@@ -1,0 +1,22 @@
+[package]
+name = "rustcloud"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+aws-config = "1.4.0"
+aws-sdk-dynamodb = "1.27.0"
+aws-sdk-ec2 = "1.44.0"
+aws-sdk-ec2instanceconnect = "1.24.0"
+aws-sdk-ecs = "1.28.0"
+tokio = { version = "1.37.0", features = ["full"] }
+
+
+[[language]]
+name = "rust"
+file-types = ["rs"]
+comment-tokens = ["//", "///", "//!"]
+indent = { tab-width = 2, unit = " " }
+language-servers = [ "rust-analyzer"]
