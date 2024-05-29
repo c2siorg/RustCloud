@@ -1,27 +1,45 @@
 #![allow(clippy::result_large_err)]
 
-use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_ec2::{config::Region, meta::PKG_VERSION, types::Tag, Client, Error};
+use aws_sdk_ecs::types::{ClusterConfiguration, ClusterField, ClusterSetting};
+use aws_sdk_ecs::{types::Tag, Client, Error};
 
-async fn make_cluster(client: &aws_sdk_ecs::Client, name: &str) -> Result<(), aws_sdk_ecs::Error> {
-    let cluster = client.create_cluster().cluster_name(name).send().await?;
+
+async fn create_cluster(client: &Client, name: &String, tags: Option<Vec<Tag>>, settings : ClusterSetting,configuration : ClusterConfiguration, capacity_providers:  Option<Vec<String>>) -> Result<(), Error> {
+    let cluster = client.create_cluster().cluster_name(name).set_tags(tags).settings(settings).configuration(configuration).set_capacity_providers(capacity_providers).send().await?;
     println!("cluster created: {:?}", cluster);
 
     Ok(())
 }
 
-async fn remove_cluster(
-    client: &aws_sdk_ecs::Client,
-    name: &str,
-) -> Result<(), aws_sdk_ecs::Error> {
+
+
+async fn delete_cluster(
+    client: &Client,
+    name: &String,
+) -> Result<(), Error> {
     let cluster_deleted = client.delete_cluster().cluster(name).send().await?;
     println!("cluster deleted: {:?}", cluster_deleted);
-
+    
     Ok(())
 }
 
-async fn show_clusters(client: &aws_sdk_ecs::Client) -> Result<(), aws_sdk_ecs::Error> {
-    let resp = client.list_clusters().send().await?;
+
+async fn describe_cluster(client: &Client, clusters: Option<Vec<String>>, include:Option<Vec<ClusterField>>) -> Result<(), Error> {
+
+    let res = client.describe_clusters().set_clusters(clusters).set_include(include).send().await?;
+
+    let clusters = res.clusters();
+    println!("Found {} clusters:", clusters.len());
+    for cluster in clusters {
+        println!("  {}", cluster.cluster_name().unwrap());
+    }
+    Ok(())
+}
+
+
+
+async fn show_clusters(client: &aws_sdk_ecs::Client, max_results: Option<i32>) -> Result<(), Error> {
+    let resp = client.list_clusters().set_max_results(max_results).send().await?;
 
     let cluster_arns = resp.cluster_arns();
     println!("Found {} clusters:", cluster_arns.len());

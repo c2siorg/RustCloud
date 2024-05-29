@@ -120,12 +120,77 @@ async fn stop_instance(client: &Client, id: &str) -> Result<(), Error> {
 
     Ok(())
 }
+// fn mock_client() -> Client {
+//     // Create a mock client for testing purposes
+//     Client::new(&aws_config::load_from_env().await)
+// }
+
+// fn mock_run_instances_output() -> RunInstancesOutput {
+//     // Create a mock RunInstancesOutput for testing purposes
+//     RunInstancesOutput::builder()
+//         .instances(
+//             std::iter::once(aws_sdk_ec2::output::Instance::builder()
+//                 .instance_id("mock-instance-id")
+//                 .build())
+//             .collect(),
+//         )
+//         .build()
+// }
+
+// fn mock_create_tags_output() -> CreateTagsOutput {
+//     // Create a mock CreateTagsOutput for testing purposes
+//     CreateTagsOutput::builder().build()
+// }
 
 
 // #[cfg(test)]
+
+
 // #[test]
-// fn test_create_instance() {
-//     let config = aws_config::from_env().load().await.unwrap();
-//     let client = Client::new(&config);
-//     create_instance(&client, "ami-00000000000000000").await.unwrap();
+// fn test_create_instance_success() {
+//     let client = mock_client();
+//     let ami_id = "mock-ami-id";
+
+//     // Mock the run_instances method
+//     let mut run_instances_mock = client.run_instances().image_id(ami_id);
+//     run_instances_mock = run_instances_mock
+//         .instance_type(InstanceType::T1Micro)
+//         .min_count(1)
+//         .max_count(1)
+//         .send()
+//         .mocked(|_, _| Ok(mock_run_instances_output()));
+
+//     // Mock the create_tags method
+//     let mut create_tags_mock = client.create_tags();
+//     create_tags_mock = create_tags_mock
+//         .resources("mock-instance-id")
+//         .tags(
+//             Tag::builder()
+//                 .key("Name")
+//                 .value("From SDK Examples")
+//                 .build(),
+//         )
+//         .send()
+//         .mocked(|_, _| Ok(mock_create_tags_output()));
+
+//     let result = create_instance(&client, ami_id).unwrap();
+//     assert!(result.is_ok());
+// }
+
+// #[test]
+// #[should_panic(expected = "No instances created.")]
+// fn test_create_instance_no_instances_created() {
+//     let client = mock_client();
+//     let ami_id = "mock-ami-id";
+
+//     // Mock the run_instances method to return an empty list of instances
+//     let mut run_instances_mock = client.run_instances().image_id(ami_id);
+//     run_instances_mock = run_instances_mock
+//         .instance_type(InstanceType::T1Micro)
+//         .min_count(1)
+//         .max_count(1)
+//         .send()
+//         .mocked(|_, _| Ok(RunInstancesOutput::builder().build()));
+
+//     let _result = create_instance(&client, ami_id).unwrap();
 // }
