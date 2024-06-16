@@ -1,6 +1,6 @@
 #![allow(clippy::result_large_err)]
 
-use aws_sdk_s3::{operation::{create_bucket::CreateBucketInput, delete_bucket::DeleteBucketInput, delete_object::DeleteObjectInput, list_buckets::ListBucketsInput, upload_part::UploadPartInput}, types::{BucketCannedAcl, CreateBucketConfiguration, ObjectOwnership, RequestPayer, ChecksumAlgorithm}, Client, Error};
+use aws_sdk_s3::{types::{BucketCannedAcl, CreateBucketConfiguration, ObjectOwnership, RequestPayer, ChecksumAlgorithm}, Client, Error};
 
 async fn create_bucket(client: &Client, acl: BucketCannedAcl,bucket: String,create_bucket_configuration: CreateBucketConfiguration,grant_full_control: Option<String>,grant_read: Option<String>,grant_read_acp: Option<String>,grant_write: Option<String>,grant_write_acp: Option<String>,object_lock_enabled_for_bucket: Option<bool>,object_ownership: Option<ObjectOwnership>) -> Result<(), Error> {
     let createbucket = client.create_bucket().acl(acl).bucket(bucket).create_bucket_configuration(create_bucket_configuration).set_grant_full_control(grant_full_control).set_grant_read(grant_read).set_grant_read_acp(grant_read_acp).set_grant_write(grant_write).set_grant_write_acp(grant_write_acp).set_object_lock_enabled_for_bucket(object_lock_enabled_for_bucket).set_object_ownership(object_ownership).send().await?;
