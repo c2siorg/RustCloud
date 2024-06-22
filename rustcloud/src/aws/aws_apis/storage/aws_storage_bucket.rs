@@ -28,9 +28,9 @@ async fn list(client: &Client) -> Result<(), Error> {
     Ok(())
 }
 
-async fn upload(client: &Client, body: ::aws_smithy_types::byte_stream::ByteStream,bucket: Option<String>,content_length: Option<i64>,content_md5: Option<String>,checksum_algorithm: Option<ChecksumAlgorithm>,checksum_crc32: Option<String>,checksum_crc32_c: Option<String>,checksum_sha1: Option<String>,checksum_sha256: Option<String>,key: Option<String>,part_number: Option<i32>,upload_id: Option<String>,sse_customer_algorithm: Option<String>,sse_customer_key: Option<String>,sse_customer_key_md5: Option<String>,request_payer: Option<RequestPayer>,expected_bucket_owner: Option<String>) -> Result<(), Error> {
-    let upload = client.upload_part().send().await?;
-    println!("upload: {:?}", upload);
-    Ok(())
-}
+// async fn upload(client: &Client, body: ::aws_smithy_types::byte_stream::ByteStream,bucket: Option<String>,content_length: Option<i64>,content_md5: Option<String>,checksum_algorithm: Option<ChecksumAlgorithm>,checksum_crc32: Option<String>,checksum_crc32_c: Option<String>,checksum_sha1: Option<String>,checksum_sha256: Option<String>,key: Option<String>,part_number: Option<i32>,upload_id: Option<String>,sse_customer_algorithm: Option<String>,sse_customer_key: Option<String>,sse_customer_key_md5: Option<String>,request_payer: Option<RequestPayer>,expected_bucket_owner: Option<String>) -> Result<(), Error> {
+//     let upload = client.upload_part().send().await?;
+//     println!("upload: {:?}", upload);
+//     Ok(())
+// }
 

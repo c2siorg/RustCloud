@@ -1,1 +1,1 @@
-mod aws_monitoring;
+pub mod aws_monitoring;

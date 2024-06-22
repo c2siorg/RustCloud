@@ -1,3 +1,3 @@
-mod aws_dynamodb;
-mod aws_nosqlindexed;
-mod aws_rbmds;
+pub mod aws_dynamodb;
+pub mod aws_nosqlindexed;
+pub mod aws_rbmds;
