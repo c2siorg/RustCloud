@@ -1,3 +1,4 @@
+mod tests;
 pub mod aws{
     pub mod aws_apis {
         pub mod compute {
@@ -8,7 +9,6 @@ pub mod aws{
         }
         pub mod database {
             pub mod aws_dynamodb;
-            pub mod aws_nosqlindexed;
             pub mod aws_rbmds;
         }
         pub mod management {

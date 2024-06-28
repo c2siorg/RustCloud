@@ -4,7 +4,7 @@ use aws_sdk_ecs::types::{ClusterConfiguration, ClusterField, ClusterSetting};
 use aws_sdk_ecs::{types::Tag, Client, Error};
 
 
-async fn create_cluster(client: &Client, name: &String, tags: Option<Vec<Tag>>, settings : ClusterSetting,configuration : ClusterConfiguration, capacity_providers:  Option<Vec<String>>) -> Result<(), Error> {
+pub async fn create_cluster(client: &Client, name: &String, tags: Option<Vec<Tag>>, settings : ClusterSetting,configuration : ClusterConfiguration, capacity_providers:  Option<Vec<String>>) -> Result<(), Error> {
     let cluster = client.create_cluster().cluster_name(name).set_tags(tags).settings(settings).configuration(configuration).set_capacity_providers(capacity_providers).send().await?;
     println!("cluster created: {:?}", cluster);
 
@@ -13,7 +13,7 @@ async fn create_cluster(client: &Client, name: &String, tags: Option<Vec<Tag>>, 
 
 
 
-async fn delete_cluster(
+pub async fn delete_cluster(
     client: &Client,
     name: &String,
 ) -> Result<(), Error> {
@@ -24,7 +24,7 @@ async fn delete_cluster(
 }
 
 
-async fn describe_cluster(client: &Client, clusters: Option<Vec<String>>, include:Option<Vec<ClusterField>>) -> Result<(), Error> {
+pub async fn describe_cluster(client: &Client, clusters: Option<Vec<String>>, include:Option<Vec<ClusterField>>) -> Result<(), Error> {
 
     let res = client.describe_clusters().set_clusters(clusters).set_include(include).send().await?;
 
@@ -38,7 +38,7 @@ async fn describe_cluster(client: &Client, clusters: Option<Vec<String>>, includ
 
 
 
-async fn show_clusters(client: &aws_sdk_ecs::Client, max_results: Option<i32>) -> Result<(), Error> {
+pub async fn show_clusters(client: &aws_sdk_ecs::Client, max_results: Option<i32>) -> Result<(), Error> {
     let resp = client.list_clusters().set_max_results(max_results).send().await?;
 
     let cluster_arns = resp.cluster_arns();

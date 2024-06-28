@@ -1,10 +1,10 @@
 #![allow(clippy::result_large_err)]
 
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_ec2::{config::Region, meta::PKG_VERSION, types::Tag, Client, Error};
+use aws_sdk_ec2::{types::Tag, Client, Error};
 // use clap::Parser;
 
-async fn create_instance(client: &Client, ami_id: &str) -> Result<(), Error> {
+pub async fn create_instance(client: &Client, ami_id: &str) -> Result<(), Error> {
     let run_instances = client
         .run_instances()
         .image_id(ami_id)
@@ -38,7 +38,7 @@ async fn create_instance(client: &Client, ami_id: &str) -> Result<(), Error> {
     Ok(())
 }
 
-async fn show_state(client: &Client, ids: Option<Vec<String>>) -> Result<(), Error> {
+pub async fn show_state(client: &Client, ids: Option<Vec<String>>) -> Result<(), Error> {
     let resp = client
         .describe_instances()
         .set_instance_ids(ids)
@@ -59,7 +59,7 @@ async fn show_state(client: &Client, ids: Option<Vec<String>>) -> Result<(), Err
     Ok(())
 }
 
-async fn show_all_events(client: &Client) -> Result<(), Error> {
+pub async fn show_all_events(client: &Client) -> Result<(), Error> {
     let resp = client.describe_regions().send().await.unwrap();
 
     for region in resp.regions.unwrap_or_default() {
@@ -90,7 +90,7 @@ async fn show_all_events(client: &Client) -> Result<(), Error> {
     Ok(())
 }
 
-async fn enable_monitoring(client: &Client, id: &str) -> Result<(), Error> {
+pub async fn enable_monitoring(client: &Client, id: &str) -> Result<(), Error> {
     client.monitor_instances().instance_ids(id).send().await?;
 
     println!("Enabled monitoring");
@@ -98,14 +98,14 @@ async fn enable_monitoring(client: &Client, id: &str) -> Result<(), Error> {
     Ok(())
 }
 
-async fn reboot_instance(client: &Client, id: &str) -> Result<(), Error> {
+pub async fn reboot_instance(client: &Client, id: &str) -> Result<(), Error> {
     client.reboot_instances().instance_ids(id).send().await?;
 
     println!("Rebooted instance.");
     Ok(())
 }
 
-async fn start_instance(client: &Client, id: &str) -> Result<(), Error> {
+pub async fn start_instance(client: &Client, id: &str) -> Result<(), Error> {
     client.start_instances().instance_ids(id).send().await?;
 
     println!("Started instance.");
@@ -113,7 +113,7 @@ async fn start_instance(client: &Client, id: &str) -> Result<(), Error> {
     Ok(())
 }
 
-async fn stop_instance(client: &Client, id: &str) -> Result<(), Error> {
+pub async fn stop_instance(client: &Client, id: &str) -> Result<(), Error> {
     client.stop_instances().instance_ids(id).send().await?;
 
     println!("Stopped instance.");
