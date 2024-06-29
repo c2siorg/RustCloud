@@ -26,7 +26,7 @@ async fn test_create_cluster() {
         role_arn,
         resources_vpc_config,
         kubernetes_network_config
-    ).await;
+    );
     assert!(result.is_ok());
 }
 

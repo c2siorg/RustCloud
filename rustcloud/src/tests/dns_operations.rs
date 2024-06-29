@@ -1,6 +1,6 @@
 use crate::aws::aws_apis::network::aws_dns::*;
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_route53::{Client, config::Config, types::{Change, ChangeAction, ResourceRecordSet, Vpc, RrType, ResourceRecord}};
+use aws_sdk_route53::{config::Config, types::{builders::ResourceRecordSetBuilder, Change, ChangeAction, ResourceRecord, ResourceRecordSet, RrType, Vpc, VpcRegion}, Client};
 use aws_sdk_route53::types::{ChangeBatch, HostedZoneConfig, HostedZoneType};
 
 async fn get_client() -> Client {
@@ -16,16 +16,13 @@ async fn get_client() -> Client {
         let hosted_zone_id = "your_hosted_zone_id".to_string(); // Replace with your hosted zone ID
 
         // Build ResourceRecord
-        let resource_record = ResourceRecord {
-            value: "192.0.2.44".to_string(),
-        };
-
+        let resource_record = ResourceRecord::builder().value("192.0.2.44".to_string()).build().unwrap();
         // Build ResourceRecordSet
         let resource_record_set = ResourceRecordSetBuilder::default()
             .name("test.example.com.".to_string())
-            .rr_type(RrType::A)
+            .r#type(RrType::A)
             .ttl(60)
-            .resource_records(vec![resource_record])
+            .resource_records(resource_record)
             .build()
             .expect("Failed to build ResourceRecordSet");
 
@@ -33,12 +30,12 @@ async fn get_client() -> Client {
         let change = Change::builder()
             .action(ChangeAction::Upsert)
             .resource_record_set(resource_record_set.clone()) // Use clone() if needed
-            .build();
+            .build().unwrap();
 
         // Build ChangeBatch
         let change_batch = ChangeBatch::builder()
-            .changes(vec![change])
-            .build();
+            .changes(change)
+            .build().unwrap();
 
         let result = change_record_sets(&client, hosted_zone_id, change_batch).await;
         assert!(result.is_ok());
@@ -50,7 +47,7 @@ async fn test_create_zone() {
 
     let name = "example.com".to_string(); // Replace with your desired domain name
     let vpc = Vpc::builder()
-        .vpc_region("us-east-1")
+        .vpc_region(VpcRegion::UsEast1)
         .vpc_id("vpc-1a2b3c4d") // Replace with your VPC ID
         .build();
     let caller_reference = "unique-string".to_string();
@@ -82,7 +79,7 @@ async fn test_list_zones() {
     let marker = None;
     let max_items = Some(10);
     let delegation_set_id = None;
-    let hosted_zone_type = Some(HostedZoneType::Private);
+    let hosted_zone_type = Some(HostedZoneType::PrivateHostedZone);
 
     let result = list_zones(&client, marker, max_items, delegation_set_id, hosted_zone_type).await;
     assert!(result.is_ok());

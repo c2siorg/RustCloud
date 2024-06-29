@@ -20,7 +20,7 @@ async fn test_create_cluster() {
     .name(ClusterSettingName::from("my-cluster-setting"))
     .value("some-value")
     .build(); // Replace with your desired settings
-    let configuration = ClusterConfiguration::default(); // Replace with your desired configuration
+    let configuration = ClusterConfiguration::builder().build(); // Replace with your desired configuration
     let capacity_providers = None; // Replace with your desired capacity providers if any
 
     let result = create_cluster(&client, &name, tags, settings, configuration, capacity_providers).await;

@@ -1,10 +1,7 @@
 use crate::aws::aws_apis::database::aws_dynamodb::*;
 use aws_sdk_dynamodb::config::Region;
 use aws_sdk_dynamodb::{Client, Config};
-use aws_sdk_dynamodb::types::{
-    AttributeDefinition, KeySchemaElement, ProvisionedThroughput, BillingMode,
-    StreamSpecification, SseSpecification, TableClass, AttributeValue, Select,
-    ReturnConsumedCapacity, Condition, ComparisonOperator
+use aws_sdk_dynamodb::types::{AttributeDefinition, AttributeValue, BillingMode, ComparisonOperator, Condition, KeySchemaElement, KeyType, ProvisionedThroughput, ReturnConsumedCapacity, ScalarAttributeType, Select, SseSpecification, StreamSpecification, TableClass,LocalSecondaryIndex, GlobalSecondaryIndex
 };
 use std::collections::HashMap;
 
@@ -16,34 +13,35 @@ async fn test_create_table() {
     let table_name = "test-table".to_string();
     let attribute_definitions = AttributeDefinition::builder()
         .attribute_name("id")
-        .attribute_type("S")
-        .build();
+        .attribute_type(ScalarAttributeType::S)
+        .build().unwrap();
+    let key_type = KeyType::Hash;
     let key_schema = KeySchemaElement::builder()
         .attribute_name("id")
-        .key_type("HASH")
-        .build();
+        .key_type(key_type)
+        .build().unwrap();
     let provisioned_throughput = ProvisionedThroughput::builder()
         .read_capacity_units(5)
         .write_capacity_units(5)
-        .build();
+        .build().unwrap();
 
     let result = create_table(
         &client,
         attribute_definitions,
         table_name,
         key_schema,
-        Default::default(),  // LocalSecondaryIndex
-        Default::default(),  // GlobalSecondaryIndex
+        LocalSecondaryIndex::builder().build().unwrap(),  // LocalSecondaryIndex
+        GlobalSecondaryIndex::builder().build().unwrap(),  // GlobalSecondaryIndex
         BillingMode::Provisioned,
         provisioned_throughput,
-        StreamSpecification::builder().build(),
+        StreamSpecification::builder().build().unwrap(),
         SseSpecification::builder().build(),
         None,  // tags
         TableClass::Standard,
         Some(false),  // deletion_protection_enabled
         None,  // resource_policy
         None,  // on_demand_throughput
-    ).await;
+    );
     
     assert!(result.is_ok());
 }
