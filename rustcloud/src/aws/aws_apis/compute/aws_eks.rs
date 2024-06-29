@@ -10,7 +10,7 @@ use aws_sdk_eks::types::{AmiTypes, CapacityTypes, KubernetesNetworkConfigRequest
 
 #[tokio::main]
 #[allow(clippy::result_large_err)]
-async fn create_cluster(client: &Client, cluster_name: String,subnet_id: Vec<String>, version: Option<String>, role_arn: Option<String>, resources_vpc_config: Option<VpcConfigRequest>, kubernetes_network_config: Option<KubernetesNetworkConfigRequest> ) -> Result<(), CreateClusterError> {
+pub async fn create_cluster(client: &Client, cluster_name: String,_subnet_id: Vec<String>, version: Option<String>, role_arn: Option<String>, resources_vpc_config: Option<VpcConfigRequest>, kubernetes_network_config: Option<KubernetesNetworkConfigRequest> ) -> Result<(), Error> {
     
     let cluster = client
         .create_cluster()
@@ -20,8 +20,7 @@ async fn create_cluster(client: &Client, cluster_name: String,subnet_id: Vec<Str
         .set_resources_vpc_config(resources_vpc_config)
         .set_kubernetes_network_config(kubernetes_network_config)
         .send()
-        .await
-        .map_err(Box::new);
+        .await?;
         println!("cluster created: {:?}", cluster);
         Ok(())
     // return cluster;
@@ -29,7 +28,7 @@ async fn create_cluster(client: &Client, cluster_name: String,subnet_id: Vec<Str
 
 
 
-async fn create_node_group(client: &Client, cluster_name: String, nodegroup_name: String, disk_size: Option<i32>, scaling_config: Option<NodegroupScalingConfig>, subnets: Option<Vec<String>>, instance_types: Option<Vec<String>>, ami_type: Option<AmiTypes>, remote_access: Option<RemoteAccessConfig>,node_role: Option<String>, labels: Option<HashMap<String,String>>,taints: Option<Vec<Taint>>,tags: Option<HashMap<String, String>>, client_request_token: Option<String>, launch_template: Option<LaunchTemplateSpecification>,update_config: Option<NodegroupUpdateConfig>,capacity_type: Option<CapacityTypes>,version: Option<String>,release_version: Option<String> ) -> Result<(), Error> {
+pub async fn create_node_group(client: &Client, cluster_name: String, nodegroup_name: String, disk_size: Option<i32>, scaling_config: Option<NodegroupScalingConfig>, subnets: Option<Vec<String>>, instance_types: Option<Vec<String>>, ami_type: Option<AmiTypes>, remote_access: Option<RemoteAccessConfig>,node_role: Option<String>, labels: Option<HashMap<String,String>>,taints: Option<Vec<Taint>>,tags: Option<HashMap<String, String>>, client_request_token: Option<String>, launch_template: Option<LaunchTemplateSpecification>,update_config: Option<NodegroupUpdateConfig>,capacity_type: Option<CapacityTypes>,version: Option<String>,release_version: Option<String> ) -> Result<(), Error> {
 
     let node_group = client.create_nodegroup()
     .cluster_name(cluster_name)
@@ -60,7 +59,7 @@ async fn create_node_group(client: &Client, cluster_name: String, nodegroup_name
 
 
 
-async fn delete_nodegroup(client: &Client, cluster_name: String, nodegroup_name: String) -> Result<(), Error> {
+pub async fn delete_nodegroup(client: &Client, cluster_name: String, nodegroup_name: String) -> Result<(), Error> {
     let nodegroup_deleted = client.delete_nodegroup().cluster_name(cluster_name).nodegroup_name(nodegroup_name).send().await?;
     println!("nodegroup deleted: {:?}", nodegroup_deleted);
  
@@ -68,13 +67,13 @@ async fn delete_nodegroup(client: &Client, cluster_name: String, nodegroup_name:
     
 }
 
-async fn describe_cluster(client: &Client, name: String) -> Result<(), Error> {
+pub async fn describe_cluster(client: &Client, name: String) -> Result<(), Error> {
     let cluster = client.describe_cluster().name(name).send().await?;
     println!("cluster: {:?}", cluster);
     Ok(())
 }
 
-async fn describe_nodegroup(client: &Client, cluster_name: String, nodegroup_name: String) -> Result<(), Error> {
+pub async fn describe_nodegroup(client: &Client, cluster_name: String, nodegroup_name: String) -> Result<(), Error> {
     let cluster = client.describe_nodegroup().cluster_name(cluster_name).nodegroup_name(nodegroup_name).send().await?;
     println!("nodegroup: {:?}", cluster);
     Ok(())
@@ -82,13 +81,13 @@ async fn describe_nodegroup(client: &Client, cluster_name: String, nodegroup_nam
 }
 
 
-async fn delete_cluster(client: &Client, cluster_name: &str) -> Result<(), DeleteClusterError> {
+pub async fn delete_cluster(client: &Client, cluster_name: &str) -> Result<(), DeleteClusterError> {
     let cluster_deleted = client.delete_cluster().name(cluster_name).send().await;
     println!("cluster deleted: {:?}", cluster_deleted);
     Ok(())
 }
 
-async fn list_clusters(client: &Client, max_results: Option<i32>, include: Option<Vec<String>>) -> Result<(), Error> {
+pub async fn list_clusters(client: &Client, max_results: Option<i32>, include: Option<Vec<String>>) -> Result<(), Error> {
 
     let resp = client.list_clusters().set_max_results(max_results).set_include(include).send().await?;
     let clusters = resp.clusters();
@@ -102,7 +101,7 @@ async fn list_clusters(client: &Client, max_results: Option<i32>, include: Optio
     Ok(())
 }
 
-async fn list_nodegroups(client: &Client, cluster_name: String, max_results: Option<i32>) -> Result<(), Error> {
+pub async fn list_nodegroups(client: &Client, cluster_name: String, max_results: Option<i32>) -> Result<(), Error> {
     let resp = client.list_nodegroups().cluster_name(cluster_name).set_max_results(max_results).send().await?;
     let nodegroups = resp.nodegroups();
     // ListClustersOutput
@@ -115,14 +114,14 @@ async fn list_nodegroups(client: &Client, cluster_name: String, max_results: Opt
     Ok(())
 }
 
-async fn update_tags(client: &Client, resource_arn: String, tags: Option<HashMap<String, String>>) -> Result<(), Error> {
+pub async fn update_tags(client: &Client, resource_arn: String, tags: Option<HashMap<String, String>>) -> Result<(), Error> {
     let update_tags = client.tag_resource().resource_arn(resource_arn).set_tags(tags).send().await?;
     println!("tags updated: {:?}", update_tags);
     Ok(())
 }
 
 
-async fn update_config(client: &Client, name: String, resources_vpc_config: Option<VpcConfigRequest>, logging: Option<Logging>, client_request_token: Option<String>, access_config: Option<UpdateAccessConfigRequest>) -> Result<(), Error> {
+pub async fn update_config(client: &Client, name: String, resources_vpc_config: Option<VpcConfigRequest>, logging: Option<Logging>, client_request_token: Option<String>, access_config: Option<UpdateAccessConfigRequest>) -> Result<(), Error> {
     let update_config = 
     client
     .update_cluster_config()
