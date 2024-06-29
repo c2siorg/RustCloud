@@ -1,6 +1,7 @@
 use crate::aws::aws_apis::network::aws_loadbalancer::*;
 use aws_sdk_elasticloadbalancing::{Client, Config};
-use aws_sdk_elasticloadbalancing::types::{Listener, Tag, CredentialsProvider};
+use aws_sdk_elasticloadbalancing::types::{Listener, Tag};
+
 use aws_sdk_elasticloadbalancing::config::Region;
 use aws_sdk_elasticloadbalancing::Error;
 use std::collections::HashMap;
@@ -10,16 +11,14 @@ fn create_client() -> Client {
     // Replace with your actual AWS credentials and region for real scenarios
     let config = Config::builder()
         .region(Region::new("us-east-1")) // Specify your desired AWS region
-        .credentials_provider(CredentialsProvider::Anonymous)
         .build();
-
     Client::from_conf(config)
 }
 
 #[tokio::test]
 async fn test_add_tags() {
     let client = create_client();
-    let tag = Tag::builder().key("Environment".to_string()).value("Production".to_string());
+    let tag = Tag::builder().key("Environment".to_string()).value("Production".to_string()).build().unwrap();
     let result = add_tags(&client, "my-load-balancer".to_string(), tag ).await;
 
     assert!(result.is_ok());

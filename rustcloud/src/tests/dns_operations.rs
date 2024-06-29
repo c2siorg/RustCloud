@@ -1,7 +1,7 @@
 use crate::aws::aws_apis::network::aws_dns::*;
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_route53::{Client, config::Config, types::{Change, ChangeAction, ResourceRecordSet, Vpc, RrType, ResourceRecord}};
-use aws_sdk_route53::types::{ChangeBatch, HostedZoneConfig, HostedZoneType};
+use aws_sdk_route53::{config::Config, types::{ builders::ResourceRecordSetBuilder, Change, ChangeAction, ResourceRecord, ResourceRecordSet, RrType, Vpc, VpcRegion}, Client};
+// use aws_sdk_route53::types::{ChangeBatch, HostedZoneConfig, HostedZoneType};
 
 async fn get_client() -> Client {
     let region_provider = RegionProviderChain::default_provider().or_else("us-east-1");
@@ -16,16 +16,14 @@ async fn get_client() -> Client {
         let hosted_zone_id = "your_hosted_zone_id".to_string(); // Replace with your hosted zone ID
 
         // Build ResourceRecord
-        let resource_record = ResourceRecord {
-            value: "192.0.2.44".to_string(),
-        };
+        let resource_record = ResourceRecord::builder().value("192.0.2.44".to_string()).build().unwrap();
 
         // Build ResourceRecordSet
         let resource_record_set = ResourceRecordSetBuilder::default()
             .name("test.example.com.".to_string())
-            .rr_type(RrType::A)
+            .r#type(RrType::A)
             .ttl(60)
-            .resource_records(vec![resource_record])
+            .resource_records(resource_record)
             .build()
             .expect("Failed to build ResourceRecordSet");
 
@@ -49,8 +47,9 @@ async fn test_create_zone() {
     let client = get_client().await;
 
     let name = "example.com".to_string(); // Replace with your desired domain name
+    let vpc_region = VpcRegion::UsEast1;
     let vpc = Vpc::builder()
-        .vpc_region("us-east-1")
+        .vpc_region(vpc_region)
         .vpc_id("vpc-1a2b3c4d") // Replace with your VPC ID
         .build();
     let caller_reference = "unique-string".to_string();

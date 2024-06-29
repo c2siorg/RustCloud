@@ -29,6 +29,8 @@ pub mod aws{
         }
     } 
 }
+
+mod gcp;
 fn main() {
     println!("Hello, world!");
 }
