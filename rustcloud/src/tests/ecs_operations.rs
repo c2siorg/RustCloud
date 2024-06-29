@@ -7,7 +7,6 @@ use aws_sdk_ecs::types::{ClusterConfiguration, ClusterSetting, Tag, ClusterSetti
 
 #[tokio::test]
 async fn test_create_cluster() {
-    // Replace with your AWS credentials and desired region
     let config = Config::builder().region(Region::new("us-east-1")).build();
     let client = Client::from_conf(config);
 
@@ -19,9 +18,9 @@ async fn test_create_cluster() {
     let settings = ClusterSetting::builder()
     .name(ClusterSettingName::from("my-cluster-setting"))
     .value("some-value")
-    .build(); // Replace with your desired settings
-    let configuration = ClusterConfiguration::builder().build(); // Replace with your desired configuration
-    let capacity_providers = None; // Replace with your desired capacity providers if any
+    .build(); 
+    let configuration = ClusterConfiguration::builder().build(); 
+    let capacity_providers = None; 
 
     let result = create_cluster(&client, &name, tags, settings, configuration, capacity_providers).await;
     assert!(result.is_ok());
@@ -29,11 +28,10 @@ async fn test_create_cluster() {
 
 #[tokio::test]
 async fn test_delete_cluster() {
-    // Replace with your AWS credentials and desired region
     let config = Config::builder().region(Region::new("us-east-1")).build();
     let client = Client::from_conf(config);
 
-    let name = "test-cluster".to_string(); // Replace with an existing cluster name
+    let name = "test-cluster".to_string(); 
 
     let result = delete_cluster(&client, &name).await;
     assert!(result.is_ok());
@@ -41,12 +39,11 @@ async fn test_delete_cluster() {
 
 #[tokio::test]
 async fn test_describe_cluster() {
-    // Replace with your AWS credentials and desired region
     let config = Config::builder().region(Region::new("us-east-1")).build();
     let client = Client::from_conf(config);
 
-    let clusters = None; // Optionally specify cluster names to describe
-    let include = None; // Optionally specify fields to include in the description
+    let clusters = None; 
+    let include = None; 
 
     let result = describe_cluster(&client, clusters, include).await;
     assert!(result.is_ok());
@@ -54,11 +51,10 @@ async fn test_describe_cluster() {
 
 #[tokio::test]
 async fn test_show_clusters() {
-    // Replace with your AWS credentials and desired region
     let config = Config::builder().region(Region::new("us-east-1")).build();
     let client = Client::from_conf(config);
 
-    let max_results = Some(10); // Optionally specify max results to fetch
+    let max_results = Some(10); 
 
     let result = show_clusters(&client, max_results).await;
     assert!(result.is_ok());

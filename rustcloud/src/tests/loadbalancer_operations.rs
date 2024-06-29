@@ -5,9 +5,8 @@ use aws_sdk_elasticloadbalancing::config::Region;
 
 
 fn create_client() -> Client {
-    // Replace with your actual AWS credentials and region for real scenarios
     let config = Config::builder()
-        .region(Region::new("us-east-1")) // Specify your desired AWS region
+        .region(Region::new("us-east-1")) 
         .build();
     Client::from_conf(config)
 }

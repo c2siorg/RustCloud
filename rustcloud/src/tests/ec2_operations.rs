@@ -21,7 +21,6 @@ async fn test_show_state() {
     let config = Config::builder().region(Region::new("us-east-1")).build();
     let client = Client::from_conf(config);
 
-    // Optionally provide instance IDs to test specific instances
     let ids = None;
 
     let result = show_state(&client, ids).await;
@@ -43,7 +42,7 @@ async fn test_enable_monitoring() {
     let config = Config::builder().region(Region::new("us-east-1")).build();
     let client = Client::from_conf(config);
 
-    let instance_id = "i-1234567890abcdef0"; // Replace with a valid instance ID
+    let instance_id = "i-1234567890abcdef0"; 
 
     let result = enable_monitoring(&client, instance_id).await;
     assert!(result.is_ok());
@@ -54,7 +53,7 @@ async fn test_reboot_instance() {
     let config = Config::builder().region(Region::new("us-east-1")).build();
     let client = Client::from_conf(config);
 
-    let instance_id = "i-1234567890abcdef0"; // Replace with a valid instance ID
+    let instance_id = "i-1234567890abcdef0"; 
 
     let result = reboot_instance(&client, instance_id).await;
     assert!(result.is_ok());
@@ -76,7 +75,7 @@ async fn test_stop_instance() {
     let config = Config::builder().region(Region::new("us-east-1")).build();
     let client = Client::from_conf(config);
 
-    let instance_id = "i-1234567890abcdef0"; // Replace with a valid instance ID
+    let instance_id = "i-1234567890abcdef0"; 
 
     let result = stop_instance(&client, instance_id).await;
     assert!(result.is_ok());

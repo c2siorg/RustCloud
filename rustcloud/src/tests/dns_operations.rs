@@ -13,8 +13,7 @@ async fn get_client() -> Client {
     async fn test_change_record_sets() {
         let client = get_client().await;
 
-        let hosted_zone_id = "your_hosted_zone_id".to_string(); // Replace with your hosted zone ID
-
+        let hosted_zone_id = "your_hosted_zone_id".to_string(); 
         // Build ResourceRecord
         let resource_record = ResourceRecord::builder().value("192.0.2.44".to_string()).build().unwrap();
         // Build ResourceRecordSet
@@ -29,7 +28,7 @@ async fn get_client() -> Client {
         // Build Change
         let change = Change::builder()
             .action(ChangeAction::Upsert)
-            .resource_record_set(resource_record_set.clone()) // Use clone() if needed
+            .resource_record_set(resource_record_set.clone()) 
             .build().unwrap();
 
         // Build ChangeBatch
@@ -45,10 +44,10 @@ async fn get_client() -> Client {
 async fn test_create_zone() {
     let client = get_client().await;
 
-    let name = "example.com".to_string(); // Replace with your desired domain name
+    let name = "example.com".to_string(); 
     let vpc = Vpc::builder()
         .vpc_region(VpcRegion::UsEast1)
-        .vpc_id("vpc-1a2b3c4d") // Replace with your VPC ID
+        .vpc_id("vpc-1a2b3c4d") 
         .build();
     let caller_reference = "unique-string".to_string();
     let hosted_zone_config = Some(
@@ -66,8 +65,7 @@ async fn test_create_zone() {
 async fn test_delete_zone() {
     let client = get_client().await;
 
-    let hosted_zone_id = "Z3AADJGX6KTTL2".to_string(); // Replace with your hosted zone ID
-
+    let hosted_zone_id = "Z3AADJGX6KTTL2".to_string(); 
     let result = delete_zone(&client, hosted_zone_id).await;
     assert!(result.is_ok());
 }
