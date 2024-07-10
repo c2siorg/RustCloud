@@ -9,3 +9,4 @@ mod iam_operations;
 mod kms_operations;
 mod archival_operations;
 mod block_operations;
+mod bucket_operations;

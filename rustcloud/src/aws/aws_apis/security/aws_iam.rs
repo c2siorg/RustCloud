@@ -4,37 +4,72 @@ use aws_sdk_iam::{Client, Error};
 
 
 pub async fn attach_group_policy(client: &Client, group_name: String, policy_arn: String) -> Result<(), Error> {
-    let attachgrouppolicy = client.attach_group_policy().group_name(group_name).policy_arn(policy_arn).send().await?;
-    println!("attachgrouppolicy: {:?}", attachgrouppolicy);
-    Ok(())
+    let resp = client.attach_group_policy().group_name(group_name).policy_arn(policy_arn).send().await;
+    match resp {
+        Ok(result) =>{        
+            println!("attachgrouppolicy: {:?}", result);
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error : {:?}", e);
+            Err(e.into())
+        }
+    }
 
-}
-
-pub struct CreateGroupInput {
-    pub path: Option<String>,
-    pub group_name: Option<String>,
 }
 
 pub async fn create_group(client: &Client, path: String, group_name: String) -> Result<(), Error> {
-    let creategroup = client.create_group().group_name(path).group_name(group_name).send().await?;
-    println!("creategroup: {:?}", creategroup);
-    Ok(())
+    let resp = client.create_group().group_name(path).group_name(group_name).send().await;
+    match resp {
+        Ok(result) =>{        
+            println!("creategroup: {:?}", result);
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error : {:?}", e);
+            Err(e.into())
+        }
+    }
 }
 
 pub async fn delete_group(client: &Client, group_name: String) -> Result<(), Error> {
-    let deletegroup = client.delete_group().group_name(group_name).send().await?;
-    println!("deletegroup: {:?}", deletegroup);
-    Ok(())
+    let resp = client.delete_group().group_name(group_name).send().await;
+    match resp {
+        Ok(result) =>{        
+            println!("deletegroup: {:?}", result);
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error : {:?}", e);
+            Err(e.into())
+        }
+    }
 }
 
 pub async fn detach_group_policy(client: &Client, group_name: String, policy_arn: String) -> Result<(), Error> {
-    let detachgrouppolicy = client.detach_group_policy().group_name(group_name).policy_arn(policy_arn).send().await?;
-    println!("detachgrouppolicy: {:?}", detachgrouppolicy);
-    Ok(())
+    let resp = client.detach_group_policy().group_name(group_name).policy_arn(policy_arn).send().await;
+    match resp {
+        Ok(result) =>{        
+            println!("detachgrouppolicy: {:?}", result);
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error : {:?}", e);
+            Err(e.into())
+        }
+    }
 }
 
-pub async fn describe(client: &Client, group_name: String, marker: String, max_items: i32) -> Result<(), Error> {
-    let describe = client.get_group().group_name(group_name).marker(marker).max_items(max_items).send().await?;
-    println!("describe: {:?}", describe);
-    Ok(())
+pub async fn describe(client: &Client, group_name: String, marker: Option<String>, max_items: Option<i32>) -> Result<(), Error> {
+    let resp = client.get_group().group_name(group_name).set_marker(marker).set_max_items(max_items).send().await;
+    match resp {
+        Ok(result) =>{        
+            println!("describe: {:?}", result);
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error : {:?}", e);
+            Err(e.into())
+        }
+    }
 }

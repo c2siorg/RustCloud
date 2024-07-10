@@ -5,15 +5,17 @@ use aws_sdk_cloudwatch::types::{ComparisonOperator, Statistic, MetricDataQuery, 
 use aws_sdk_ec2::primitives::DateTime;
 use std::collections::HashMap;
 
-async fn get_client() -> Client {
-    let region_provider = RegionProviderChain::default_provider().or_else("us-east-1");
-    let config = aws_config::from_env().region(region_provider).load().await;
-    Client::new(&config)
+
+
+async fn create_client() -> Client {
+    let config =  aws_config::load_from_env().await;
+    let client =  Client::new(&config);
+    return client;
 }
 
 #[tokio::test]
 async fn test_delete_alarm() {
-    let client = get_client().await;
+    let client = create_client().await;
     let alarm_name = "test-alarm".to_string();
     let result = delete_alarm(&client, &alarm_name).await;
     assert!(result.is_ok());
@@ -21,7 +23,7 @@ async fn test_delete_alarm() {
 
 #[tokio::test]
 async fn test_get_metric_data() {
-    let client = get_client().await;
+    let client = create_client().await;
     
     let metric_data_queries = Some(vec![
         MetricDataQuery::builder()
@@ -63,18 +65,18 @@ async fn test_get_metric_data() {
 
 #[tokio::test]
 async fn test_list_alarms() {
-    let client = get_client().await;
+    let client = create_client().await;
     let result = list_alarms(&client).await;
     assert!(result.is_ok());
 }
 
 #[tokio::test]
 async fn test_put_metric_alarm() {
-    let client = get_client().await;
+    let client = create_client().await;
 
     let alarm_name = "test-alarm".to_string();
     let alarm_description = Some("This is a test alarm.".to_string());
-    let alarm_actions = Some(vec!["arn:aws:sns:us-east-1:123456789012:my-sns-topic".to_string()]);
+    let alarm_actions = None;
     let comparison_operator = Some(ComparisonOperator::GreaterThanThreshold);
     let evaluation_periods = Some(1);
     let metric_name = Some("CPUUtilization".to_string());

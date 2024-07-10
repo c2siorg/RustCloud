@@ -2,13 +2,19 @@ use crate::aws::aws_apis::storage::aws_archival_storage::*;
 use aws_sdk_glacier::{Client, Config};
 use aws_sdk_glacier::config::Region;
 
+
+async fn create_client() -> Client {
+    let config =  aws_config::load_from_env().await;
+    let client =  Client::new(&config);
+    return client;
+}
+
 #[tokio::test]
 async fn test_create_vault() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+    let client = create_client().await;
 
     let vault_name = "test-vault";
-    let account_id = "123456789012";
+    let account_id = "167355850481";
 
     let result = create_vault(&client, vault_name.to_string(), account_id.to_string()).await;
     assert!(result.is_ok());
@@ -16,10 +22,9 @@ async fn test_create_vault() {
 
 #[tokio::test]
 async fn test_delete_archive() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+    let client = create_client().await;
 
-    let account_id = "123456789012";
+    let account_id = "167355850481";
     let vault_name = "test-vault";
     let archive_id = "archive123";
 
@@ -29,10 +34,9 @@ async fn test_delete_archive() {
 
 #[tokio::test]
 async fn test_delete_vault() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+    let client = create_client().await;
 
-    let account_id = "123456789012";
+    let account_id = "167355850481";
     let vault_name = "test-vault";
 
     let result = delete_vault(&client, account_id.to_string(), vault_name.to_string()).await;
@@ -40,11 +44,10 @@ async fn test_delete_vault() {
 }
 
 #[tokio::test]
-async fn test_upload() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+async fn test_upload_vault() {
+    let client = create_client().await;
 
-    let account_id = "123456789012";
+    let account_id = "167355850481";
     let vault_name = "test-vault";
     let archive_description = Some("Test archive".to_string());
     let part_size = Some("1048576".to_string());
@@ -54,11 +57,10 @@ async fn test_upload() {
 }
 
 #[tokio::test]
-async fn test_list() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+async fn test_list_vault() {
+    let client = create_client().await;
 
-    let account_id = "123456789012";
+    let account_id = "167355850481";
     let marker = None;
     let limit = Some(10);
 

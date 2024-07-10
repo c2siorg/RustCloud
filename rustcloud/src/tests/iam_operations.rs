@@ -2,10 +2,17 @@ use crate::aws::aws_apis::security::aws_iam::*;
 use aws_sdk_iam::{Client, Config};
 use aws_sdk_iam::config::Region;
 
+
+async fn create_client() -> Client {
+    let config =  aws_config::load_from_env().await;
+    let client =  Client::new(&config);
+    return client;
+}
+
+
 #[tokio::test]
 async fn test_attach_group_policy() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+    let client = create_client().await;
 
     let group_name = "TestGroup".to_string();
     let policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess".to_string();
@@ -16,8 +23,7 @@ async fn test_attach_group_policy() {
 
 #[tokio::test]
 async fn test_create_group() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+    let client = create_client().await;
 
     let path = "/".to_string();
     let group_name = "TestGroup".to_string();
@@ -28,8 +34,7 @@ async fn test_create_group() {
 
 #[tokio::test]
 async fn test_delete_group() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+    let client = create_client().await;
 
     let group_name = "TestGroup".to_string();
 
@@ -39,8 +44,7 @@ async fn test_delete_group() {
 
 #[tokio::test]
 async fn test_detach_group_policy() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+    let client = create_client().await;
 
     let group_name = "TestGroup".to_string();
     let policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess".to_string();
@@ -50,13 +54,12 @@ async fn test_detach_group_policy() {
 }
 
 #[tokio::test]
-async fn test_describe() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+async fn test_describe_group() {
+    let client = create_client().await;
 
     let group_name = "TestGroup".to_string();
-    let marker = "".to_string();
-    let max_items = 100;
+    let marker = None;
+    let max_items = Some(100);
 
     let result = describe(&client, group_name, marker, max_items).await;
     assert!(result.is_ok());

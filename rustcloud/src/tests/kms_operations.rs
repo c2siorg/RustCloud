@@ -3,12 +3,19 @@ use aws_sdk_kms::{Client, Config};
 use aws_sdk_kms::config::Region;
 use aws_sdk_kms::types::{KeySpec, KeyUsageType, OriginType, Tag};
 
+
+
+async fn create_client() -> Client {
+    let config =  aws_config::load_from_env().await;
+    let client =  Client::new(&config);
+    return client;
+}
+
 #[tokio::test]
 async fn test_create_key() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+    let client = create_client().await;
 
-    let policy = r#"{"Version": "2012-10-17","Statement": [{"Sid": "Enable IAM User Permissions","Effect": "Allow","Principal": {"AWS": "arn:aws:iam::111122223333:root"},"Action": "kms:*","Resource": "*"}]}"#.to_string();
+    let policy = r#"{"Version": "2012-10-17","Statement": [{"Sid": "Enable IAM User Permissions","Effect": "Allow","Principal": {"AWS": "arn:aws:iam::167355850481:user/rustcloud-testing-delete-asap"},"Action": "kms:*","Resource": "*"}]}"#.to_string();
     let description = Some("Test Key".to_string());
     let key_usage = Some(KeyUsageType::EncryptDecrypt);
     let key_spec = Some(KeySpec::SymmetricDefault);
@@ -20,8 +27,8 @@ async fn test_create_key() {
 
 #[tokio::test]
 async fn test_delete_key() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+    let client = create_client().await;
+
 
     let custom_key_store_id = "cks-1234567890abcdef0".to_string();
 
@@ -31,10 +38,9 @@ async fn test_delete_key() {
 
 #[tokio::test]
 async fn test_describe_key() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+    let client = create_client().await;
 
-    let key_id = "1234abcd-12ab-34cd-56ef-1234567890ab".to_string();
+    let key_id = "07bfea74-a123-4760-8cb8-fa1a168983b8".to_string();
     let grant_tokens = None;
 
     let result = describe_key(&client, key_id, grant_tokens).await;
@@ -43,12 +49,11 @@ async fn test_describe_key() {
 
 #[tokio::test]
 async fn test_put_key_policy() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+    let client = create_client().await;
 
-    let key_id = "1234abcd-12ab-34cd-56ef-1234567890ab".to_string();
+    let key_id = "07bfea74-a123-4760-8cb8-fa1a168983b8".to_string();
     let policy_name = "default".to_string();
-    let policy = r#"{"Version": "2012-10-17","Statement": [{"Sid": "Enable IAM User Permissions","Effect": "Allow","Principal": {"AWS": "arn:aws:iam::111122223333:root"},"Action": "kms:*","Resource": "*"}]}"#.to_string();
+    let policy = r#"{"Version": "2012-10-17","Statement": [{"Sid": "Enable IAM User Permissions","Effect": "Allow","Principal": {"AWS": "arn:aws:iam::167355850481:user/rustcloud-testing-delete-asap"},"Action": "kms:*","Resource": "*"}]}"#.to_string();
     let bypass_policy_lockout_safety_check = None;
 
     let result = put_key_policy(&client, key_id, policy_name, policy, bypass_policy_lockout_safety_check).await;
@@ -56,11 +61,10 @@ async fn test_put_key_policy() {
 }
 
 #[tokio::test]
-async fn test_update() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+async fn test_update_key() {
+    let client = create_client().await;
 
-    let key_id = "1234abcd-12ab-34cd-56ef-1234567890ab".to_string();
+    let key_id = "07bfea74-a123-4760-8cb8-fa1a168983b8".to_string();
     let description = Some("Updated Test Key".to_string());
 
     let result = update(&client, key_id, description).await;

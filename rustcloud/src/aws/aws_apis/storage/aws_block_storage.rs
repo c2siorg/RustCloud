@@ -19,9 +19,18 @@ pub async fn create(
         .set_encrypted(encrypted)
         .set_kms_key_id(kms_key_id)
         .send()
-        .await?;
+        .await;
+    match resp {
+        Ok(result) =>{        
+            println!("create: {:?}", result);
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error : {:?}", e);
+            Err(e.into())
+        }
+    }
 
-    Ok(())
 }
 
 pub async fn delete(client: &Client, volume_id: String) -> Result<(), Error> {
@@ -29,9 +38,18 @@ pub async fn delete(client: &Client, volume_id: String) -> Result<(), Error> {
         .delete_volume()
         .volume_id(volume_id)
         .send()
-        .await?;
+        .await;
+    match resp {
+        Ok(result) =>{        
+            println!("delete: {:?}", result);
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error : {:?}", e);
+            Err(e.into())
+        }
+    }
 
-    Ok(())
 }
 
 pub async fn describe(
@@ -44,9 +62,18 @@ pub async fn describe(
         .volume_id(volume_id)
         .attribute(attribute)
         .send()
-        .await?;
+        .await;
+    match resp {
+        Ok(result) =>{        
+            println!("describe: {:?}", result);
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error : {:?}", e);
+            Err(e.into())
+        }
+    }
 
-    Ok(())
 }
 
 pub async fn list(
@@ -71,7 +98,16 @@ pub async fn list(
         request = request.next_token(token);
     }
 
-    let resp = request.send().await?;
+    let resp = request.send().await;
+    match resp {
+        Ok(result) =>{        
+            println!("descibe: {:?}", result);
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error : {:?}", e);
+            Err(e.into())
+        }
+    }
 
-    Ok(())
 }

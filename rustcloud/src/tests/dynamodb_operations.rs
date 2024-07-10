@@ -5,11 +5,17 @@ use aws_sdk_dynamodb::types::{AttributeDefinition, AttributeValue, BillingMode, 
 };
 use std::collections::HashMap;
 
+
+async fn create_client() -> Client {
+    let config =  aws_config::load_from_env().await;
+    let client =  Client::new(&config);
+    return client;
+}
+
 #[tokio::test]
 async fn test_create_table() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
-    
+    let client = create_client().await;
+
     let table_name = "test-table".to_string();
     let attribute_definitions = AttributeDefinition::builder()
         .attribute_name("id")
@@ -30,26 +36,25 @@ async fn test_create_table() {
         attribute_definitions,
         table_name,
         key_schema,
-        LocalSecondaryIndex::builder().build().unwrap(),  // LocalSecondaryIndex
-        GlobalSecondaryIndex::builder().build().unwrap(),  // GlobalSecondaryIndex
+        None,
+        None,
         BillingMode::Provisioned,
         provisioned_throughput,
-        StreamSpecification::builder().build().unwrap(),
-        SseSpecification::builder().build(),
+        None,
+        None,
         None,  // tags
         TableClass::Standard,
         Some(false),  // deletion_protection_enabled
         None,  // resource_policy
         None,  // on_demand_throughput
-    );
+    ).await;
     
     assert!(result.is_ok());
 }
 
 #[tokio::test]
 async fn test_delete_item() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+    let client = create_client().await;
     
     let table_name = "test-table".to_string();
     let mut key = HashMap::new();
@@ -75,8 +80,7 @@ async fn test_delete_item() {
 
 #[tokio::test]
 async fn test_delete_table() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+    let client = create_client().await;
     
     let table_name = "test-table".to_string();
 
@@ -87,8 +91,7 @@ async fn test_delete_table() {
 
 #[tokio::test]
 async fn test_query() {
-    let config = Config::builder().region(Region::new("us-east-1")).build();
-    let client = Client::from_conf(config);
+    let client = create_client().await;
     
     let table_name = "test-table".to_string();
     let mut key_conditions = HashMap::new();
