@@ -172,3 +172,4 @@ pub async fn stop_instance(client: &Client, id: &str) -> Result<(), Error> {
         }
     }
 }
+

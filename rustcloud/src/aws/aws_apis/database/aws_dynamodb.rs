@@ -81,17 +81,3 @@ pub async fn query(client: &Client, table_name: String, index_name: Option<Strin
     }
 
 }
-
-
-// pub async fn update_item(client: &Client, table_name: String, index_name: Option<String>, select: Option<Select>, attributes_to_get: Option<Vec<String>>, limit: Option<i32>, consistent_read: Option<bool>, key_conditions: Option<HashMap<String, Condition>>, query_filter: Option<HashMap<String, Condition>>, conditional_operator: Option<ConditionalOperator>, scan_index_forward: Option<bool>,exclusive_start_key: Option<HashMap<String, AttributeValue>>,return_consumed_capacity: Option<ReturnConsumedCapacity>, projection_expression: Option<String>, filter_expression: Option<String>,key_condition_expression: Option<String>,expression_attribute_names: Option<HashMap<String, String>>,expression_attribute_values: Option<HashMap<String, AttributeValue>>) -> Result<(), Error> {
-    
-//     let query = client.update_item().table_name(table_name).set_index_name(index_name).set_select(select).set_attributes_to_get(attributes_to_get).set_limit(limit).set_consistent_read(consistent_read).set_key_conditions(key_conditions).set_query_filter(query_filter).set_conditional_operator(conditional_operator).set_scan_index_forward(scan_index_forward).set_exclusive_start_key(exclusive_start_key).set_return_consumed_capacity(return_consumed_capacity).set_projection_expression(projection_expression).set_filter_expression(filter_expression).set_key_condition_expression(key_condition_expression).set_expression_attribute_names(expression_attribute_names).set_expression_attribute_values(expression_attribute_values).send().await?;
-    
-
-//     println!("table queried: {:?}", query);
-
-//     Ok(())
-// }
-
-
-

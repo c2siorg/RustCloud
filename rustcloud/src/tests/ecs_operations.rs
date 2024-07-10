@@ -14,6 +14,7 @@ async fn create_client() -> Client {
 async fn test_create_ecs_cluster() {
     let client = create_client().await;
 
+
     let name = "test-cluster".to_string();
     let tags = Some(vec![
         Tag::builder().key("Environment").value("Test").build(),
@@ -26,6 +27,7 @@ async fn test_create_ecs_cluster() {
     let configuration = ClusterConfiguration::builder().build(); // Replace with your desired configuration
     let capacity_providers = None; // Replace with your desired capacity providers if any
 
+
     let result = create_cluster(&client, &name, tags, settings, configuration, capacity_providers).await;
     assert!(result.is_ok());
 }
@@ -34,7 +36,8 @@ async fn test_create_ecs_cluster() {
 async fn test_delete_ecs_cluster() {
     let client = create_client().await;
 
-    let name = "test-cluster".to_string(); // Replace with an existing cluster name
+
+    let name = "test-cluster".to_string(); 
 
     let result = delete_cluster(&client, &name).await;
     assert!(result.is_ok());
@@ -48,6 +51,7 @@ async fn test_describe_ecs_cluster() {
     let clusters = Some(vec!["test-cluster".to_string()]); // Optionally specify cluster names to describe
     let include = None; // Optionally specify fields to include in the description
 
+
     let result = describe_cluster(&client, clusters, include).await;
     assert!(result.is_ok());
 }
@@ -58,6 +62,7 @@ async fn test_show_ecs_clusters() {
 
 
     let max_results = Some(10);
+
 
     let result = show_clusters(&client, max_results).await;
     assert!(result.is_ok());
