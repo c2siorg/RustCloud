@@ -41,6 +41,7 @@ async fn test_enable_monitoring() {
 
     let instance_id = "i-0a06238e5fc156e3f";
 
+
     let result = enable_monitoring(&client, instance_id).await;
     assert!(result.is_ok());
 }
@@ -52,6 +53,7 @@ async fn test_reboot_instance() {
     
     let instance_id = "i-0a06238e5fc156e3f"; // Replace with a valid instance ID
     
+
     let result = reboot_instance(&client, instance_id).await;
     assert!(result.is_ok());
 }
