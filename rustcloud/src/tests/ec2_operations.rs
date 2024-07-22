@@ -22,7 +22,7 @@ async fn test_create_instance() {
 #[tokio::test]
 async fn test_show_state() {
     let client = create_client().await;
-    let ids =  Some((vec!["i-0a06238e5fc156e3f".to_string()]));
+    let ids =  Some((vec!["i-0374a5ac799ffd4d2".to_string()]));
     let result = show_state(&client, ids).await;
     assert!(result.is_ok());
 }
@@ -70,9 +70,10 @@ async fn test_start_instance() {
 async fn test_stop_instance() {
     let client = create_client().await;
 
-    let instance_id = "i-0a06238e5fc156e3f"; // Replace with a valid instance ID
+    let instance_id = "i-0271bcdf16391102c"; // Replace with a valid instance ID
 
     let result = stop_instance(&client, instance_id).await;
     assert!(result.is_ok());
 }
 
+// Add terminate instance 

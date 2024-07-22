@@ -46,7 +46,7 @@ async fn test_describe_loadbalancer() {
 #[tokio::test]
 async fn test_list_load_balancers() {
     let client = create_client().await;
-    let result = list_load_balancers(&client, "my-load-balancer".to_string(), "marker".to_string(), 10).await;
+    let result = list_load_balancers(&client, None, None, Some(10)).await;
 
     assert!(result.is_ok());
 }

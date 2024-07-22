@@ -61,8 +61,8 @@ pub async fn describe(client: &Client, load_balancer_name: String) -> Result<(),
         }
     }
 }
-pub async fn list_load_balancers(client: &Client, load_balancer_names: String,marker: String,page_size: i32) -> Result<(), Error> {
-    let resp = client.describe_load_balancers().load_balancer_names(load_balancer_names).marker(marker).page_size(page_size).send().await;
+pub async fn list_load_balancers(client: &Client, load_balancer_names: Option<Vec<String>>,marker: Option<String>,page_size: Option<i32>) -> Result<(), Error> {
+    let resp = client.describe_load_balancers().set_load_balancer_names(load_balancer_names).set_marker(marker).set_page_size(page_size).send().await;
     match resp {
         Ok(result) =>{        
             println!("{:?}", result);
