@@ -1,8 +1,8 @@
-use reqwest::Client;
+use reqwest::{Client, header::AUTHORIZATION};
 use serde_json::json;
 use crate::gcp::types::database::gcp_bigtable_types::*;
 use serde_json::to_string;
-
+use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
 
 pub struct Bigtable {
     client: Client,
@@ -19,20 +19,24 @@ impl Bigtable {
         }
     }
 
-    pub async fn list_tables(&self, parent: &str, page_token: Option<&str>, view: Option<&str>) -> Result<serde_json::Value, reqwest::Error> {
+    pub async fn list_tables(&self, parent: &str, page_token: Option<&str>, view: Option<&str>) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
         let url = format!("{}/v2/{}/tables", self.base_url, parent);
-        
-        let mut request_builder = self.client.get(&url);
 
+        let mut request_builder = self.client.get(&url);
         if let Some(token) = page_token {
             request_builder = request_builder.query(&[("pageToken", token)]);
         }
-
         if let Some(view) = view {
             request_builder = request_builder.query(&[("view", view)]);
         }
 
-        let response = request_builder.header("Content-Type", "application/json").send().await?;
+        let token = retrieve_token().await?;
+        let response = request_builder
+            .header("Content-Type", "application/json")
+            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .send()
+            .await?;
+
         let status = response.status();
         let body = response.text().await?;
 
@@ -42,10 +46,17 @@ impl Bigtable {
         }))
     }
 
-    pub async fn delete_tables(&self, name: &str) -> Result<serde_json::Value, reqwest::Error> {
+    pub async fn delete_tables(&self, name: &str) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
         let url = format!("{}/v2/{}", self.base_url, name);
 
-        let response = self.client.delete(&url).header("Content-Type", "application/json").send().await?;
+        let token = retrieve_token().await?;
+        let response = self.client
+            .delete(&url)
+            .header("Content-Type", "application/json")
+            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .send()
+            .await?;
+
         let status = response.status();
         let body = response.text().await?;
 
@@ -55,10 +66,17 @@ impl Bigtable {
         }))
     }
 
-    pub async fn describe_tables(&self, name: &str) -> Result<serde_json::Value, reqwest::Error> {
+    pub async fn describe_tables(&self, name: &str) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
         let url = format!("{}/v2/{}", self.base_url, name);
 
-        let response = self.client.get(&url).header("Content-Type", "application/json").send().await?;
+        let token = retrieve_token().await?;
+        let response = self.client
+            .get(&url)
+            .header("Content-Type", "application/json")
+            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .send()
+            .await?;
+
         let status = response.status();
         let body = response.text().await?;
 
@@ -68,7 +86,7 @@ impl Bigtable {
         }))
     }
 
-    pub async fn create_tables(&self, parent: &str, table_id: &str, table: Table, initial_splits: Vec<InitialSplits>, cluster_states: ClusterStates) -> Result<serde_json::Value, reqwest::Error> {
+    pub async fn create_tables(&self, parent: &str, table_id: &str, table: Table, initial_splits: Vec<InitialSplits>, cluster_states: ClusterStates) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
         let url = format!("{}/v2/{}/tables", self.base_url, parent);
 
         let create_bigtable = CreateBigtable {
@@ -78,9 +96,13 @@ impl Bigtable {
             cluster_states,
         };
         let body = to_string(&create_bigtable).unwrap();
-        let response = self.client.post(&url)
+
+        let token = retrieve_token().await?;
+        let response = self.client
+            .post(&url)
             .body(body)
             .header("Content-Type", "application/json")
+            .header(AUTHORIZATION, format!("Bearer {}", token))
             .send()
             .await?;
 
@@ -93,12 +115,3 @@ impl Bigtable {
         }))
     }
 }
-
-// #[tokio::main]
-// async fn main() {
-//     let bigtable = Bigtable::new("https://bigtableadmin.googleapis.com", "your-project-id");
-
-//     // Example call to list_tables
-//     let response = bigtable.list_tables("projects/your-project-id/instances/your-instance-id", None, Some("FULL")).await.unwrap();
-//     println!("{:?}", response);
-// }

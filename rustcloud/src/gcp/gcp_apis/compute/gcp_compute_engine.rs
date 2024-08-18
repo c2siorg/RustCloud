@@ -1,8 +1,11 @@
-use reqwest::{Client, Method};
+use reqwest::{Client, Method, header::AUTHORIZATION};
 use serde_json::json;
 use std::collections::HashMap;
 
-pub struct GCE{
+// Assuming the token retrieval function is in a module named 'auth'
+use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
+
+pub struct GCE {
     client: Client,
     base_url: String,
 }
@@ -15,7 +18,7 @@ impl GCE {
         }
     }
 
-    pub async fn create_node(&self, request: HashMap<String, serde_json::Value>) -> Result<HashMap<String, String>, reqwest::Error> {
+    pub async fn create_node(&self, request: HashMap<String, serde_json::Value>) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let mut project_id = String::new();
         let mut zone = String::new();
         let mut gce_instance = HashMap::new();
@@ -141,11 +144,14 @@ impl GCE {
             }
         }
 
+
         let gce_instance_json = serde_json::to_string(&gce_instance).unwrap();
         let url = format!("{}/projects/{}/zones/{}/instances", self.base_url, project_id, zone);
 
+        let token = retrieve_token().await?;
         let response = self.client.post(&url)
             .header("Content-Type", "application/json")
+            .header(AUTHORIZATION, format!("Bearer {}", token))
             .body(gce_instance_json)
             .send()
             .await?;
@@ -160,15 +166,16 @@ impl GCE {
         Ok(create_node_response)
     }
 
-    pub async fn start_node(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, reqwest::Error> {
+    pub async fn start_node(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let project_id = request.get("projectid").unwrap();
         let zone = request.get("Zone").unwrap();
         let instance = request.get("instance").unwrap();
         let url = format!("{}/v1/projects/{}/zones/{}/instances/{}/start", self.base_url, project_id, zone, instance);
 
-        
+        let token = retrieve_token().await?;
         let response = self.client.post(&url)
             .header("Content-Type", "application/json")
+            .header(AUTHORIZATION, format!("Bearer {}", token))
             .send()
             .await?;
 
@@ -182,14 +189,16 @@ impl GCE {
         Ok(start_node_response)
     }
 
-    pub async fn stop_node(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, reqwest::Error> {
+    pub async fn stop_node(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let project_id = request.get("projectid").unwrap();
         let zone = request.get("Zone").unwrap();
         let instance = request.get("instance").unwrap();
         let url = format!("{}/projects/{}/zones/{}/instances/{}/stop", self.base_url, project_id, zone, instance);
 
+        let token = retrieve_token().await?;
         let response = self.client.post(&url)
             .header("Content-Type", "application/json")
+            .header(AUTHORIZATION, format!("Bearer {}", token))
             .send()
             .await?;
 
@@ -203,14 +212,16 @@ impl GCE {
         Ok(stop_node_response)
     }
 
-    pub async fn delete_node(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, reqwest::Error> {
+    pub async fn delete_node(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let project_id = request.get("projectid").unwrap();
         let zone = request.get("Zone").unwrap();
         let instance = request.get("instance").unwrap();
         let url = format!("{}/projects/{}/zones/{}/instances/{}", self.base_url, project_id, zone, instance);
 
+        let token = retrieve_token().await?;
         let response = self.client.delete(&url)
             .header("Content-Type", "application/json")
+            .header(AUTHORIZATION, format!("Bearer {}", token))
             .send()
             .await?;
 
@@ -224,14 +235,16 @@ impl GCE {
         Ok(delete_node_response)
     }
 
-    pub async fn reboot_node(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, reqwest::Error> {
+    pub async fn reboot_node(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let project_id = request.get("projectid").unwrap();
         let zone = request.get("Zone").unwrap();
         let instance = request.get("instance").unwrap();
         let url = format!("{}/projects/{}/zones/{}/instances/{}/reset", self.base_url, project_id, zone, instance);
 
+        let token = retrieve_token().await?;
         let response = self.client.post(&url)
             .header("Content-Type", "application/json")
+            .header(AUTHORIZATION, format!("Bearer {}", token))
             .send()
             .await?;
 
@@ -245,13 +258,15 @@ impl GCE {
         Ok(reboot_node_response)
     }
 
-    pub async fn list_node(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, reqwest::Error> {
+    pub async fn list_node(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let project_id = request.get("projectid").unwrap();
         let zone = request.get("Zone").unwrap();
         let url = format!("{}/projects/{}/zones/{}/instances/", self.base_url, project_id, zone);
 
-        let response = self.client.request(Method::POST, &url)
+        let token = retrieve_token().await?;
+        let response = self.client.request(Method::GET, &url)
             .header("Content-Type", "application/json")
+            .header(AUTHORIZATION, format!("Bearer {}", token))
             .send()
             .await?;
 

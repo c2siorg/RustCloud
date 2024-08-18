@@ -1,11 +1,10 @@
-use reqwest::{Client, Response};
+use reqwest::{Client, Response, header::AUTHORIZATION};
 use crate::gcp::types::artificial_intelligence::gcp_automl_types::*;
 use serde_json::to_string;
 use std::collections::HashMap;
 
-
-
-
+// Assuming the token retrieval function is in a module named 'auth'
+use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
 
 pub struct AutoML {
     client: Client,
@@ -14,15 +13,15 @@ pub struct AutoML {
 }
 
 impl AutoML {
-    pub fn new(base_url: &str, project_id: &str) -> Self {
+    pub fn new(project_id: &str) -> Self {
         Self {
             client: Client::new(),
-            base_url: base_url.to_string(),
+            base_url: "https://automl.googleapis.com".to_string(),
             project_id: project_id.to_string(),
         }
     }
 
-    pub async fn create_dataset(&self, location: &str, name: &str) -> Result<reqwest::Response, reqwest::Error> {
+    pub async fn create_dataset(&self, location: &str, name: &str) -> Result<Response, Box<dyn std::error::Error>> {
         let url = format!("{}/v1/projects/{}/locations/{}/datasets", self.base_url, self.project_id, location);
         let request = CreateDatasetRequest {
             parent: format!("projects/{}/locations/{}", self.project_id, location),
@@ -32,19 +31,28 @@ impl AutoML {
             },
         };
         let body = to_string(&request).unwrap();
+        let token = retrieve_token().await?;
         self.client
             .post(&url)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
             .body(body)
             .send()
             .await
+            .map_err(|e| e.into())
     }
 
-    pub async fn get_dataset(&self, location: &str, dataset_id: &str) -> Result<reqwest::Response, reqwest::Error> {
+    pub async fn get_dataset(&self, location: &str, dataset_id: &str) -> Result<Response, Box<dyn std::error::Error>> {
         let url = format!("{}/v1/projects/{}/locations/{}/datasets/{}", self.base_url, self.project_id, location, dataset_id);
-        self.client.get(&url).send().await
+        let token = retrieve_token().await?;
+        self.client
+            .get(&url)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .send()
+            .await
+            .map_err(|e| e.into())
     }
 
-    pub async fn import_data_set(&self, location: &str, dataset_id: &str, uris: Vec<String>) -> Result<reqwest::Response, reqwest::Error> {
+    pub async fn import_data_set(&self, location: &str, dataset_id: &str, uris: Vec<String>) -> Result<Response, Box<dyn std::error::Error>> {
         let url = format!("{}/v1/projects/{}/locations/{}/datasets/{}:importData", self.base_url, self.project_id, location, dataset_id);
         let request = ImportDataSetRequest {
             name: format!("projects/{}/locations/{}/datasets/{}", self.project_id, location, dataset_id),
@@ -55,19 +63,28 @@ impl AutoML {
             },
         };
         let body = to_string(&request).unwrap();
+        let token = retrieve_token().await?;
         self.client
             .post(&url)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
             .body(body)
             .send()
             .await
+            .map_err(|e| e.into())
     }
 
-    pub async fn list_models(&self, location: &str) -> Result<reqwest::Response, reqwest::Error> {
+    pub async fn list_models(&self, location: &str) -> Result<Response, Box<dyn std::error::Error>> {
         let url = format!("{}/v1/projects/{}/locations/{}/models", self.base_url, self.project_id, location);
-        self.client.get(&url).send().await
+        let token = retrieve_token().await?;
+        self.client
+            .get(&url)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .send()
+            .await
+            .map_err(|e| e.into())
     }
 
-    pub async fn create_model(&self, location: &str, dataset_id: &str, model_name: &str, column_id: &str, train_budget: i64) -> Result<reqwest::Response, reqwest::Error> {
+    pub async fn create_model(&self, location: &str, dataset_id: &str, model_name: &str, column_id: &str, train_budget: i64) -> Result<Response, Box<dyn std::error::Error>> {
         let url = format!("{}/v1/projects/{}/locations/{}/models", self.base_url, self.project_id, location);
         let request = CreateModelRequest {
             parent: format!("projects/{}/locations/{}", self.project_id, location),
@@ -83,45 +100,60 @@ impl AutoML {
             },
         };
         let body = to_string(&request).unwrap();
+        let token = retrieve_token().await?;
         self.client
             .post(&url)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
             .body(body)
             .send()
             .await
+            .map_err(|e| e.into())
     }
 
-    pub async fn deploy_model(&self, location: &str, model_id: &str) -> Result<reqwest::Response, reqwest::Error> {
+    pub async fn deploy_model(&self, location: &str, model_id: &str) -> Result<Response, Box<dyn std::error::Error>> {
         let url = format!("{}/v1/projects/{}/locations/{}/models/{}:deploy", self.base_url, self.project_id, location, model_id);
         let request = DeployModelRequest {
             name: format!("projects/{}/locations/{}/models/{}", self.project_id, location, model_id),
         };
         let body = to_string(&request).unwrap();
+        let token = retrieve_token().await?;
         self.client
             .post(&url)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
             .body(body)
             .send()
             .await
+            .map_err(|e| e.into())
     }
 
-    pub async fn undeploy_model(&self, location: &str, model_id: &str) -> Result<reqwest::Response, reqwest::Error> {
+    pub async fn undeploy_model(&self, location: &str, model_id: &str) -> Result<Response, Box<dyn std::error::Error>> {
         let url = format!("{}/v1/projects/{}/locations/{}/models/{}:undeploy", self.base_url, self.project_id, location, model_id);
         let request = UndeployModelRequest {
             name: format!("projects/{}/locations/{}/models/{}", self.project_id, location, model_id),
         };
         let body = to_string(&request).unwrap();
+        let token = retrieve_token().await?;
         self.client
             .post(&url)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
             .body(body)
             .send()
             .await
+            .map_err(|e| e.into())
     }
 
-    pub async fn get_model(&self, location: &str, model_id: &str) -> Result<reqwest::Response, reqwest::Error> {
+    pub async fn get_model(&self, location: &str, model_id: &str) -> Result<Response, Box<dyn std::error::Error>> {
         let url = format!("{}/v1/projects/{}/locations/{}/models/{}", self.base_url, self.project_id, location, model_id);
-        self.client.get(&url).send().await
+        let token = retrieve_token().await?;
+        self.client
+            .get(&url)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .send()
+            .await
+            .map_err(|e| e.into())
     }
 
-    pub async fn export_dataset(&self, location: &str, dataset_id: &str, gcs_uri: &str) -> Result<reqwest::Response, reqwest::Error> {
+    pub async fn export_dataset(&self, location: &str, dataset_id: &str, gcs_uri: &str) -> Result<Response, Box<dyn std::error::Error>> {
         let url = format!("{}/v1/projects/{}/locations/{}/datasets/{}:exportData", self.base_url, self.project_id, location, dataset_id);
         let request = ExportDatasetRequest {
             name: format!("projects/{}/locations/{}/datasets/{}", self.project_id, location, dataset_id),
@@ -132,20 +164,35 @@ impl AutoML {
             },
         };
         let body = to_string(&request).unwrap();
+        let token = retrieve_token().await?;
         self.client
             .post(&url)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
             .body(body)
             .send()
             .await
+            .map_err(|e| e.into())
     }
 
-    pub async fn delete_model(&self, location: &str, model_id: &str) -> Result<reqwest::Response, reqwest::Error> {
+    pub async fn delete_model(&self, location: &str, model_id: &str) -> Result<Response, Box<dyn std::error::Error>> {
         let url = format!("{}/v1/projects/{}/locations/{}/models/{}", self.base_url, self.project_id, location, model_id);
-        self.client.delete(&url).send().await
+        let token = retrieve_token().await?;
+        self.client
+            .delete(&url)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .send()
+            .await
+            .map_err(|e| e.into())
     }
 
-    pub async fn delete_dataset(&self, location: &str, dataset_id: &str) -> Result<reqwest::Response, reqwest::Error> {
+    pub async fn delete_dataset(&self, location: &str, dataset_id: &str) -> Result<Response, Box<dyn std::error::Error>> {
         let url = format!("{}/v1/projects/{}/locations/{}/datasets/{}", self.base_url, self.project_id, location, dataset_id);
-        self.client.delete(&url).send().await
+        let token = retrieve_token().await?;
+        self.client
+            .delete(&url)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .send()
+            .await
+            .map_err(|e| e.into())
     }
 }

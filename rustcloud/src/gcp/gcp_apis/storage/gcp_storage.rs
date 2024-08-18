@@ -1,6 +1,7 @@
 use serde_json::Value;
 use std::collections::HashMap;
-use std::io::Read;
+use reqwest::header::AUTHORIZATION;
+use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
 
 struct GoogleStorage {
     client: reqwest::Client,
@@ -50,23 +51,23 @@ impl GoogleStorage {
                 _ => {},
             }
         }
-
+        
         option.insert("Zone", &Value::String(format!("projects/{}/zones/{}", project_id, zone)));
         option.insert("Type", &Value::String(format!("projects/{}/zones/{}/diskTypes/{}", project_id, zone, disk_type)));
 
         let create_disk_json = serde_json::to_string(&option).unwrap();
         let url = format!("{}/projects/{}/zones/{}/disks", self.base_url, project_id, zone);
+        let token = retrieve_token().await.unwrap();
 
         let resp = self.client.post(&url)
             .header("Content-Type", "application/json")
+            .header(AUTHORIZATION, token)
             .body(create_disk_json)
             .send()
             .await?;
 
         let mut body = String::new();
-        resp.read_to_string(&mut body)?;
-
-        let mut response = HashMap::new();
+        let mut response: HashMap<String, Value> = HashMap::new();
         response.insert("status".to_string(), Value::Number(resp.status().as_u16().into()));
         response.insert("body".to_string(), Value::String(body));
         
@@ -75,14 +76,14 @@ impl GoogleStorage {
 
     async fn delete_disk(&self, request: HashMap<String, String>) -> Result<HashMap<String, Value>, reqwest::Error> {
         let url = format!("{}/projects/{}/zones/{}/disks/{}", self.base_url, request["projectid"], request["Zone"], request["disk"]);
-
+        let token = retrieve_token().await.unwrap();
         let resp = self.client.delete(&url)
             .header("Content-Type", "application/json")
+            .header(AUTHORIZATION, token)
             .send()
             .await?;
 
         let mut body = String::new();
-        resp.read_to_string(&mut body)?;
 
         let mut response = HashMap::new();
         response.insert("status".to_string(), Value::Number(resp.status().as_u16().into()));
@@ -124,15 +125,16 @@ impl GoogleStorage {
 
         let create_snapshot_json = serde_json::to_string(&snapshot).unwrap();
         let url = format!("{}/projects/{}/zones/{}/disks/{}/createSnapshot", self.base_url, project_id, zone, disk);
+        let token = retrieve_token().await.unwrap();
 
         let resp = self.client.post(&url)
             .header("Content-Type", "application/json")
+            .header(AUTHORIZATION, token)
             .body(create_snapshot_json)
             .send()
             .await?;
 
         let mut body = String::new();
-        resp.read_to_string(&mut body)?;
 
         let mut response = HashMap::new();
         response.insert("status".to_string(), Value::Number(resp.status().as_u16().into()));
@@ -140,45 +142,4 @@ impl GoogleStorage {
         
         Ok(response)
     }
-}
-
-#[tokio::main]
-async fn main() {
-    let google_storage = GoogleStorage::new();
-
-    // Example request for creating a disk
-    let mut create_disk_request = HashMap::new();
-    create_disk_request.insert("projectid".to_string(), Value::String("your_project_id".to_string()));
-    create_disk_request.insert("Name".to_string(), Value::String("disk_name".to_string()));
-    create_disk_request.insert("Zone".to_string(), Value::String("zone".to_string()));
-    create_disk_request.insert("Type".to_string(), Value::String("pd-standard".to_string()));
-    create_disk_request.insert("SizeGb".to_string(), Value::Number(10.into()));
-    
-    match google_storage.create_disk(create_disk_request).await {
-        Ok(response) => println!("{:?}", response),
-        Err(e) => println!("Error: {:?}", e),
-    };
-
-    // Example request for deleting a disk
-    let mut delete_disk_request = HashMap::new();
-    delete_disk_request.insert("projectid".to_string(), "your_project_id".to_string());
-    delete_disk_request.insert("Zone".to_string(), "zone".to_string());
-    delete_disk_request.insert("disk".to_string(), "disk_name".to_string());
-
-    match google_storage.delete_disk(delete_disk_request).await {
-        Ok(response) => println!("{:?}", response),
-        Err(e) => println!("Error: {:?}", e),
-    };
-
-    // Example request for creating a snapshot
-    let mut create_snapshot_request = HashMap::new();
-    create_snapshot_request.insert("projectid".to_string(), Value::String("your_project_id".to_string()));
-    create_snapshot_request.insert("Name".to_string(), Value::String("snapshot_name".to_string()));
-    create_snapshot_request.insert("Zone".to_string(), Value::String("zone".to_string()));
-    create_snapshot_request.insert("disk".to_string(), Value::String("disk_name".to_string()));
-    
-    match google_storage.create_snapshot(create_snapshot_request).await {
-        Ok(response) => println!("{:?}", response),
-        Err(e) => println!("Error: {:?}", e),
-    };
 }

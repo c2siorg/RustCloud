@@ -1,15 +1,13 @@
-use reqwest::Client;
+use reqwest::{Client, header::AUTHORIZATION};
 use serde_json::to_string;
 use std::collections::HashMap;
 use std::error::Error;
 use chrono::Utc;
 use crate::gcp::types::network::gcp_loadbalancer_types::*;
-
+use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
 
 const UNIX_DATE: &str = "%a %b %e %H:%M:%S %Z %Y";
 const RFC3339: &str = "%Y-%m-%dT%H:%M:%S%.f%:z";
-
-
 
 pub struct GoogleLoadBalancer {
     client: Client,
@@ -18,12 +16,17 @@ pub struct GoogleLoadBalancer {
 }
 
 impl GoogleLoadBalancer {
-    pub fn new(base_url: &str, project: &str) -> Self {
+    pub fn new(project: &str) -> Self {
         Self {
             client: Client::new(),
             base_url: "https://www.googleapis.com".to_string(),
             project: project.to_string(),
         }
+    }
+
+    async fn get_authorization_header(&self) -> Result<String, Box<dyn Error>> {
+        let token = retrieve_token().await?;
+        Ok(format!("Bearer {}", token))
     }
 
     pub async fn create_load_balancer(&self, param: &HashMap<&str, &str>) -> Result<reqwest::Response, Box<dyn Error>> {
@@ -67,7 +70,9 @@ impl GoogleLoadBalancer {
         let body = to_string(&option)?;
         let url = format!("{}/compute/beta/projects/{}/regions/{}/targetPools", self.base_url, project, region);
 
+        let auth_header = self.get_authorization_header().await?;
         let response = self.client.post(&url)
+            .header(AUTHORIZATION, auth_header)
             .header("Content-Type", "application/json")
             .body(body)
             .send()
@@ -79,7 +84,9 @@ impl GoogleLoadBalancer {
     pub async fn delete_load_balancer(&self, options: &HashMap<&str, &str>) -> Result<reqwest::Response, Box<dyn Error>> {
         let url = format!("{}/compute/beta/projects/{}/regions/{}/targetPools/{}", self.base_url, options["Project"], options["Region"], options["TargetPool"]);
 
+        let auth_header = self.get_authorization_header().await?;
         let response = self.client.delete(&url)
+            .header(AUTHORIZATION, auth_header)
             .header("Content-Type", "application/json")
             .send()
             .await?;
@@ -90,7 +97,9 @@ impl GoogleLoadBalancer {
     pub async fn list_load_balancer(&self, options: &HashMap<&str, &str>) -> Result<reqwest::Response, Box<dyn Error>> {
         let url = format!("{}/compute/beta/projects/{}/regions/{}/targetPools", self.base_url, options["Project"], options["Region"]);
 
+        let auth_header = self.get_authorization_header().await?;
         let response = self.client.get(&url)
+            .header(AUTHORIZATION, auth_header)
             .header("Content-Type", "application/json")
             .send()
             .await?;
@@ -115,8 +124,10 @@ impl GoogleLoadBalancer {
         json_map.insert("instances", instance_list);
 
         let body = to_string(&json_map)?;
-        
+
+        let auth_header = self.get_authorization_header().await?;
         let response = self.client.post(&url)
+            .header(AUTHORIZATION, auth_header)
             .header("Content-Type", "application/json")
             .body(body)
             .send()
@@ -142,8 +153,10 @@ impl GoogleLoadBalancer {
         json_map.insert("instances", instance_list);
 
         let body = to_string(&json_map)?;
-        
+
+        let auth_header = self.get_authorization_header().await?;
         let response = self.client.post(&url)
+            .header(AUTHORIZATION, auth_header)
             .header("Content-Type", "application/json")
             .body(body)
             .send()

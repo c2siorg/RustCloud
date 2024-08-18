@@ -1,15 +1,13 @@
-use reqwest::Client;
+use reqwest::{Client, header::AUTHORIZATION};
 use serde_json::to_string;
 use std::collections::HashMap;
 use std::error::Error;
 use crate::gcp::types::network::gcp_dns_types::*;
 use chrono;
-
+use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
 
 const UNIX_DATE: &str = "%a %b %e %H:%M:%S %Z %Y";
 const RFC3339: &str = "%Y-%m-%dT%H:%M:%S%.f%:z";
-
-
 
 pub struct GoogleDns {
     client: Client,
@@ -26,8 +24,13 @@ impl GoogleDns {
         }
     }
 
+    async fn get_authorization_header(&self) -> Result<String, Box<dyn Error>> {
+        let token = retrieve_token().await?;
+        Ok(format!("Bearer {}", token))
+    }
+
     pub async fn list_resource_dns_record_sets(&self, options: &HashMap<&str, &str>) -> Result<reqwest::Response, Box<dyn Error>> {
-        let url = format!("{}/dns/v1/projects/{}/managedZones/{}/rrsets", self.base_url, options["project"], options["managedZone"]);
+        let url = format!("{}/dns/v1/projects/{}/managedZones/{}/rrsets", self.base_url, self.project, options["managedZone"]);
         let mut req = self.client.get(&url);
 
         if let Some(max_results) = options.get("maxResults") {
@@ -46,7 +49,8 @@ impl GoogleDns {
             req = req.query(&[("sortOrder", *sort_order)]);
         }
 
-        let response = req.send().await?;
+        let auth_header = self.get_authorization_header().await?;
+        let response = req.header(AUTHORIZATION, auth_header).send().await?;
         Ok(response)
     }
 
@@ -66,7 +70,9 @@ impl GoogleDns {
         let body = to_string(&option).unwrap();
         let url = format!("{}/dns/v1/projects/{}/managedZones", self.base_url, project);
 
+        let auth_header = self.get_authorization_header().await?;
         let response = self.client.post(&url)
+            .header(AUTHORIZATION, auth_header)
             .header("Content-Type", "application/json")
             .body(body)
             .send()
@@ -76,7 +82,7 @@ impl GoogleDns {
     }
 
     pub async fn list_dns(&self, options: &HashMap<&str, &str>) -> Result<reqwest::Response, Box<dyn Error>> {
-        let url = format!("{}/dns/v1/projects/{}/managedZones/", self.base_url, options["Project"]);
+        let url = format!("{}/dns/v1/projects/{}/managedZones/", self.base_url, self.project);
         let mut req = self.client.get(&url);
 
         if let Some(max_results) = options.get("maxResults") {
@@ -87,13 +93,17 @@ impl GoogleDns {
             req = req.query(&[("pageToken", *page_token)]);
         }
 
-        let response = req.send().await?;
+        let auth_header = self.get_authorization_header().await?;
+        let response = req.header(AUTHORIZATION, auth_header).send().await?;
         Ok(response)
     }
 
     pub async fn delete_dns(&self, options: &HashMap<&str, &str>) -> Result<reqwest::Response, Box<dyn Error>> {
-        let url = format!("{}/dns/v1/projects/{}/managedZones/{}", self.base_url, options["Project"], options["managedZone"]);
+        let url = format!("{}/dns/v1/projects/{}/managedZones/{}", self.base_url, self.project, options["managedZone"]);
+
+        let auth_header = self.get_authorization_header().await?;
         let response = self.client.delete(&url)
+            .header(AUTHORIZATION, auth_header)
             .header("Content-Type", "application/json")
             .send()
             .await?;
