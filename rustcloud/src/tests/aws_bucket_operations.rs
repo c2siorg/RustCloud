@@ -1,11 +1,14 @@
-use aws_sdk_s3::{types::{BucketCannedAcl, CreateBucketConfiguration, ObjectOwnership, RequestPayer}, Client, Error};
-use aws_sdk_s3::config::Region;
-use tokio;
 use crate::aws::aws_apis::storage::aws_storage_bucket::*;
+use aws_sdk_s3::config::Region;
+use aws_sdk_s3::{
+    types::{BucketCannedAcl, CreateBucketConfiguration, ObjectOwnership, RequestPayer},
+    Client, Error,
+};
+use tokio;
 
 async fn create_client() -> Client {
-    let config =  aws_config::load_from_env().await;
-    let client =  Client::new(&config);
+    let config = aws_config::load_from_env().await;
+    let client = Client::new(&config);
     return client;
 }
 
@@ -37,10 +40,10 @@ async fn test_create_bucket() {
         grant_write_acp,
         object_lock_enabled_for_bucket,
         object_ownership,
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
-
 }
 
 #[tokio::test]
@@ -75,4 +78,3 @@ async fn test_list_buckets() {
 
     assert!(result.is_ok());
 }
-

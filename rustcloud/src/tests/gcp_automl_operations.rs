@@ -60,7 +60,9 @@ async fn test_create_model() {
     let column_id = "your_column_id";
     let train_budget = 1000;
 
-    let result = client.create_model(location, dataset_id, model_name, column_id, train_budget).await;
+    let result = client
+        .create_model(location, dataset_id, model_name, column_id, train_budget)
+        .await;
     assert!(result.is_ok());
 }
 

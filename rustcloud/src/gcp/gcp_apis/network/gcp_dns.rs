@@ -1,10 +1,10 @@
-use reqwest::{Client, header::AUTHORIZATION};
+use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
+use crate::gcp::types::network::gcp_dns_types::*;
+use chrono;
+use reqwest::{header::AUTHORIZATION, Client};
 use serde_json::to_string;
 use std::collections::HashMap;
 use std::error::Error;
-use crate::gcp::types::network::gcp_dns_types::*;
-use chrono;
-use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
 
 const UNIX_DATE: &str = "%a %b %e %H:%M:%S %Z %Y";
 const RFC3339: &str = "%Y-%m-%dT%H:%M:%S%.f%:z";
@@ -29,8 +29,14 @@ impl GoogleDns {
         Ok(format!("Bearer {}", token))
     }
 
-    pub async fn list_resource_dns_record_sets(&self, options: &HashMap<&str, &str>) -> Result<reqwest::Response, Box<dyn Error>> {
-        let url = format!("{}/dns/v1/projects/{}/managedZones/{}/rrsets", self.base_url, self.project, options["managedZone"]);
+    pub async fn list_resource_dns_record_sets(
+        &self,
+        options: &HashMap<&str, &str>,
+    ) -> Result<reqwest::Response, Box<dyn Error>> {
+        let url = format!(
+            "{}/dns/v1/projects/{}/managedZones/{}/rrsets",
+            self.base_url, self.project, options["managedZone"]
+        );
         let mut req = self.client.get(&url);
 
         if let Some(max_results) = options.get("maxResults") {
@@ -54,13 +60,19 @@ impl GoogleDns {
         Ok(response)
     }
 
-    pub async fn create_dns(&self, param: &HashMap<&str, &str>) -> Result<reqwest::Response, Box<dyn Error>> {
+    pub async fn create_dns(
+        &self,
+        param: &HashMap<&str, &str>,
+    ) -> Result<reqwest::Response, Box<dyn Error>> {
         let project = param["Project"];
         let option = CreateDns {
             creation_time: chrono::Utc::now().to_rfc3339(),
             description: param["Description"].to_string(),
             dns_name: param["DnsName"].to_string(),
-            name_servers: param["nameServers"].split(',').map(|s| s.to_string()).collect(),
+            name_servers: param["nameServers"]
+                .split(',')
+                .map(|s| s.to_string())
+                .collect(),
             id: param["Id"].to_string(),
             kind: param["Kind"].to_string(),
             name: param["Name"].to_string(),
@@ -71,18 +83,26 @@ impl GoogleDns {
         let url = format!("{}/dns/v1/projects/{}/managedZones", self.base_url, project);
 
         let auth_header = self.get_authorization_header().await?;
-        let response = self.client.post(&url)
+        let response = self
+            .client
+            .post(&url)
             .header(AUTHORIZATION, auth_header)
             .header("Content-Type", "application/json")
             .body(body)
             .send()
             .await?;
-        
+
         Ok(response)
     }
 
-    pub async fn list_dns(&self, options: &HashMap<&str, &str>) -> Result<reqwest::Response, Box<dyn Error>> {
-        let url = format!("{}/dns/v1/projects/{}/managedZones/", self.base_url, self.project);
+    pub async fn list_dns(
+        &self,
+        options: &HashMap<&str, &str>,
+    ) -> Result<reqwest::Response, Box<dyn Error>> {
+        let url = format!(
+            "{}/dns/v1/projects/{}/managedZones/",
+            self.base_url, self.project
+        );
         let mut req = self.client.get(&url);
 
         if let Some(max_results) = options.get("maxResults") {
@@ -98,16 +118,24 @@ impl GoogleDns {
         Ok(response)
     }
 
-    pub async fn delete_dns(&self, options: &HashMap<&str, &str>) -> Result<reqwest::Response, Box<dyn Error>> {
-        let url = format!("{}/dns/v1/projects/{}/managedZones/{}", self.base_url, self.project, options["managedZone"]);
+    pub async fn delete_dns(
+        &self,
+        options: &HashMap<&str, &str>,
+    ) -> Result<reqwest::Response, Box<dyn Error>> {
+        let url = format!(
+            "{}/dns/v1/projects/{}/managedZones/{}",
+            self.base_url, self.project, options["managedZone"]
+        );
 
         let auth_header = self.get_authorization_header().await?;
-        let response = self.client.delete(&url)
+        let response = self
+            .client
+            .delete(&url)
             .header(AUTHORIZATION, auth_header)
             .header("Content-Type", "application/json")
             .send()
             .await?;
-        
+
         Ok(response)
     }
 }

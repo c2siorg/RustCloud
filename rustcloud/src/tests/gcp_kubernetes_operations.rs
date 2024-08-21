@@ -11,7 +11,7 @@ async fn test_create_cluster() {
     let client = create_client().await;
 
     let request = CreateClusterRequest {
-        project_id: "your_project_id".to_string(),
+        projectId: "your_project_id".to_string(),
         zone: "your_zone".to_string(),
         // Add other required fields for CreateClusterRequest here.
     };
@@ -66,9 +66,9 @@ async fn test_create_node_pool() {
     let client = create_client().await;
 
     let request = CreateNodePoolRequest {
-        project_id: "your_project_id".to_string(),
+        projectId: "your_project_id".to_string(),
         zone: "your_zone".to_string(),
-        cluster_id: "your_cluster_id".to_string(),
+        clusterId: "your_cluster_id".to_string(),
         // Add other required fields for CreateNodePoolRequest here.
     };
 
@@ -125,9 +125,9 @@ async fn test_set_addons_config() {
     let client = create_client().await;
 
     let request = SetAddonsConfigRequest {
-        project_id: "your_project_id".to_string(),
+        projectId: "your_project_id".to_string(),
         zone: "your_zone".to_string(),
-        cluster_id: "your_cluster_id".to_string(),
+        clusterId: "your_cluster_id".to_string(),
         // Add other required fields for SetAddonsConfigRequest here.
     };
 

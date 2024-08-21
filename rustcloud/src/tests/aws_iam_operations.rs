@@ -1,14 +1,12 @@
 use crate::aws::aws_apis::security::aws_iam::*;
-use aws_sdk_iam::{Client, Config};
 use aws_sdk_iam::config::Region;
-
+use aws_sdk_iam::{Client, Config};
 
 async fn create_client() -> Client {
-    let config =  aws_config::load_from_env().await;
-    let client =  Client::new(&config);
+    let config = aws_config::load_from_env().await;
+    let client = Client::new(&config);
     return client;
 }
-
 
 #[tokio::test]
 async fn test_attach_group_policy() {

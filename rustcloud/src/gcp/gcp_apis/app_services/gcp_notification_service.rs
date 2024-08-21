@@ -1,10 +1,7 @@
-use reqwest::{Client, Method, header::AUTHORIZATION};
+use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
+use reqwest::{header::AUTHORIZATION, Client, Method};
 use serde_json::json;
 use std::collections::HashMap;
-use std::sync::Arc;
-
-// Assuming the token retrieval function is in a module named 'auth'
-use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
 
 #[derive(Debug, Clone)]
 pub struct Googlenotification {
@@ -16,11 +13,14 @@ impl Googlenotification {
     pub fn new() -> Self {
         Self {
             client: Client::new(),
-            base_url: "https://pubsub.googleapis.com".to_string()
+            base_url: "https://pubsub.googleapis.com".to_string(),
         }
     }
 
-    pub async fn list_topic(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
+    pub async fn list_topic(
+        &self,
+        request: HashMap<String, String>,
+    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let project = request.get("Project").expect("Project is required");
         let url = format!("{}/v1/projects/{}/topics", self.base_url, project);
 
@@ -50,13 +50,17 @@ impl Googlenotification {
         Ok(list_topic_response)
     }
 
-    pub async fn get_topic(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
+    pub async fn get_topic(
+        &self,
+        request: HashMap<String, String>,
+    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let project = request.get("Project").expect("Project is required");
         let topic = request.get("Topic").expect("Topic is required");
         let url = format!("{}/v1/projects/{}/topics/{}", self.base_url, project, topic);
 
         let token = retrieve_token().await?;
-        let response = self.client
+        let response = self
+            .client
             .request(Method::GET, &url)
             .header("Content-Type", "application/json")
             .header(AUTHORIZATION, format!("Bearer {}", token))
@@ -73,13 +77,17 @@ impl Googlenotification {
         Ok(get_topic_response)
     }
 
-    pub async fn delete_topic(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
+    pub async fn delete_topic(
+        &self,
+        request: HashMap<String, String>,
+    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let project = request.get("Project").expect("Project is required");
         let topic = request.get("Topic").expect("Topic is required");
         let url = format!("{}/v1/projects/{}/topics/{}", self.base_url, project, topic);
 
         let token = retrieve_token().await?;
-        let response = self.client
+        let response = self
+            .client
             .request(Method::DELETE, &url)
             .header("Content-Type", "application/json")
             .header(AUTHORIZATION, format!("Bearer {}", token))
@@ -96,7 +104,10 @@ impl Googlenotification {
         Ok(delete_topic_response)
     }
 
-    pub async fn create_topic(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
+    pub async fn create_topic(
+        &self,
+        request: HashMap<String, String>,
+    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let project = request.get("Project").expect("Project is required");
         let topic = request.get("Topic").expect("Topic is required");
         let url = format!("{}/v1/projects/{}/topics/{}", self.base_url, project, topic);
@@ -105,7 +116,8 @@ impl Googlenotification {
         let create_topic_json = json!(create_topic_json_map).to_string();
 
         let token = retrieve_token().await?;
-        let response = self.client
+        let response = self
+            .client
             .request(Method::PUT, &url)
             .header("Content-Type", "application/json")
             .header(AUTHORIZATION, format!("Bearer {}", token))

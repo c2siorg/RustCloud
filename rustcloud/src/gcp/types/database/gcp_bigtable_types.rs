@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-
-
 // InitialSplits struct represents InitialSplits.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct InitialSplits {

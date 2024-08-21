@@ -1,7 +1,7 @@
 use crate::gcp::gcp_apis::compute::gcp_compute_engine::*;
+use serde_json::json;
 use std::collections::HashMap;
 use tokio::test;
-use serde_json::json;
 
 async fn create_client() -> GCE {
     GCE::new()

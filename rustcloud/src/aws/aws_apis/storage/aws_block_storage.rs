@@ -1,14 +1,14 @@
+use aws_sdk_ec2::types::{VolumeAttributeName, VolumeType};
 use aws_sdk_ec2::{Client, Error};
-use aws_sdk_ec2::types::{VolumeType, VolumeAttributeName};
 
 pub async fn create(
-    client: &Client, 
-    availability_zone: String, 
+    client: &Client,
+    availability_zone: String,
     size: Option<i32>,
     volume_type: Option<VolumeType>,
     iops: Option<i32>,
     encrypted: Option<bool>,
-    kms_key_id: Option<String>
+    kms_key_id: Option<String>,
 ) -> Result<(), Error> {
     let resp = client
         .create_volume()
@@ -21,7 +21,7 @@ pub async fn create(
         .send()
         .await;
     match resp {
-        Ok(result) =>{        
+        Ok(result) => {
             println!("create: {:?}", result);
             Ok(())
         }
@@ -30,17 +30,12 @@ pub async fn create(
             Err(e.into())
         }
     }
-
 }
 
 pub async fn delete(client: &Client, volume_id: String) -> Result<(), Error> {
-    let resp = client
-        .delete_volume()
-        .volume_id(volume_id)
-        .send()
-        .await;
+    let resp = client.delete_volume().volume_id(volume_id).send().await;
     match resp {
-        Ok(result) =>{        
+        Ok(result) => {
             println!("delete: {:?}", result);
             Ok(())
         }
@@ -49,13 +44,12 @@ pub async fn delete(client: &Client, volume_id: String) -> Result<(), Error> {
             Err(e.into())
         }
     }
-
 }
 
 pub async fn describe(
-    client: &Client, 
-    volume_id: String, 
-    attribute: VolumeAttributeName
+    client: &Client,
+    volume_id: String,
+    attribute: VolumeAttributeName,
 ) -> Result<(), Error> {
     let resp = client
         .describe_volume_attribute()
@@ -64,7 +58,7 @@ pub async fn describe(
         .send()
         .await;
     match resp {
-        Ok(result) =>{        
+        Ok(result) => {
             println!("describe: {:?}", result);
             Ok(())
         }
@@ -73,7 +67,6 @@ pub async fn describe(
             Err(e.into())
         }
     }
-
 }
 
 pub async fn list(
@@ -81,7 +74,7 @@ pub async fn list(
     volume_ids: Option<Vec<String>>,
     filters: Option<Vec<aws_sdk_ec2::types::Filter>>,
     max_results: Option<i32>,
-    next_token: Option<String>
+    next_token: Option<String>,
 ) -> Result<(), Error> {
     let mut request = client.describe_volumes();
 
@@ -100,7 +93,7 @@ pub async fn list(
 
     let resp = request.send().await;
     match resp {
-        Ok(result) =>{        
+        Ok(result) => {
             println!("descibe: {:?}", result);
             Ok(())
         }
@@ -109,5 +102,4 @@ pub async fn list(
             Err(e.into())
         }
     }
-
 }

@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateDns {
     pub creation_time: String,

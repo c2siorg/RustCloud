@@ -1,17 +1,13 @@
-use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
+use serde::{Deserialize, Serialize};
 
 // Define request and response structs based on your API specification
 #[derive(Debug, Serialize)]
 pub struct CreateClusterRequest {
-    pub project_id: String,
+    pub projectId: String,
     pub zone: String,
-    // Add other fields as required
-}
-
-#[derive(Debug, Deserialize)]
-pub struct CreateClusterResponse {
-    // Define fields based on response structure
+    pub cluster: HashMap<String, String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -30,7 +26,6 @@ struct ListClustersResponse {
 pub struct ListClustersRequest {
     pub project_id: String,
     pub zone: String,
-    // Add other fields as required
 }
 
 #[derive(Debug, Serialize)]
@@ -47,10 +42,10 @@ struct GetClusterResponse {
 
 #[derive(Debug, Serialize)]
 pub struct CreateNodePoolRequest {
-    pub project_id: String,
+    pub projectId: String,
     pub zone: String,
-    pub cluster_id: String,
-    // Add other fields as required
+    pub clusterId: String,
+    pub nodePool: HashMap<String, String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -93,10 +88,10 @@ struct ListNodePoolsResponse {
 
 #[derive(Debug, Serialize)]
 pub struct SetAddonsConfigRequest {
-    pub project_id: String,
+    pub projectId: String,
     pub zone: String,
-    pub cluster_id: String,
-    // Add other fields as required
+    pub clusterId: String,
+    pub addonsConfig: HashMap<String, String>, // Add other fields as required
 }
 
 #[derive(Debug, Deserialize)]

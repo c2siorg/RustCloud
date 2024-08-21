@@ -1,11 +1,10 @@
 use crate::aws::aws_apis::storage::aws_archival_storage::*;
-use aws_sdk_glacier::{Client, Config};
 use aws_sdk_glacier::config::Region;
-
+use aws_sdk_glacier::{Client, Config};
 
 async fn create_client() -> Client {
-    let config =  aws_config::load_from_env().await;
-    let client =  Client::new(&config);
+    let config = aws_config::load_from_env().await;
+    let client = Client::new(&config);
     return client;
 }
 
@@ -28,7 +27,13 @@ async fn test_delete_archive() {
     let vault_name = "test-vault";
     let archive_id = "archive123";
 
-    let result = delete_archive(&client, account_id.to_string(), vault_name.to_string(), archive_id.to_string()).await;
+    let result = delete_archive(
+        &client,
+        account_id.to_string(),
+        vault_name.to_string(),
+        archive_id.to_string(),
+    )
+    .await;
     assert!(result.is_ok());
 }
 
@@ -52,7 +57,14 @@ async fn test_upload_vault() {
     let archive_description = Some("Test archive".to_string());
     let part_size = Some("1048576".to_string());
 
-    let result = upload(&client, account_id.to_string(), vault_name.to_string(), archive_description, part_size).await;
+    let result = upload(
+        &client,
+        account_id.to_string(),
+        vault_name.to_string(),
+        archive_description,
+        part_size,
+    )
+    .await;
     assert!(result.is_ok());
 }
 

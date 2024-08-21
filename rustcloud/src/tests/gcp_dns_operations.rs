@@ -29,7 +29,10 @@ async fn test_create_dns() {
     params.insert("Project", "your_project_id");
     params.insert("Description", "Test DNS Description");
     params.insert("DnsName", "test.dns.name.");
-    params.insert("nameServers", "ns-cloud-a1.googledomains.com,ns-cloud-a2.googledomains.com");
+    params.insert(
+        "nameServers",
+        "ns-cloud-a1.googledomains.com,ns-cloud-a2.googledomains.com",
+    );
     params.insert("Id", "12345");
     params.insert("Kind", "dns#managedZone");
     params.insert("Name", "test-dns");

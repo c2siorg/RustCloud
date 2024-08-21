@@ -1,15 +1,15 @@
 use crate::aws::aws_apis::management::aws_monitoring::*;
 use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_cloudwatch::types::{
+    ComparisonOperator, Metric, MetricDataQuery, MetricStat, ScanBy, Statistic,
+};
 use aws_sdk_cloudwatch::Client;
-use aws_sdk_cloudwatch::types::{ComparisonOperator, Statistic, MetricDataQuery, MetricStat, Metric, ScanBy};
 use aws_sdk_ec2::primitives::DateTime;
 use std::collections::HashMap;
 
-
-
 async fn create_client() -> Client {
-    let config =  aws_config::load_from_env().await;
-    let client =  Client::new(&config);
+    let config = aws_config::load_from_env().await;
+    let client = Client::new(&config);
     return client;
 }
 
@@ -24,24 +24,22 @@ async fn test_delete_alarm() {
 #[tokio::test]
 async fn test_get_metric_data() {
     let client = create_client().await;
-    
-    let metric_data_queries = Some(vec![
-        MetricDataQuery::builder()
-            .id("test-query".to_string())
-            .metric_stat(
-                MetricStat::builder()
-                    .metric(
-                        Metric::builder()
-                            .namespace("AWS/EC2")
-                            .metric_name("CPUUtilization")
-                            .build(),
-                    )
-                    .period(60)
-                    .build(),
-            )
-            .return_data(true)
-            .build(),
-    ]);
+
+    let metric_data_queries = Some(vec![MetricDataQuery::builder()
+        .id("test-query".to_string())
+        .metric_stat(
+            MetricStat::builder()
+                .metric(
+                    Metric::builder()
+                        .namespace("AWS/EC2")
+                        .metric_name("CPUUtilization")
+                        .build(),
+                )
+                .period(60)
+                .build(),
+        )
+        .return_data(true)
+        .build()]);
     let start_time = Some(DateTime::from_secs(1625155200)); // Example timestamp
     let end_time = Some(DateTime::from_secs(1625241600)); // Example timestamp
     let next_token = None;
@@ -58,7 +56,8 @@ async fn test_get_metric_data() {
         scan_by,
         _max_datapoints,
         label_options,
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 }
@@ -99,7 +98,8 @@ async fn test_put_metric_alarm() {
         statistic,
         threshold,
         treat_missing_data,
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 }

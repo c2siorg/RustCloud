@@ -1,8 +1,7 @@
-use reqwest::{Client, Method, header::AUTHORIZATION};
+use reqwest::{header::AUTHORIZATION, Client, Method};
 use serde_json::json;
 use std::collections::HashMap;
 
-// Assuming the token retrieval function is in a module named 'auth'
 use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
 
 pub struct GCE {
@@ -18,7 +17,10 @@ impl GCE {
         }
     }
 
-    pub async fn create_node(&self, request: HashMap<String, serde_json::Value>) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
+    pub async fn create_node(
+        &self,
+        request: HashMap<String, serde_json::Value>,
+    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let mut project_id = String::new();
         let mut zone = String::new();
         let mut gce_instance = HashMap::new();
@@ -73,9 +75,12 @@ impl GCE {
                                 }
                                 "InitializeParams" => {
                                     let init_params = disk_val.as_object().unwrap();
-                                    initialize_param.insert("SourceImage", init_params["SourceImage"].clone());
-                                    initialize_param.insert("DiskType", init_params["DiskType"].clone());
-                                    initialize_param.insert("DiskSizeGb", init_params["DiskSizeGb"].clone());
+                                    initialize_param
+                                        .insert("SourceImage", init_params["SourceImage"].clone());
+                                    initialize_param
+                                        .insert("DiskType", init_params["DiskType"].clone());
+                                    initialize_param
+                                        .insert("DiskSizeGb", init_params["DiskSizeGb"].clone());
                                     disk.insert("InitializeParams", json!(initialize_param));
                                 }
                                 _ => {}
@@ -94,24 +99,32 @@ impl GCE {
                         let mut network_interface = HashMap::new();
                         let mut access_configs = vec![];
 
-                        for (network_interface_key, network_interface_val) in network_interface_map {
+                        for (network_interface_key, network_interface_val) in network_interface_map
+                        {
                             match network_interface_key.as_str() {
                                 "Network" => {
-                                    network_interface.insert("Network", network_interface_val.clone());
+                                    network_interface
+                                        .insert("Network", network_interface_val.clone());
                                 }
                                 "Subnetwork" => {
-                                    network_interface.insert("Subnetwork", network_interface_val.clone());
+                                    network_interface
+                                        .insert("Subnetwork", network_interface_val.clone());
                                 }
                                 "AccessConfigs" => {
-                                    let access_configs_param = network_interface_val.as_array().unwrap();
+                                    let access_configs_param =
+                                        network_interface_val.as_array().unwrap();
                                     for access_config_value in access_configs_param {
-                                        let access_config_map = access_config_value.as_object().unwrap();
+                                        let access_config_map =
+                                            access_config_value.as_object().unwrap();
                                         let mut access_config = HashMap::new();
-                                        access_config.insert("Name", access_config_map["Name"].clone());
-                                        access_config.insert("Type", access_config_map["Type"].clone());
+                                        access_config
+                                            .insert("Name", access_config_map["Name"].clone());
+                                        access_config
+                                            .insert("Type", access_config_map["Type"].clone());
                                         access_configs.push(json!(access_config));
                                     }
-                                    network_interface.insert("AccessConfigs", json!(access_configs));
+                                    network_interface
+                                        .insert("AccessConfigs", json!(access_configs));
                                 }
                                 _ => {}
                             }
@@ -144,12 +157,16 @@ impl GCE {
             }
         }
 
-
         let gce_instance_json = serde_json::to_string(&gce_instance).unwrap();
-        let url = format!("{}/projects/{}/zones/{}/instances", self.base_url, project_id, zone);
+        let url = format!(
+            "{}/projects/{}/zones/{}/instances",
+            self.base_url, project_id, zone
+        );
 
         let token = retrieve_token().await?;
-        let response = self.client.post(&url)
+        let response = self
+            .client
+            .post(&url)
             .header("Content-Type", "application/json")
             .header(AUTHORIZATION, format!("Bearer {}", token))
             .body(gce_instance_json)
@@ -166,14 +183,22 @@ impl GCE {
         Ok(create_node_response)
     }
 
-    pub async fn start_node(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
+    pub async fn start_node(
+        &self,
+        request: HashMap<String, String>,
+    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let project_id = request.get("projectid").unwrap();
         let zone = request.get("Zone").unwrap();
         let instance = request.get("instance").unwrap();
-        let url = format!("{}/v1/projects/{}/zones/{}/instances/{}/start", self.base_url, project_id, zone, instance);
+        let url = format!(
+            "{}/v1/projects/{}/zones/{}/instances/{}/start",
+            self.base_url, project_id, zone, instance
+        );
 
         let token = retrieve_token().await?;
-        let response = self.client.post(&url)
+        let response = self
+            .client
+            .post(&url)
             .header("Content-Type", "application/json")
             .header(AUTHORIZATION, format!("Bearer {}", token))
             .send()
@@ -189,14 +214,22 @@ impl GCE {
         Ok(start_node_response)
     }
 
-    pub async fn stop_node(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
+    pub async fn stop_node(
+        &self,
+        request: HashMap<String, String>,
+    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let project_id = request.get("projectid").unwrap();
         let zone = request.get("Zone").unwrap();
         let instance = request.get("instance").unwrap();
-        let url = format!("{}/projects/{}/zones/{}/instances/{}/stop", self.base_url, project_id, zone, instance);
+        let url = format!(
+            "{}/projects/{}/zones/{}/instances/{}/stop",
+            self.base_url, project_id, zone, instance
+        );
 
         let token = retrieve_token().await?;
-        let response = self.client.post(&url)
+        let response = self
+            .client
+            .post(&url)
             .header("Content-Type", "application/json")
             .header(AUTHORIZATION, format!("Bearer {}", token))
             .send()
@@ -212,14 +245,22 @@ impl GCE {
         Ok(stop_node_response)
     }
 
-    pub async fn delete_node(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
+    pub async fn delete_node(
+        &self,
+        request: HashMap<String, String>,
+    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let project_id = request.get("projectid").unwrap();
         let zone = request.get("Zone").unwrap();
         let instance = request.get("instance").unwrap();
-        let url = format!("{}/projects/{}/zones/{}/instances/{}", self.base_url, project_id, zone, instance);
+        let url = format!(
+            "{}/projects/{}/zones/{}/instances/{}",
+            self.base_url, project_id, zone, instance
+        );
 
         let token = retrieve_token().await?;
-        let response = self.client.delete(&url)
+        let response = self
+            .client
+            .delete(&url)
             .header("Content-Type", "application/json")
             .header(AUTHORIZATION, format!("Bearer {}", token))
             .send()
@@ -235,14 +276,22 @@ impl GCE {
         Ok(delete_node_response)
     }
 
-    pub async fn reboot_node(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
+    pub async fn reboot_node(
+        &self,
+        request: HashMap<String, String>,
+    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let project_id = request.get("projectid").unwrap();
         let zone = request.get("Zone").unwrap();
         let instance = request.get("instance").unwrap();
-        let url = format!("{}/projects/{}/zones/{}/instances/{}/reset", self.base_url, project_id, zone, instance);
+        let url = format!(
+            "{}/projects/{}/zones/{}/instances/{}/reset",
+            self.base_url, project_id, zone, instance
+        );
 
         let token = retrieve_token().await?;
-        let response = self.client.post(&url)
+        let response = self
+            .client
+            .post(&url)
             .header("Content-Type", "application/json")
             .header(AUTHORIZATION, format!("Bearer {}", token))
             .send()
@@ -258,13 +307,21 @@ impl GCE {
         Ok(reboot_node_response)
     }
 
-    pub async fn list_node(&self, request: HashMap<String, String>) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
+    pub async fn list_node(
+        &self,
+        request: HashMap<String, String>,
+    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let project_id = request.get("projectid").unwrap();
         let zone = request.get("Zone").unwrap();
-        let url = format!("{}/projects/{}/zones/{}/instances/", self.base_url, project_id, zone);
+        let url = format!(
+            "{}/projects/{}/zones/{}/instances/",
+            self.base_url, project_id, zone
+        );
 
         let token = retrieve_token().await?;
-        let response = self.client.request(Method::GET, &url)
+        let response = self
+            .client
+            .request(Method::GET, &url)
             .header("Content-Type", "application/json")
             .header(AUTHORIZATION, format!("Bearer {}", token))
             .send()

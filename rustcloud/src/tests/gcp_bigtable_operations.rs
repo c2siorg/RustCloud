@@ -52,16 +52,16 @@ async fn test_create_tables() {
     let table = Table {
         // Populate Table struct fields
     };
-    let initial_splits = vec![
-        InitialSplits {
+    let initial_splits = vec![InitialSplits {
             // Populate InitialSplits struct fields
-        },
-    ];
+        }];
     let cluster_states = ClusterStates {
         // Populate ClusterStates struct fields
     };
 
-    let result = client.create_tables(parent, table_id, table, initial_splits, cluster_states).await;
+    let result = client
+        .create_tables(parent, table_id, table, initial_splits, cluster_states)
+        .await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
