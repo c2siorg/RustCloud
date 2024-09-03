@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 // InitialSplits struct represents InitialSplits.
@@ -9,16 +11,30 @@ pub struct InitialSplits {
 // Table struct represents Table.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Table {
-    pub granularity: String,
-    pub name: String,
+    pub name: Option<String>,
+    #[serde(rename = "clusterStates")]
+    pub cluster_states: Option<HashMap<String, ClusterStates>>,
+    #[serde(rename = "columnFamilies")]
+    pub column_families: Option<HashMap<String, serde_json::Value>>,
+    pub granularity: Option<String>,
+    #[serde(rename = "restoreInfo")]
+    pub restore_info: Option<serde_json::Value>,
+    #[serde(rename = "changeStreamConfig")]
+    pub change_stream_config: Option<serde_json::Value>,
+    #[serde(rename = "deletionProtection")]
+    pub deletion_protection: Option<bool>,
+    pub stats: Option<serde_json::Value>,
+    #[serde(rename = "automatedBackupPolicy")]
+    pub automated_backup_policy: Option<serde_json::Value>,
 }
 
-// ClusterStates struct represents ClusterStates.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ClusterStates {
+    #[serde(rename = "replicationState")]
     pub replication_state: String,
+    #[serde(rename = "encryptionInfo")]
+    pub encryption_info: Vec<serde_json::Value>,
 }
-
 // GcRule struct represents GcRule.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GcRule {
@@ -31,6 +47,6 @@ pub struct GcRule {
 pub struct CreateBigtable {
     pub table_id: String,
     pub table: Table,
-    pub initial_splits: Vec<InitialSplits>,
-    pub cluster_states: ClusterStates,
+    #[serde(rename = "initialSplits")]
+    pub initial_splits: Option<Vec<InitialSplits>>,
 }
