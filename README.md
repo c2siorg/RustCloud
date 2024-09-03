@@ -14,7 +14,7 @@ RustCloud  is a rust library which hides the difference between different APIs p
 
 
 
-<img src="assets/gocloudarchitecture_new.jpg" width="650">
+<img src="assets/Rustcloud.png" width="650" height="300">
 
 
 ## Service Types
@@ -33,41 +33,26 @@ RustCloud  is a rust library which hides the difference between different APIs p
 
 ### AWS
 
-* EC2 Compute [Link to example](examples/compute/ec2/ec2.md)
+* EC2 Compute [Link to example](examples/aws/compute/ec2.md)
+* EKS Compute [Link to example](examples/aws/compute/eks.md)
 * EC2 Storage [Link to example](examples/storage/aws_storage/aws_storage.md)
-* Amazon Elastic Container Service (Container) [Link to example](examples/container/aws_container/aws_container.md)
-* Elastic Load Balancing [Link to example](examples/loadbalancer/aws_loadbalancer/aws_loadbalancer.md)
-* AWS Route53 (DNS) [Link to example](examples/dns/aws_route53/aws_route53.md)
+* Amazon Elastic Container Service (Container) [Link to example](examples/aws/compute/ecs.md)
+* Elastic Load Balancing [Link to example](examples/aws/network/loadbalancer.md)
+* AWS Route53 (DNS) [Link to example](examples/aws/network/dns.md)
+* AWS DynamoDB (Database) [Link to example](examples/aws/database/dynamodb.md)
+* AWS CloudWatch (Monitoring) [Link to example](examples/aws/management/monitoring.md)
+* AWS IAM  [Link to example](examples/aws/security/iam.md)
+* AWS Keymanagement [Link to example](examples/aws/security/kms.md)
 
 ### Google
 
-* Google Compute [Link to example](examples/compute/gce/gce.md)
-* Google Compute Storage [Link to example](examples/storage/google_storage/google_storage.md)
-* Google Container Service (Container) [Link to example](examples/container/google_container/google_container.md)
-* Google Elastic Load Balancing [Link to example](examples/loadbalancer/google_loadbalancer/google_loadbalancer.md)
-* Google DNS [Link to example](examples/dns/google_dns/google_dns.md)
-
-### DigitalOcean
-
-* DigitalOcean Droplet [Link to example](examples/compute/droplet/droplet.md)
-* DigitalOcean LoadBalancer [Link to example](examples/loadbalancer/digiocean_loadbalancer/digiocean_loadbalancer.md)
-* DigitalOcean Storage [Link to example](examples/storage/digiocean_storage/digiocean_storage.md)
-* DigitalOcean DNS [Link to example](examples/dns/digioceandns/digioceandns.md)
-
-### Ali-cloud
-
-* ECS Compute [Link to example](examples/compute/ecs/ecs.md)
-* ECS Storage [Link to example](examples/storage/ali_storage/ali_storage.md)
-* Alibaba Cloud DNS [Link to example](examples/dns/ali_dns/ali_dns.md)
-* Server Load Balancer [Link to example](examples/loadbalancer/ali_loadbalancer/ali_loadbalancer.md)
-* Container Service [Link to example](examples/container/ali_container/ali_container.md)
-
-### Vultr
-
-* Server [Link to example](examples/compute/vultr_compute/vultr_compute.md)
-* Bare Metal [Link to example](examples/baremetal/vultr_baremetal/vultr_baremetal.md)
-* Block Storage [Link to example](examples/storage/vultr_storage/vultr_storage.md)
-* DNS [Link to example](examples/dns/vultr_dns/vultr_dns.md)
+* Google Compute [Link to example](examples/gcp/compute/compute_engine.md)
+* Google Compute Storage [Link to example](examples/gcp/storage/storage.md)
+* Google Kubernetes Service [Link to example](examples/gcp/compute/kubenetes.md)
+* Google Elastic Load Balancing [Link to example](examples/gcp/network/loadbalancer.md)
+* Google DNS [Link to example](examples/gcp/network/dns.md)
+* Google Bigtable [Link to example](examples/gcp/database/bigtable.md)
+* Google Notifications [Link to example](examples/gcp/app_services/notifications.md)
 
 Currently, implementations for other cloud providers are being worked on.
 
@@ -104,89 +89,33 @@ $ go get golang.org/x/oauth2
 $ go get cloud.google.com/go/compute/metadata
 ```
 
-5. Create a directory called <b>.gocloud</b> in your <b>HOME</b> directory. Download your AWS, Google and DigitalOcean access credentials and store them in a file in your <b>.gocloud</b> folder.
+5. You can set your credentials as environment variables.  
 
-   #### AWS:
-   Save your AWS credentials in a file named *amazoncloudconfig.json*.
-   ```js
-   {
-     "AWSAccessKeyID": "xxxxxxxxxxxx",
-     "AWSSecretKey": "xxxxxxxxxxxx"
-   }
-   ```
-   #### Google Cloud Services:
-   Save your Google Cloud credentials in a file named *googlecloudconfig.json*. The file is downloaded in the required format.
-   #### DigitalOcean:
-   Save your DigitalOcean credentials in a file named *digioceancloudconfig.json*.
-   ```js
-   {
-     "DigiOceanAccessToken": "xxxxxxxxxxxx"
-   }
-   ```
-   #### Ali-cloud:
-   Save your Ali-cloud credentials in a file named *alicloudconfig.json*.
-   ```js
-   {
-     "AliAccessKeyID":"xxxxxxxxxxxx",
-     "AliAccessKeySecret":"xxxxxxxxxxxx"
-   }
-   ```
-   #### Vultr:
-   Save your Vultr credentials in a file named *vultrconfig.json*.
-   ```
-   {
-     "VultrAPIKey":"xxxxxxxxxxxx"
-   }
-   ```
-
-   You can also set your credentials as environment variables.  
    #### AWS:  
    ```
-   export AWSAccessKeyID =  "xxxxxxxxxxxx"
-   export AWSSecretKey = "xxxxxxxxxxxx"
+   export AWS_ACCESS_KEY_ID =  "xxxxxxxxxxxx"
+   export AWS_SECRET_ACCESS_KEY = "xxxxxxxxxxxx"
    ```
    #### Google Cloud Services:
    ```
-   export PrivateKey =  "xxxxxxxxxxxx"
-   export Type =  "xxxxxxxxxxxx"
-   export ProjectID = "xxxxxxxxxxxx"
-   export PrivateKeyID = "xxxxxxxxxxxx"
-   export ClientEmail = "xxxxxxxxxxxx"
-   export ClientID = "xxxxxxxxxxxx"
-   export AuthURI = "xxxxxxxxxxxx"
-   export TokenURI = "xxxxxxxxxxxx"
-   export AuthProviderX509CertURL = "xxxxxxxxxxxx"
-   export ClientX509CertURL =  "xxxxxxxxxxxx"
-   ```
-   #### DigitalOcean:  
-   ```
-   export DigiOceanAccessToken =  "xxxxxxxxxxxx"
-   ```
-   #### Ali-cloud:
-   ```
-   export AliAccessKeyID =  "xxxxxxxxxxxx"
-   export AliAccessKeySecret =  "xxxxxxxxxxxx"
-   ```
-   #### Vultr:
-   ```
-   export VultrAPIKey =  "xxxxxxxxxxxx"
+   export GOOGLE_APPLICATION_CREDENTIALS =  "path/to/googlecredentials.json"
    ```
 
-6. You are all set to use gocloud! Check out the following YouTube videos for more information and usage examples:
-https://youtu.be/4LxsAeoonlY?list=PLOdfztY25UNnxK_0KRRHSngJIyVLDKZxq&t=3
+<!-- 6. You are all set to use gocloud! Check out the following YouTube videos for more information and usage examples:
+https://youtu.be/4LxsAeoonlY?list=PLOdfztY25UNnxK_0KRRHSngJIyVLDKZxq&t=3 -->
 
 ## Development setup
 
 ```
-$ git clone https://github.com/cloudlibz/gocloud
-$ cd gocloud
+$ git clone https://github.com/c2siorg/RustCloud
+$ cd RustCloud/rustcloud
 ```
 
 ## Unit tests
 
 ```
-$ cd gocloud
-$ go test -v ./...
+$ cd RustCloud/rustcloud
+$ cargo test -- --nocapture
 ```
 
 <b>Please make sure to delete all your instances, storage blocks, load balancers, containers, and DNS settings once you run the tests by visiting the respective web portals of the cloud providers.</b>

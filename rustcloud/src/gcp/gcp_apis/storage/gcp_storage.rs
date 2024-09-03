@@ -3,23 +3,23 @@ use reqwest::header::AUTHORIZATION;
 use serde_json::Value;
 use std::collections::HashMap;
 
-struct GoogleStorage {
+pub struct GoogleStorage {
     client: reqwest::Client,
     base_url: String,
 }
 
 impl GoogleStorage {
-    fn new() -> Self {
+    pub fn new() -> Self {
         GoogleStorage {
             client: reqwest::Client::new(),
             base_url: "https://www.googleapis.com/compute/v1".to_string(),
         }
     }
 
-    async fn create_disk(
+    pub async fn create_disk(
         &self,
         request: HashMap<String, Value>,
-    ) -> Result<HashMap<String, Value>, reqwest::Error> {
+    ) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>> {
         let mut option = HashMap::new();
         let mut project_id = String::new();
         let mut zone = String::new();
@@ -29,146 +29,180 @@ impl GoogleStorage {
             match key.as_str() {
                 "projectid" => project_id = value.as_str().unwrap_or_default().to_string(),
                 "Name" => {
-                    option.insert("Name", value);
+                    option.insert("name", value);
                 }
                 "Zone" => zone = value.as_str().unwrap_or_default().to_string(),
                 "Type" => disk_type = value.as_str().unwrap_or_default().to_string(),
                 "SizeGb" => {
-                    option.insert("SizeGb", value);
+                    option.insert("sizeGb", value);
                 }
                 "SourceImageEncryptionKeys" => {
-                    option.insert("SourceImageEncryptionKeys", value);
+                    option.insert("sourceImageEncryptionKey", value);
                 }
                 "DiskEncryptionKeys" => {
-                    option.insert("DiskEncryptionKeys", value);
+                    option.insert("diskEncryptionKey", value);
                 }
                 "SourceSnapshotEncryptionKeys" => {
-                    option.insert("SourceSnapshotEncryptionKeys", value);
+                    option.insert("sourceSnapshotEncryptionKey", value);
                 }
                 "Licenses" => {
-                    option.insert("Licenses", value);
+                    option.insert("licenses", value);
                 }
                 "Users" => {
-                    option.insert("Users", value);
+                    option.insert("users", value);
                 }
                 "CreationTimestamp" => {
-                    option.insert("CreationTimestamp", value);
+                    option.insert("creationTimestamp", value);
                 }
                 "Description" => {
-                    option.insert("Description", value);
+                    option.insert("description", value);
                 }
                 "ID" => {
-                    option.insert("ID", value);
+                    option.insert("id", value);
                 }
                 "Kind" => {
-                    option.insert("Kind", value);
+                    option.insert("kind", value);
                 }
                 "LabelFingerprint" => {
-                    option.insert("LabelFingerprint", value);
+                    option.insert("labelFingerprint", value);
                 }
                 "SourceSnapshotID" => {
-                    option.insert("SourceSnapshotID", value);
+                    option.insert("sourceSnapshotID", value);
                 }
                 "Status" => {
-                    option.insert("Status", value);
+                    option.insert("status", value);
                 }
                 "LastAttachTimestamp" => {
-                    option.insert("LastAttachTimestamp", value);
+                    option.insert("lastAttachTimestamp", value);
                 }
                 "LastDetachTimestamp" => {
-                    option.insert("LastDetachTimestamp", value);
+                    option.insert("lastDetachTimestamp", value);
                 }
                 "Options" => {
-                    option.insert("Options", value);
+                    option.insert("options", value);
                 }
                 "SelfLink" => {
-                    option.insert("SelfLink", value);
+                    option.insert("selfLink", value);
                 }
                 "SourceImage" => {
-                    option.insert("SourceImage", value);
+                    option.insert("sourceImage", value);
                 }
                 "SourceImageID" => {
-                    option.insert("SourceImageID", value);
+                    option.insert("sourceImageID", value);
                 }
                 "SourceSnapshot" => {
-                    option.insert("SourceSnapshot", value);
+                    option.insert("sourceSnapshot", value);
                 }
                 _ => {}
             }
         }
 
+        let Zone = Value::String(format!("projects/{}/zones/{}", project_id, zone));
+        let Type = Value::String(format!(
+            "projects/{}/zones/{}/diskTypes/{}",
+            project_id.clone(), zone.clone(), disk_type.clone()
+        ));
         option.insert(
-            "Zone",
-            &Value::String(format!("projects/{}/zones/{}", project_id, zone)),
+            "zone",
+            &Zone,
         );
+
         option.insert(
-            "Type",
-            &Value::String(format!(
-                "projects/{}/zones/{}/diskTypes/{}",
-                project_id, zone, disk_type
-            )),
+            "type",
+            &Type,
         );
 
         let create_disk_json = serde_json::to_string(&option).unwrap();
         let url = format!(
             "{}/projects/{}/zones/{}/disks",
-            self.base_url, project_id, zone
+            self.base_url, project_id.clone(), zone.clone()
         );
-        let token = retrieve_token().await.unwrap();
+        let token = retrieve_token().await.map_err(|e| format!("Failed to retrieve token: {}", e))?;
 
         let resp = self
             .client
             .post(&url)
             .header("Content-Type", "application/json")
-            .header(AUTHORIZATION, token)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
             .body(create_disk_json)
             .send()
-            .await?;
+            .await
+            .map_err(|e| format!("Failed to send request: {}", e))?;
 
-        let mut body = String::new();
+
+        let status = resp.status();
+        if !status.is_success() {
+            let response_text = resp.text().await?;
+            println!("{:?}", response_text);
+            return Err(format!("Request failed with status: {}", status).into());
+        }
+    
+        // Parse the response body
+        let body = resp
+            .text()
+            .await
+            .map_err(|e| format!("Failed to read response body: {}", e))?;
+    
+        println!("{:?}", body);
+
         let mut response: HashMap<String, Value> = HashMap::new();
         response.insert(
             "status".to_string(),
-            Value::Number(resp.status().as_u16().into()),
+            Value::Number(status.as_u16().into()),
         );
         response.insert("body".to_string(), Value::String(body));
 
         Ok(response)
     }
 
-    async fn delete_disk(
+    pub async fn delete_disk(
         &self,
         request: HashMap<String, String>,
-    ) -> Result<HashMap<String, Value>, reqwest::Error> {
+    ) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>> {
         let url = format!(
             "{}/projects/{}/zones/{}/disks/{}",
             self.base_url, request["projectid"], request["Zone"], request["disk"]
         );
-        let token = retrieve_token().await.unwrap();
+        let token = retrieve_token().await.map_err(|e| format!("Failed to retrieve token: {}", e))?;
         let resp = self
             .client
             .delete(&url)
             .header("Content-Type", "application/json")
-            .header(AUTHORIZATION, token)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
             .send()
-            .await?;
+            .await
+            .map_err(|e| format!("Failed to send request: {}", e))?;
 
-        let mut body = String::new();
+
+        let status = resp.status();
+        if !status.is_success() {
+            let response_text = resp.text().await?;
+            println!("{:?}", response_text);
+            return Err(format!("Request failed with status: {}", status).into());
+        }
+    
+        // Parse the response body
+        let body = resp
+            .text()
+            .await
+            .map_err(|e| format!("Failed to read response body: {}", e))?;
+    
+        println!("{:?}", body);
 
         let mut response = HashMap::new();
         response.insert(
             "status".to_string(),
-            Value::Number(resp.status().as_u16().into()),
+            Value::Number(status.as_u16().into()),
         );
         response.insert("body".to_string(), Value::String(body));
 
         Ok(response)
     }
 
-    async fn create_snapshot(
+    pub async fn create_snapshot(
         &self,
         request: HashMap<String, Value>,
-    ) -> Result<HashMap<String, Value>, reqwest::Error> {
+    ) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>> {
         let mut snapshot = HashMap::new();
         let mut project_id = String::new();
         let mut zone = String::new();
@@ -178,54 +212,54 @@ impl GoogleStorage {
             match key.as_str() {
                 "projectid" => project_id = value.as_str().unwrap_or_default().to_string(),
                 "Name" => {
-                    snapshot.insert("Name", value);
+                    snapshot.insert("name", value);
                 }
                 "Zone" => zone = value.as_str().unwrap_or_default().to_string(),
                 "disk" => disk = value.as_str().unwrap_or_default().to_string(),
                 "CreationTimestamp" => {
-                    snapshot.insert("CreationTimestamp", value);
+                    snapshot.insert("creationTimestamp", value);
                 }
                 "Description" => {
-                    snapshot.insert("Description", value);
+                    snapshot.insert("description", value);
                 }
                 "DiskSizeGb" => {
-                    snapshot.insert("DiskSizeGb", value);
+                    snapshot.insert("diskSizeGb", value);
                 }
                 "ID" => {
-                    snapshot.insert("ID", value);
+                    snapshot.insert("id", value);
                 }
                 "Kind" => {
-                    snapshot.insert("Kind", value);
+                    snapshot.insert("kind", value);
                 }
                 "LabelFingerprint" => {
-                    snapshot.insert("LabelFingerprint", value);
+                    snapshot.insert("labelFingerprint", value);
                 }
                 "SelfLink" => {
-                    snapshot.insert("SelfLink", value);
+                    snapshot.insert("selfLink", value);
                 }
                 "StorageBytes" => {
-                    snapshot.insert("StorageBytes", value);
+                    snapshot.insert("storageBytes", value);
                 }
                 "Status" => {
-                    snapshot.insert("Status", value);
+                    snapshot.insert("status", value);
                 }
                 "SourceDiskID" => {
-                    snapshot.insert("SourceDiskID", value);
+                    snapshot.insert("sourceDiskID", value);
                 }
                 "SourceDisk" => {
-                    snapshot.insert("SourceDisk", value);
+                    snapshot.insert("sourceDisk", value);
                 }
                 "StorageBytesStatus" => {
-                    snapshot.insert("StorageBytesStatus", value);
+                    snapshot.insert("storageBytesStatus", value);
                 }
                 "Licenses" => {
-                    snapshot.insert("Licenses", value);
+                    snapshot.insert("licenses", value);
                 }
                 "SourceDiskEncryptionKeys" => {
-                    snapshot.insert("SourceDiskEncryptionKeys", value);
+                    snapshot.insert("sourceDiskEncryptionKey", value);
                 }
                 "SnapshotEncryptionKeys" => {
-                    snapshot.insert("SnapshotEncryptionKeys", value);
+                    snapshot.insert("snapshotEncryptionKey", value);
                 }
                 _ => {}
             }
@@ -236,23 +270,37 @@ impl GoogleStorage {
             "{}/projects/{}/zones/{}/disks/{}/createSnapshot",
             self.base_url, project_id, zone, disk
         );
-        let token = retrieve_token().await.unwrap();
+        let token = retrieve_token().await.map_err(|e| format!("Failed to retrieve token: {}", e))?;
 
         let resp = self
             .client
             .post(&url)
             .header("Content-Type", "application/json")
-            .header(AUTHORIZATION, token)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
             .body(create_snapshot_json)
             .send()
-            .await?;
+            .await
+            .map_err(|e| format!("Failed to send request: {}", e))?;
 
-        let mut body = String::new();
+        let status = resp.status();
+        if !status.is_success() {
+            let response_text = resp.text().await?;
+            println!("{:?}", response_text);
+            return Err(format!("Request failed with status: {}", status).into());
+        }
+    
+        // Parse the response body
+        let body = resp
+            .text()
+            .await
+            .map_err(|e| format!("Failed to read response body: {}", e))?;
+    
+        println!("{:?}", body);
 
         let mut response = HashMap::new();
         response.insert(
             "status".to_string(),
-            Value::Number(resp.status().as_u16().into()),
+            Value::Number(status.as_u16().into()),
         );
         response.insert("body".to_string(), Value::String(body));
 
