@@ -33,12 +33,12 @@ pub mod gcp {
         pub mod app_services {
             pub mod gcp_notification_service;
         }
-        pub mod artificial_intelligence {
-            pub mod gcp_automl;
-        }
+        // pub mod artificial_intelligence {
+        //     pub mod gcp_automl;
+        // }
         pub mod compute {
             pub mod gcp_compute_engine;
-            pub mod gcp_kubernetes;
+            pub mod gcp_container;
         }
         pub mod database {
             pub mod gcp_bigtable;
