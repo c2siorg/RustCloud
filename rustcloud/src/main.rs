@@ -56,6 +56,23 @@ pub mod gcp {
     }
     pub mod types;
 }
+
+pub mod digiocean {
+    pub mod digiocean_apis {
+        pub mod compute {
+            pub mod digiocean_droplet;
+        }
+        pub mod dns {
+            pub mod digiocean_dns;
+        }
+        pub mod network {
+            pub mod digiocean_loadbalancer;
+        }
+        pub mod storage {
+            pub mod digiocean_storage;
+        }
+    }
+}
 fn main() {
     println!("Hello, world!");
 }
