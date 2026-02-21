@@ -125,7 +125,7 @@ impl GoogleStorage {
             .send()
             .await?;
 
-        let mut body = String::new();
+        let body = resp.text().await.unwrap_or_default();
         let mut response: HashMap<String, Value> = HashMap::new();
         response.insert(
             "status".to_string(),
@@ -153,7 +153,7 @@ impl GoogleStorage {
             .send()
             .await?;
 
-        let mut body = String::new();
+        let body = resp.text().await.unwrap_or_default();
 
         let mut response = HashMap::new();
         response.insert(
@@ -247,7 +247,7 @@ impl GoogleStorage {
             .send()
             .await?;
 
-        let mut body = String::new();
+        let body = resp.text().await.unwrap_or_default();
 
         let mut response = HashMap::new();
         response.insert(
