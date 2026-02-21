@@ -1,17 +1,20 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DatasetReference {
     pub project_id: String,
     pub dataset_id: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateDataset {
     pub dataset_reference: DatasetReference,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TableReference {
     pub project_id: String,
     pub dataset_id: String,
@@ -31,6 +34,7 @@ pub struct TableSchema {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateTable {
     pub table_reference: TableReference,
     pub schema: TableSchema,

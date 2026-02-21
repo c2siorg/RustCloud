@@ -29,8 +29,7 @@ impl BigQuery {
                 project_id: self.project_id.clone(),
                 dataset_id: dataset_id.to_string(),
             },
-        })
-        .unwrap();
+        })?;
 
         let token = retrieve_token().await?;
         let response = self
@@ -51,10 +50,11 @@ impl BigQuery {
     pub async fn delete_dataset(
         &self,
         dataset_id: &str,
+        delete_contents: bool,
     ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
         let url = format!(
-            "{}/projects/{}/datasets/{}?deleteContents=true",
-            self.base_url, self.project_id, dataset_id
+            "{}/projects/{}/datasets/{}?deleteContents={}",
+            self.base_url, self.project_id, dataset_id, delete_contents
         );
 
         let token = retrieve_token().await?;
@@ -110,8 +110,7 @@ impl BigQuery {
                 table_id: table_id.to_string(),
             },
             schema: TableSchema { fields },
-        })
-        .unwrap();
+        })?;
 
         let token = retrieve_token().await?;
         let response = self
@@ -187,8 +186,7 @@ impl BigQuery {
         let body = to_string(&RunQuery {
             query: query.to_string(),
             use_legacy_sql: false,
-        })
-        .unwrap();
+        })?;
 
         let token = retrieve_token().await?;
         let response = self
