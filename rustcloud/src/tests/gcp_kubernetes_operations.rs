@@ -1,5 +1,6 @@
 use crate::gcp::gcp_apis::compute::gcp_kubernetes::*;
 use crate::gcp::types::compute::gcp_kubernetes_types::*;
+use std::collections::HashMap;
 use tokio::test;
 
 async fn create_client() -> GCPKubernetesClient {
@@ -13,7 +14,7 @@ async fn test_create_cluster() {
     let request = CreateClusterRequest {
         projectId: "your_project_id".to_string(),
         zone: "your_zone".to_string(),
-        // Add other required fields for CreateClusterRequest here.
+        cluster: HashMap::new(),
     };
 
     let result = client.create_cluster(request).await;
@@ -69,7 +70,7 @@ async fn test_create_node_pool() {
         projectId: "your_project_id".to_string(),
         zone: "your_zone".to_string(),
         clusterId: "your_cluster_id".to_string(),
-        // Add other required fields for CreateNodePoolRequest here.
+        nodePool: HashMap::new(),
     };
 
     let result = client.create_node_pool(request).await;
@@ -128,7 +129,7 @@ async fn test_set_addons_config() {
         projectId: "your_project_id".to_string(),
         zone: "your_zone".to_string(),
         clusterId: "your_cluster_id".to_string(),
-        // Add other required fields for SetAddonsConfigRequest here.
+        addonsConfig: HashMap::new(),
     };
 
     let result = client.set_addons_config(request).await;

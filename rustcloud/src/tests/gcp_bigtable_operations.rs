@@ -50,13 +50,15 @@ async fn test_create_tables() {
     let parent = "projects/your_project_id/instances/your_instance_id";
     let table_id = "your_table_id";
     let table = Table {
-        // Populate Table struct fields
+        granularity: "MILLIS".to_string(),
+        name: "projects/your_project_id/instances/your_instance_id/tables/your_table_id"
+            .to_string(),
     };
     let initial_splits = vec![InitialSplits {
-            // Populate InitialSplits struct fields
-        }];
+        key: "split-key-1".to_string(),
+    }];
     let cluster_states = ClusterStates {
-        // Populate ClusterStates struct fields
+        replication_state: "READY".to_string(),
     };
 
     let result = client
