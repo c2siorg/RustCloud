@@ -42,6 +42,7 @@ pub mod gcp {
         }
         pub mod database {
             pub mod gcp_bigtable;
+            pub mod gcp_bigquery;
         }
         pub mod network {
             pub mod gcp_dns;
