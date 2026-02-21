@@ -1,11 +1,15 @@
 #![allow(clippy::result_large_err)]
 
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_ec2::{operation::run_instances::RunInstancesError, types::Tag, Client, Error};
+use aws_sdk_ec2::{types::Tag, Client, Error};
+use std::error::Error as StdError;
 
 // use clap::Parser;
 
-pub async fn create_instance(client: &Client, ami_id: &str) -> Result<(), Error> {
+pub async fn create_instance(
+    client: &Client,
+    ami_id: &str,
+) -> Result<String, Box<dyn StdError>> {
     let run_instances = client
         .run_instances()
         .image_id(ami_id)
@@ -17,25 +21,28 @@ pub async fn create_instance(client: &Client, ami_id: &str) -> Result<(), Error>
 
     match run_instances {
         Ok(run_instances) => {
-            if run_instances.instances().is_empty() {
-                panic!("No instances created.");
-                let instance_id = run_instances.instances()[0].instance_id().unwrap();
-                client
-                    .create_tags()
-                    .resources(instance_id)
-                    .tags(
-                        Tag::builder()
-                            .key("Name")
-                            .value("From SDK Examples")
-                            .build(),
-                    )
-                    .send()
-                    .await
-                    .unwrap();
+            let created_instance = run_instances
+                .instances()
+                .first()
+                .ok_or_else(|| std::io::Error::other("no instances created"))?;
+            let instance_id = created_instance
+                .instance_id()
+                .ok_or_else(|| std::io::Error::other("instance id missing"))?;
 
-                println!("Created {instance_id} and applied tags.",);
-            }
-            Ok(())
+            client
+                .create_tags()
+                .resources(instance_id)
+                .tags(
+                    Tag::builder()
+                        .key("Name")
+                        .value("From SDK Examples")
+                        .build(),
+                )
+                .send()
+                .await?;
+
+            println!("Created {instance_id} and applied tags.");
+            Ok(instance_id.to_string())
         }
         Err(err) => {
             println!("Error: {:?}", err);

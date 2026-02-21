@@ -16,6 +16,8 @@ async fn test_create_instance() {
     let ami_id = "ami-0aff18ec83b712f05";
     let result = create_instance(&client, ami_id).await;
     assert!(result.is_ok());
+    let instance_id = result.unwrap();
+    assert!(!instance_id.is_empty());
 }
 
 #[tokio::test]
