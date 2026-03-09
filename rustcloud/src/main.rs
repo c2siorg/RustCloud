@@ -1,4 +1,11 @@
 mod tests;
+pub mod errors;
+pub mod types {
+    pub mod llm;
+}
+pub mod traits {
+    pub mod llm_provider;
+}
 pub mod aws {
     pub mod aws_apis {
         pub mod compute {
