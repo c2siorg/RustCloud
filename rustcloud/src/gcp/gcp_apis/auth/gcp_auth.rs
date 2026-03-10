@@ -30,7 +30,7 @@ impl ServiceAccountTokenProvider {
 
 #[async_trait]
 impl TokenProvider for ServiceAccountTokenProvider {
-    async fn get_token(&self) -> Result<String, Box<dyn std::error::Error>> {
+    async fn get_token(&self) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         let scopes: Vec<&str> = self.scopes.iter().map(|s| s.as_str()).collect();
         let token = self.account.token(&scopes).await?;
         Ok(token.as_str().to_string())
@@ -51,7 +51,7 @@ impl MockTokenProvider {
 
 #[async_trait]
 impl TokenProvider for MockTokenProvider {
-    async fn get_token(&self) -> Result<String, Box<dyn std::error::Error>> {
+    async fn get_token(&self) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         Ok(self.token.clone())
     }
 }
