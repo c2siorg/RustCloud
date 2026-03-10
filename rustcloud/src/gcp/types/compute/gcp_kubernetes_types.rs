@@ -12,6 +12,7 @@ pub struct CreateClusterRequest {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DeleteClusterRequest {
     pub project_id: String,
     pub zone: String,
@@ -24,12 +25,14 @@ struct ListClustersResponse {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ListClustersRequest {
     pub project_id: String,
     pub zone: String,
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetClusterRequest {
     pub project_id: String,
     pub zone: String,
@@ -56,6 +59,7 @@ struct CreateNodePoolResponse {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DeleteNodePoolRequest {
     pub project_id: String,
     pub zone: String,
@@ -69,6 +73,7 @@ struct GetNodePoolResponse {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetNodePoolRequest {
     pub project_id: String,
     pub zone: String,
@@ -77,6 +82,7 @@ pub struct GetNodePoolRequest {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ListNodePoolsRequest {
     pub project_id: String,
     pub zone: String,
