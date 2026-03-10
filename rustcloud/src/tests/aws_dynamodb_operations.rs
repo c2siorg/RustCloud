@@ -1,10 +1,10 @@
 use crate::aws::aws_apis::database::aws_dynamodb::*;
 use aws_sdk_dynamodb::config::Region;
 use aws_sdk_dynamodb::types::{
-    AttributeDefinition, AttributeValue, BillingMode, ComparisonOperator, Condition,
-    GlobalSecondaryIndex, KeySchemaElement, KeyType, LocalSecondaryIndex, ProvisionedThroughput,
-    ReturnConsumedCapacity, ScalarAttributeType, Select, SseSpecification, StreamSpecification,
-    TableClass,
+    AttributeDefinition, AttributeValue, AttributeValueUpdate, BillingMode, ComparisonOperator,
+    Condition, GlobalSecondaryIndex, KeySchemaElement, KeyType, LocalSecondaryIndex,
+    ProvisionedThroughput, PutRequest, ReturnConsumedCapacity, ReturnValue, ScalarAttributeType,
+    Select, SseSpecification, StreamSpecification, TableClass, WriteRequest,
 };
 use aws_sdk_dynamodb::{Client, Config};
 use std::collections::HashMap;
@@ -131,6 +131,144 @@ async fn test_query() {
         None, // key_condition_expression
         None, // expression_attribute_names
         None, // expression_attribute_values
+    )
+    .await;
+
+    assert!(result.is_ok());
+}
+
+#[tokio::test]
+async fn test_get_item() {
+    let client = create_client().await;
+
+    let table_name = "test-table".to_string();
+    let mut key = HashMap::new();
+    key.insert("id".to_string(), AttributeValue::S("test-id".to_string()));
+
+    let result = get_item(
+        &client,
+        table_name,
+        key,
+        None, // attributes_to_get
+        Some(false), // consistent_read
+        None, // return_consumed_capacity
+        None, // projection_expression
+        None, // expression_attribute_names
+    )
+    .await;
+
+    assert!(result.is_ok());
+}
+
+#[tokio::test]
+async fn test_put_item() {
+    let client = create_client().await;
+
+    let table_name = "test-table".to_string();
+    let mut item = HashMap::new();
+    item.insert("id".to_string(), AttributeValue::S("test-id".to_string()));
+    item.insert("name".to_string(), AttributeValue::S("test-name".to_string()));
+
+    let result = put_item(
+        &client,
+        table_name,
+        item,
+        None, // expected
+        None, // conditional_operator
+        Some(ReturnValue::None),
+        None, // return_consumed_capacity
+        None, // return_item_collection_metrics
+        None, // condition_expression
+        None, // expression_attribute_names
+        None, // expression_attribute_values
+        None, // return_values_on_condition_check_failure
+    )
+    .await;
+
+    assert!(result.is_ok());
+}
+
+#[tokio::test]
+async fn test_update_item() {
+    let client = create_client().await;
+
+    let table_name = "test-table".to_string();
+    let mut key = HashMap::new();
+    key.insert("id".to_string(), AttributeValue::S("test-id".to_string()));
+
+    let result = update_item(
+        &client,
+        table_name,
+        key,
+        None, // attribute_updates
+        None, // expected
+        None, // conditional_operator
+        Some(ReturnValue::AllNew),
+        None, // return_consumed_capacity
+        None, // return_item_collection_metrics
+        Some("SET #n = :val".to_string()), // update_expression
+        None, // condition_expression
+        None, // expression_attribute_names
+        None, // expression_attribute_values
+        None, // return_values_on_condition_check_failure
+    )
+    .await;
+
+    assert!(result.is_ok());
+}
+
+#[tokio::test]
+async fn test_scan() {
+    let client = create_client().await;
+
+    let table_name = "test-table".to_string();
+
+    let result = scan(
+        &client,
+        table_name,
+        None,        // index_name
+        None,        // attributes_to_get
+        Some(100),   // limit
+        Some(false), // consistent_read
+        None,        // scan_filter
+        None,        // exclusive_start_key
+        Some(ReturnConsumedCapacity::Total),
+        None, // total_segments
+        None, // segment
+        None, // projection_expression
+        None, // filter_expression
+        None, // expression_attribute_names
+        None, // expression_attribute_values
+        None, // conditional_operator
+        Some(Select::AllAttributes),
+    )
+    .await;
+
+    assert!(result.is_ok());
+}
+
+#[tokio::test]
+async fn test_batch_write_item() {
+    let client = create_client().await;
+
+    let put_request = PutRequest::builder()
+        .item("id", AttributeValue::S("batch-id-1".to_string()))
+        .item("name", AttributeValue::S("batch-name-1".to_string()))
+        .build()
+        .unwrap();
+
+    let write_request = WriteRequest::builder()
+        .put_request(put_request)
+        .build();
+
+    let mut request_items = HashMap::new();
+    request_items.insert("test-table".to_string(), vec![write_request]);
+
+    let result = batch_write_item(
+        &client,
+        request_items,
+        None, // return_consumed_capacity
+        None, // return_item_collection_metrics
     )
     .await;
 
