@@ -5,6 +5,7 @@ pub mod types {
 }
 pub mod traits {
     pub mod llm_provider;
+    pub mod token_provider;
 }
 pub mod aws {
     pub mod aws_apis {
