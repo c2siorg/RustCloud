@@ -17,7 +17,6 @@ impl AzureAuth {
         let mut path = resource.to_string();
         
         let mut query = String::new();
-        \
 
         if let Some(pos) = resource.find('?') {
             path = resource[..pos].to_string();
