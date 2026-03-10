@@ -1,9 +1,14 @@
 #![allow(clippy::result_large_err)]
 
 use aws_sdk_s3::{
-    types::{BucketCannedAcl, CreateBucketConfiguration, ObjectOwnership, RequestPayer},
+    primitives::ByteStream,
+    types::{
+        BucketCannedAcl, CreateBucketConfiguration, MetadataDirective, ObjectCannedAcl,
+        ObjectOwnership, RequestPayer, ServerSideEncryption, StorageClass, TaggingDirective,
+    },
     Client, Error,
 };
+use std::collections::HashMap;
 
 pub async fn create_bucket(
     client: &Client,
@@ -103,6 +108,177 @@ pub async fn list(client: &Client) -> Result<(), Error> {
     match resp {
         Ok(result) => {
             println!("list: {:?}", result);
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error : {:?}", e);
+            Err(e.into())
+        }
+    }
+}
+
+pub async fn put_object(
+    client: &Client,
+    bucket: String,
+    key: String,
+    body: ByteStream,
+    content_type: Option<String>,
+    content_length: Option<i64>,
+    metadata: Option<HashMap<String, String>>,
+    storage_class: Option<StorageClass>,
+    server_side_encryption: Option<ServerSideEncryption>,
+    expected_bucket_owner: Option<String>,
+) -> Result<(), Error> {
+    let resp = client
+        .put_object()
+        .bucket(bucket)
+        .key(key)
+        .body(body)
+        .set_content_type(content_type)
+        .set_content_length(content_length)
+        .set_metadata(metadata)
+        .set_storage_class(storage_class)
+        .set_server_side_encryption(server_side_encryption)
+        .set_expected_bucket_owner(expected_bucket_owner)
+        .send()
+        .await;
+    match resp {
+        Ok(result) => {
+            println!("putobject: {:?}", result);
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error : {:?}", e);
+            Err(e.into())
+        }
+    }
+}
+
+pub async fn get_object(
+    client: &Client,
+    bucket: String,
+    key: String,
+    range: Option<String>,
+    version_id: Option<String>,
+    expected_bucket_owner: Option<String>,
+) -> Result<(), Error> {
+    let resp = client
+        .get_object()
+        .bucket(bucket)
+        .key(key)
+        .set_range(range)
+        .set_version_id(version_id)
+        .set_expected_bucket_owner(expected_bucket_owner)
+        .send()
+        .await;
+    match resp {
+        Ok(result) => {
+            println!("getobject: {:?}", result);
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error : {:?}", e);
+            Err(e.into())
+        }
+    }
+}
+
+pub async fn list_objects_v2(
+    client: &Client,
+    bucket: String,
+    prefix: Option<String>,
+    continuation_token: Option<String>,
+    max_keys: Option<i32>,
+    delimiter: Option<String>,
+    start_after: Option<String>,
+    fetch_owner: Option<bool>,
+    expected_bucket_owner: Option<String>,
+) -> Result<(), Error> {
+    let resp = client
+        .list_objects_v2()
+        .bucket(bucket)
+        .set_prefix(prefix)
+        .set_continuation_token(continuation_token)
+        .set_max_keys(max_keys)
+        .set_delimiter(delimiter)
+        .set_start_after(start_after)
+        .set_fetch_owner(fetch_owner)
+        .set_expected_bucket_owner(expected_bucket_owner)
+        .send()
+        .await;
+    match resp {
+        Ok(result) => {
+            println!("listobjectsv2: {:?}", result);
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error : {:?}", e);
+            Err(e.into())
+        }
+    }
+}
+
+pub async fn head_object(
+    client: &Client,
+    bucket: String,
+    key: String,
+    if_match: Option<String>,
+    if_none_match: Option<String>,
+    range: Option<String>,
+    version_id: Option<String>,
+    expected_bucket_owner: Option<String>,
+) -> Result<(), Error> {
+    let resp = client
+        .head_object()
+        .bucket(bucket)
+        .key(key)
+        .set_if_match(if_match)
+        .set_if_none_match(if_none_match)
+        .set_range(range)
+        .set_version_id(version_id)
+        .set_expected_bucket_owner(expected_bucket_owner)
+        .send()
+        .await;
+    match resp {
+        Ok(result) => {
+            println!("headobject: {:?}", result);
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error : {:?}", e);
+            Err(e.into())
+        }
+    }
+}
+
+pub async fn copy_object(
+    client: &Client,
+    bucket: String,
+    key: String,
+    copy_source: String,
+    metadata_directive: Option<MetadataDirective>,
+    acl: Option<ObjectCannedAcl>,
+    storage_class: Option<StorageClass>,
+    tagging_directive: Option<TaggingDirective>,
+    server_side_encryption: Option<ServerSideEncryption>,
+    expected_bucket_owner: Option<String>,
+) -> Result<(), Error> {
+    let resp = client
+        .copy_object()
+        .bucket(bucket)
+        .key(key)
+        .copy_source(copy_source)
+        .set_metadata_directive(metadata_directive)
+        .set_acl(acl)
+        .set_storage_class(storage_class)
+        .set_tagging_directive(tagging_directive)
+        .set_server_side_encryption(server_side_encryption)
+        .set_expected_bucket_owner(expected_bucket_owner)
+        .send()
+        .await;
+    match resp {
+        Ok(result) => {
+            println!("copyobject: {:?}", result);
             Ok(())
         }
         Err(e) => {
