@@ -4,8 +4,9 @@ use serde::{Deserialize, Serialize};
 
 // Define request and response structs based on your API specification
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateClusterRequest {
-    pub projectId: String,
+    pub project_id: String,
     pub zone: String,
     pub cluster: HashMap<String, String>,
 }
@@ -41,11 +42,12 @@ struct GetClusterResponse {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateNodePoolRequest {
-    pub projectId: String,
+    pub project_id: String,
     pub zone: String,
-    pub clusterId: String,
-    pub nodePool: HashMap<String, String>,
+    pub cluster_id: String,
+    pub node_pool: HashMap<String, String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -87,11 +89,12 @@ struct ListNodePoolsResponse {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SetAddonsConfigRequest {
-    pub projectId: String,
+    pub project_id: String,
     pub zone: String,
-    pub clusterId: String,
-    pub addonsConfig: HashMap<String, String>, // Add other fields as required
+    pub cluster_id: String,
+    pub addons_config: HashMap<String, String>, // Add other fields as required
 }
 
 #[derive(Debug, Deserialize)]

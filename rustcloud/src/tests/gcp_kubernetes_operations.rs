@@ -1,5 +1,10 @@
+#[allow(unused_imports)]
 use crate::gcp::gcp_apis::compute::gcp_kubernetes::*;
+#[allow(unused_imports)]
 use crate::gcp::types::compute::gcp_kubernetes_types::*;
+#[allow(unused_imports)]
+use std::collections::HashMap;
+#[allow(unused_imports)]
 use tokio::test;
 
 async fn create_client() -> GCPKubernetesClient {
@@ -11,9 +16,9 @@ async fn test_create_cluster() {
     let client = create_client().await;
 
     let request = CreateClusterRequest {
-        projectId: "your_project_id".to_string(),
+        project_id: "your_project_id".to_string(),
         zone: "your_zone".to_string(),
-        // Add other required fields for CreateClusterRequest here.
+        cluster: HashMap::new(),
     };
 
     let result = client.create_cluster(request).await;
@@ -66,10 +71,10 @@ async fn test_create_node_pool() {
     let client = create_client().await;
 
     let request = CreateNodePoolRequest {
-        projectId: "your_project_id".to_string(),
+        project_id: "your_project_id".to_string(),
         zone: "your_zone".to_string(),
-        clusterId: "your_cluster_id".to_string(),
-        // Add other required fields for CreateNodePoolRequest here.
+        cluster_id: "your_cluster_id".to_string(),
+        node_pool: HashMap::new(),
     };
 
     let result = client.create_node_pool(request).await;
@@ -125,10 +130,10 @@ async fn test_set_addons_config() {
     let client = create_client().await;
 
     let request = SetAddonsConfigRequest {
-        projectId: "your_project_id".to_string(),
+        project_id: "your_project_id".to_string(),
         zone: "your_zone".to_string(),
-        clusterId: "your_cluster_id".to_string(),
-        // Add other required fields for SetAddonsConfigRequest here.
+        cluster_id: "your_cluster_id".to_string(),
+        addons_config: HashMap::new(),
     };
 
     let result = client.set_addons_config(request).await;

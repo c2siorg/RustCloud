@@ -3,13 +3,13 @@ use reqwest::header::AUTHORIZATION;
 use serde_json::Value;
 use std::collections::HashMap;
 
-struct GoogleStorage {
+pub struct GoogleStorage {
     client: reqwest::Client,
     base_url: String,
 }
 
 impl GoogleStorage {
-    fn new() -> Self {
+    pub fn new() -> Self {
         GoogleStorage {
             client: reqwest::Client::new(),
             base_url: "https://www.googleapis.com/compute/v1".to_string(),
@@ -97,17 +97,13 @@ impl GoogleStorage {
             }
         }
 
-        option.insert(
-            "Zone",
-            &Value::String(format!("projects/{}/zones/{}", project_id, zone)),
-        );
-        option.insert(
-            "Type",
-            &Value::String(format!(
-                "projects/{}/zones/{}/diskTypes/{}",
-                project_id, zone, disk_type
-            )),
-        );
+        let zone_value = Value::String(format!("projects/{}/zones/{}", project_id, zone));
+        let type_value = Value::String(format!(
+            "projects/{}/zones/{}/diskTypes/{}",
+            project_id, zone, disk_type
+        ));
+        option.insert("Zone", &zone_value);
+        option.insert("Type", &type_value);
 
         let create_disk_json = serde_json::to_string(&option).unwrap();
         let url = format!(
