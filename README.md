@@ -79,7 +79,7 @@ All I/O is async (backed by Tokio), and errors are returned as the `CloudError` 
 |---|---|
 | AI / ML | [AutoML](examples/gcp/artificial_intelligence/automl.md) |
 | App Services | [Cloud Pub/Sub](examples/gcp/app_services/notifications.md) |
-| Compute | [Compute Engine](examples/gcp/compute/compute_engine.md), [GKE](examples/gcp/compute/kubenetes.md) |
+| Compute | [Compute Engine](examples/gcp/compute/compute_engine.md), [GKE](examples/gcp/compute/kubernetes.md) |
 | Database | [Bigtable](examples/gcp/database/bigtable.md), BigQuery |
 | Network | [Cloud DNS](examples/gcp/network/dns.md), [Load Balancing](examples/gcp/network/loadbalancer.md) |
 | Storage | [Cloud Storage](examples/gcp/storage/storage.md) |
