@@ -1,4 +1,22 @@
 mod tests;
+pub mod errors;
+pub mod types {
+    pub mod llm;
+}
+pub mod traits {
+    pub mod llm_provider;
+    pub mod token_provider;
+}
+pub mod azure{
+    pub mod azure_apis{
+        pub mod auth{
+            pub mod azure_auth;
+        }
+        pub mod storage{
+            pub mod azure_blob;
+        }
+    }
+}
 pub mod aws {
     pub mod aws_apis {
         pub mod compute {
@@ -42,6 +60,7 @@ pub mod gcp {
         }
         pub mod database {
             pub mod gcp_bigtable;
+            pub mod gcp_bigquery;
         }
         pub mod network {
             pub mod gcp_dns;
@@ -55,6 +74,23 @@ pub mod gcp {
         }
     }
     pub mod types;
+}
+
+pub mod digiocean {
+    pub mod digiocean_apis {
+        pub mod compute {
+            pub mod digiocean_droplet;
+        }
+        pub mod dns {
+            pub mod digiocean_dns;
+        }
+        pub mod network {
+            pub mod digiocean_loadbalancer;
+        }
+        pub mod storage {
+            pub mod digiocean_storage;
+        }
+    }
 }
 fn main() {
     println!("Hello, world!");

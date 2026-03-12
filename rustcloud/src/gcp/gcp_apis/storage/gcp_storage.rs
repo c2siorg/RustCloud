@@ -3,20 +3,20 @@ use reqwest::header::AUTHORIZATION;
 use serde_json::Value;
 use std::collections::HashMap;
 
-struct GoogleStorage {
+pub struct GoogleStorage {
     client: reqwest::Client,
     base_url: String,
 }
 
 impl GoogleStorage {
-    fn new() -> Self {
+    pub fn new() -> Self {
         GoogleStorage {
             client: reqwest::Client::new(),
             base_url: "https://www.googleapis.com/compute/v1".to_string(),
         }
     }
 
-    async fn create_disk(
+    pub async fn create_disk(
         &self,
         request: HashMap<String, Value>,
     ) -> Result<HashMap<String, Value>, reqwest::Error> {
@@ -97,17 +97,13 @@ impl GoogleStorage {
             }
         }
 
-        option.insert(
-            "Zone",
-            &Value::String(format!("projects/{}/zones/{}", project_id, zone)),
-        );
-        option.insert(
-            "Type",
-            &Value::String(format!(
-                "projects/{}/zones/{}/diskTypes/{}",
-                project_id, zone, disk_type
-            )),
-        );
+        let zone_value = Value::String(format!("projects/{}/zones/{}", project_id, zone));
+        let type_value = Value::String(format!(
+            "projects/{}/zones/{}/diskTypes/{}",
+            project_id, zone, disk_type
+        ));
+        option.insert("Zone", &zone_value);
+        option.insert("Type", &type_value);
 
         let create_disk_json = serde_json::to_string(&option).unwrap();
         let url = format!(
@@ -125,7 +121,7 @@ impl GoogleStorage {
             .send()
             .await?;
 
-        let mut body = String::new();
+        let body = resp.text().await.unwrap_or_default();
         let mut response: HashMap<String, Value> = HashMap::new();
         response.insert(
             "status".to_string(),
@@ -136,7 +132,7 @@ impl GoogleStorage {
         Ok(response)
     }
 
-    async fn delete_disk(
+    pub async fn delete_disk(
         &self,
         request: HashMap<String, String>,
     ) -> Result<HashMap<String, Value>, reqwest::Error> {
@@ -153,7 +149,7 @@ impl GoogleStorage {
             .send()
             .await?;
 
-        let mut body = String::new();
+        let body = resp.text().await.unwrap_or_default();
 
         let mut response = HashMap::new();
         response.insert(
@@ -165,7 +161,7 @@ impl GoogleStorage {
         Ok(response)
     }
 
-    async fn create_snapshot(
+    pub async fn create_snapshot(
         &self,
         request: HashMap<String, Value>,
     ) -> Result<HashMap<String, Value>, reqwest::Error> {
@@ -247,7 +243,7 @@ impl GoogleStorage {
             .send()
             .await?;
 
-        let mut body = String::new();
+        let body = resp.text().await.unwrap_or_default();
 
         let mut response = HashMap::new();
         response.insert(

@@ -1,3 +1,4 @@
+mod azure_blob_operations;
 mod aws_archival_operations;
 mod aws_block_operations;
 mod aws_bucket_operations;
@@ -12,6 +13,7 @@ mod aws_loadbalancer_operations;
 mod aws_monitoring_operations;
 mod gcp_automl_operations;
 mod gcp_bigtable_operations;
+mod gcp_bigquery_operations;
 mod gcp_compute_operations;
 mod gcp_dns_operations;
 mod gcp_kubernetes_operations;

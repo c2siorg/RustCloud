@@ -191,7 +191,7 @@ impl GCE {
         let zone = request.get("Zone").unwrap();
         let instance = request.get("instance").unwrap();
         let url = format!(
-            "{}/v1/projects/{}/zones/{}/instances/{}/start",
+            "{}/projects/{}/zones/{}/instances/{}/start",
             self.base_url, project_id, zone, instance
         );
 

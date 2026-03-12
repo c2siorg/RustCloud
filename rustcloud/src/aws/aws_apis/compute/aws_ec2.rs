@@ -1,11 +1,12 @@
 #![allow(clippy::result_large_err)]
 
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_ec2::{operation::run_instances::RunInstancesError, types::Tag, Client, Error};
+use aws_sdk_ec2::{types::Tag, Client, Error};
 
-// use clap::Parser;
-
-pub async fn create_instance(client: &Client, ami_id: &str) -> Result<(), Error> {
+pub async fn create_instance(
+    client: &Client,
+    ami_id: &str,
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let run_instances = client
         .run_instances()
         .image_id(ami_id)
@@ -18,24 +19,32 @@ pub async fn create_instance(client: &Client, ami_id: &str) -> Result<(), Error>
     match run_instances {
         Ok(run_instances) => {
             if run_instances.instances().is_empty() {
-                panic!("No instances created.");
-                let instance_id = run_instances.instances()[0].instance_id().unwrap();
-                client
-                    .create_tags()
-                    .resources(instance_id)
-                    .tags(
-                        Tag::builder()
-                            .key("Name")
-                            .value("From SDK Examples")
-                            .build(),
-                    )
-                    .send()
-                    .await
-                    .unwrap();
-
-                println!("Created {instance_id} and applied tags.",);
+                return Err(Box::new(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    "No instances were created",
+                )));
             }
-            Ok(())
+            let instance_id =
+                run_instances.instances()[0].instance_id().unwrap().to_string();
+            if let Err(e) = client
+                .create_tags()
+                .resources(&instance_id)
+                .tags(
+                    Tag::builder()
+                        .key("Name")
+                        .value("From SDK Examples")
+                        .build(),
+                )
+                .send()
+                .await
+            {
+                eprintln!(
+                    "Warning: created instance {instance_id} but failed to apply tags: {e:?}"
+                );
+            } else {
+                println!("Created {instance_id} and applied tags.");
+            }
+            Ok(instance_id)
         }
         Err(err) => {
             println!("Error: {:?}", err);
@@ -43,6 +52,21 @@ pub async fn create_instance(client: &Client, ami_id: &str) -> Result<(), Error>
         }
     }
 }
+
+pub async fn terminate_instance(client: &Client, id: &str) -> Result<(), Error> {
+    let res = client.terminate_instances().instance_ids(id).send().await;
+    match res {
+        Ok(result) => {
+            println!("Terminated instance: {:?}", result);
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error terminating instance: {:?}", e);
+            Err(e.into())
+        }
+    }
+}
+
 pub async fn show_state(client: &Client, ids: Option<Vec<String>>) -> Result<(), Error> {
     let resp = client
         .describe_instances()
@@ -107,8 +131,6 @@ pub async fn show_all_events(client: &Client) -> Result<(), Error> {
             Err(err.into())
         }
     }
-
-    // let result = resp?;
 }
 
 pub async fn enable_monitoring(client: &Client, id: &str) -> Result<(), Error> {
@@ -129,7 +151,7 @@ pub async fn reboot_instance(client: &Client, id: &str) -> Result<(), Error> {
     let res = client.reboot_instances().instance_ids(id).send().await;
     match res {
         Ok(result) => {
-            println!("Enabled monitoring: {:?}", result);
+            println!("Rebooted instance: {:?}", result);
             Ok(())
         }
         Err(e) => {
@@ -143,11 +165,11 @@ pub async fn start_instance(client: &Client, id: &str) -> Result<(), Error> {
     let res = client.start_instances().instance_ids(id).send().await;
     match res {
         Ok(result) => {
-            println!("Enabled monitoring: {:?}", result);
+            println!("Started instance: {:?}", result);
             Ok(())
         }
         Err(e) => {
-            println!("Error rebooting instance: {:?}", e);
+            println!("Error starting instance: {:?}", e);
             Err(e.into())
         }
     }
@@ -157,11 +179,11 @@ pub async fn stop_instance(client: &Client, id: &str) -> Result<(), Error> {
     let res = client.stop_instances().instance_ids(id).send().await;
     match res {
         Ok(result) => {
-            println!("Enabled monitoring: {:?}", result);
+            println!("Stopped instance: {:?}", result);
             Ok(())
         }
         Err(e) => {
-            println!("Error rebooting instance: {:?}", e);
+            println!("Error stopping instance: {:?}", e);
             Err(e.into())
         }
     }
