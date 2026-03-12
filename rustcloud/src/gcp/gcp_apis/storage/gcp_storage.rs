@@ -16,7 +16,7 @@ impl GoogleStorage {
         }
     }
 
-    async fn create_disk(
+    pub async fn create_disk(
         &self,
         request: HashMap<String, Value>,
     ) -> Result<HashMap<String, Value>, reqwest::Error> {
@@ -132,7 +132,7 @@ impl GoogleStorage {
         Ok(response)
     }
 
-    async fn delete_disk(
+    pub async fn delete_disk(
         &self,
         request: HashMap<String, String>,
     ) -> Result<HashMap<String, Value>, reqwest::Error> {
@@ -161,7 +161,7 @@ impl GoogleStorage {
         Ok(response)
     }
 
-    async fn create_snapshot(
+    pub async fn create_snapshot(
         &self,
         request: HashMap<String, Value>,
     ) -> Result<HashMap<String, Value>, reqwest::Error> {
