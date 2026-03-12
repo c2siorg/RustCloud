@@ -1,4 +1,4 @@
-# RustCloud
+﻿# RustCloud
 
 RustCloud is a Rust library that hides the differences between APIs provided by various cloud providers (AWS, GCP, Azure, and more), letting you manage cloud resources through a single, consistent interface.
 
@@ -56,6 +56,7 @@ All I/O is async (backed by Tokio), and errors are returned as the `CloudError` 
 | **Storage** | Object storage, block storage, and archival |
 | **Network** | Load balancers and DNS management |
 | **Security** | Identity, access management, and key management |
+| **App Services** | Messaging and notification services |
 | **AI/ML** | Machine learning and LLM provider abstractions |
 
 ---
@@ -74,6 +75,13 @@ All I/O is async (backed by Tokio), and errors are returned as the `CloudError` 
 | Storage | S3, Glacier, Block Storage |
 
 Examples: [`examples/aws/`](examples/aws/)
+| Compute | [EC2](examples/aws/compute/ec2.md), [ECS](examples/aws/compute/ecs.md), [EKS](examples/aws/compute/eks.md) |
+| Database | [DynamoDB](examples/aws/database/dynamodb.md) |
+| Management | [CloudWatch](examples/aws/management/monitoring.md) |
+| Network | [Route53](examples/aws/network/dns.md), [Elastic Load Balancing](examples/aws/network/loadbalancer.md) |
+| Security | [IAM](examples/aws/security/iam.md), [KMS](examples/aws/security/kms.md) |
+| Storage | [S3](examples/aws/storage/bucket.md), [Glacier](examples/aws/storage/archival.md), [Block Storage](examples/aws/storage/block.md) |
+| App Services | [SNS](examples/aws/app_services/sns.md) |
 
 ### Google Cloud Platform
 
