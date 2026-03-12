@@ -1,192 +1,330 @@
 # RustCloud
-RustCloud  is a rust library which hides the difference between different APIs provided by varied cloud providers (AWS, GCP, Azure etc.) and allows you to manage different cloud resources through a unified and easy to use API.
-<!-- 
-![GoCloud Logo](assets/logo.png)
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/0fce581810a6420aaca4ba6757c54529)](https://www.codacy.com/app/cloudlibz/gocloud?utm_source=github.com&utm_medium=referral&utm_content=cloudlibz/gocloud&utm_campaign=Badge_Grade)
-[![Build Status](https://travis-ci.org/cloudlibz/gocloud.svg?branch=master)](https://travis-ci.org/cloudlibz/gocloud)
-[![Slack](https://img.shields.io/badge/chat-on%20gitter-ff006f.svg?style=flat-square)](https://gitter.im/cloudlibz/gocloud)
-[![docs](https://camo.githubusercontent.com/df8e028288079a740c10e6cfaad2fa0e0c96014d/687474703a2f2f696d672e736869656c64732e696f2f62616467652f446f63732d6c61746573742d677265656e2e737667)](docs) -->
+RustCloud is a Rust library that hides the differences between APIs provided by various cloud providers (AWS, GCP, Azure, and more), letting you manage cloud resources through a single, consistent interface.
 
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/rust-2021%20edition-orange.svg)](https://www.rust-lang.org)
+[![Slack](https://img.shields.io/badge/chat-slack-purple.svg)](https://c2si.slack.com/archives/rust-cloud)
 
+> **Note:** This is the Rust port of the original [gocloud](https://github.com/cloudlibz/gocloud) library. The install instructions below are for Rust/Cargo — ignore any Go references you may see in older branches.
 
+---
 
+## Table of Contents
 
+- [Overview](#overview)
+- [Service Types](#service-types)
+- [Supported Providers](#supported-providers)
+- [Getting Started](#getting-started)
+- [Credential Setup](#credential-setup)
+- [Usage](#usage)
+- [LLM Provider Abstraction](#llm-provider-abstraction)
+- [Development](#development)
+- [Running Tests](#running-tests)
+- [Contributing](#contributing)
 
+---
 
-<img src="assets/gocloudarchitecture_new.jpg" width="650">
+## Overview
 
+The core idea is straightforward: you should be able to switch between AWS and GCP (or add a new provider entirely) without rewriting your application logic. RustCloud defines traits for each service category, and each cloud provider implements those traits.
+
+```
+Your application code
+        │
+        ▼
+┌──────────────────────┐
+│   RustCloud Traits   │  ← unified API surface
+└──────────┬───────────┘
+           │
+    ┌──────┼──────┐
+    ▼      ▼      ▼
+  AWS     GCP   Azure   ...
+```
+
+All I/O is async (backed by Tokio), and errors are returned as the `CloudError` enum so you can match on them precisely.
+
+---
 
 ## Service Types
 
-**Compute** -- Allows you to manage cloud and virtual servers.
+| Type | Description |
+|---|---|
+| **Compute** | Manage virtual machines and cloud servers |
+| **Container** | Deploy and manage containerized workloads |
+| **Database** | Interact with managed database services |
+| **Storage** | Object storage, block storage, and archival |
+| **Network** | Load balancers and DNS management |
+| **Security** | Identity, access management, and key management |
+| **AI/ML** | Machine learning and LLM provider abstractions |
 
-**Database** -- Allows you to manage Compute storage.
+---
 
-**Container** -- Allows users to install and deploy containers onto container based virtualization platforms.
-
-**Load balancer** -- Allows you to manager Load Balancer service.
-
-**DNS** -- Allows you to manage DNS service.
-
-## Service Providers
+## Supported Providers
 
 ### AWS
 
-* EC2 Compute [Link to example](examples/compute/ec2/ec2.md)
-* EC2 Storage [Link to example](examples/storage/aws_storage/aws_storage.md)
-* Amazon Elastic Container Service (Container) [Link to example](examples/container/aws_container/aws_container.md)
-* Elastic Load Balancing [Link to example](examples/loadbalancer/aws_loadbalancer/aws_loadbalancer.md)
-* AWS Route53 (DNS) [Link to example](examples/dns/aws_route53/aws_route53.md)
+| Category | Service |
+|---|---|
+| Compute | EC2, ECS, EKS |
+| Database | DynamoDB |
+| Management | CloudWatch |
+| Network | Route53, Elastic Load Balancing |
+| Security | IAM, KMS |
+| Storage | S3, Glacier, Block Storage |
 
-### Google
+Examples: [`examples/aws/`](examples/aws/)
 
-* Google Compute [Link to example](examples/compute/gce/gce.md)
-* Google Compute Storage [Link to example](examples/storage/google_storage/google_storage.md)
-* Google Container Service (Container) [Link to example](examples/container/google_container/google_container.md)
-* Google Elastic Load Balancing [Link to example](examples/loadbalancer/google_loadbalancer/google_loadbalancer.md)
-* Google DNS [Link to example](examples/dns/google_dns/google_dns.md)
+### Google Cloud Platform
+
+| Category | Service |
+|---|---|
+| AI / ML | AutoML |
+| App Services | Cloud Pub/Sub |
+| Compute | Compute Engine, GKE |
+| Database | Bigtable, BigQuery |
+| Network | Cloud DNS, Load Balancing |
+| Storage | Cloud Storage |
+
+Examples: [`examples/gcp/`](examples/gcp/)
+
+### Azure *(in progress)*
+
+| Category | Service |
+|---|---|
+| Auth | Azure authentication |
+| Storage | Blob Storage |
+
+### DigitalOcean *(in progress)*
+
+| Category | Service |
+|---|---|
+| Compute | Droplets |
+| Network | Load Balancer |
+| DNS | DigitalOcean DNS |
+| Storage | Block Storage |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+You need a working Rust toolchain. If you don't have one:
+
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+This installs `rustup`, `cargo`, and the stable Rust compiler. The project requires Rust 2021 edition.
+
+### Add to your project
+
+RustCloud is not yet published to crates.io, so reference it directly from the repository:
+
+```toml
+[dependencies]
+rustcloud = { git = "https://github.com/c2siorg/RustCloud", subdirectory = "rustcloud" }
+tokio = { version = "1", features = ["full"] }
+```
+
+### Clone and build
+
+```sh
+git clone https://github.com/c2siorg/RustCloud
+cd RustCloud/rustcloud
+cargo build
+```
+
+---
+
+## Credential Setup
+
+RustCloud uses the standard credential mechanisms for each provider, so you don't need any custom config file format.
+
+### AWS
+
+The AWS SDK for Rust uses the same credential chain as the AWS CLI. The easiest options are environment variables or the shared credentials file.
+
+**Environment variables:**
+```sh
+export AWS_ACCESS_KEY_ID="your-key-id"
+export AWS_SECRET_ACCESS_KEY="your-secret-key"
+export AWS_DEFAULT_REGION="us-east-1"
+```
+
+**Credentials file** at `~/.aws/credentials`:
+```ini
+[default]
+aws_access_key_id = your-key-id
+aws_secret_access_key = your-secret-key
+```
+
+### Google Cloud Platform
+
+GCP uses Application Default Credentials (ADC). Point the environment variable at your service account key file:
+
+```sh
+export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"
+```
+
+You can download a service account key from the [GCP Console](https://console.cloud.google.com/iam-admin/serviceaccounts). If you're running locally with the `gcloud` CLI installed, `gcloud auth application-default login` works too.
+
+### Azure
+
+```sh
+export AZURE_CLIENT_ID="your-client-id"
+export AZURE_CLIENT_SECRET="your-client-secret"
+export AZURE_TENANT_ID="your-tenant-id"
+```
 
 ### DigitalOcean
 
-* DigitalOcean Droplet [Link to example](examples/compute/droplet/droplet.md)
-* DigitalOcean LoadBalancer [Link to example](examples/loadbalancer/digiocean_loadbalancer/digiocean_loadbalancer.md)
-* DigitalOcean Storage [Link to example](examples/storage/digiocean_storage/digiocean_storage.md)
-* DigitalOcean DNS [Link to example](examples/dns/digioceandns/digioceandns.md)
+```sh
+export DIGITALOCEAN_TOKEN="your-token"
+```
 
-### Ali-cloud
+---
 
-* ECS Compute [Link to example](examples/compute/ecs/ecs.md)
-* ECS Storage [Link to example](examples/storage/ali_storage/ali_storage.md)
-* Alibaba Cloud DNS [Link to example](examples/dns/ali_dns/ali_dns.md)
-* Server Load Balancer [Link to example](examples/loadbalancer/ali_loadbalancer/ali_loadbalancer.md)
-* Container Service [Link to example](examples/container/ali_container/ali_container.md)
+## Usage
 
-### Vultr
+All operations are async and return `Result<_, CloudError>`. A minimal example using the AWS EC2 module:
 
-* Server [Link to example](examples/compute/vultr_compute/vultr_compute.md)
-* Bare Metal [Link to example](examples/baremetal/vultr_baremetal/vultr_baremetal.md)
-* Block Storage [Link to example](examples/storage/vultr_storage/vultr_storage.md)
-* DNS [Link to example](examples/dns/vultr_dns/vultr_dns.md)
+```rust
+use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_ec2::Client;
+use rustcloud::aws::aws_apis::compute::aws_ec2;
 
-Currently, implementations for other cloud providers are being worked on.
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let region = RegionProviderChain::default_provider().or_else("us-east-1");
+    let config = aws_config::from_env().region(region).load().await;
+    let client = Client::new(&config);
 
-## Install
+    let instance_id = aws_ec2::create_instance(&client, "ami-0abcdef1234567890").await?;
+    println!("Created instance: {}", instance_id);
 
-### Linux (Ubuntu)
-
-1. Install golang.  
-   ```
-   $ sudo apt-get update -y
-   $ sudo apt-get install golang -y
-   ```
-
-2. Set GOPATH environment variable. Run `gedit ~/.bashrc`.  
-  Copy the following in your .bashrc file:
-  ```
-  export GOPATH=$HOME/gopath
-  export GOBIN=$HOME/gopath/bin
-  ```
-
-3. Test your installation by copying the following piece of code in a file. Save the file as *gotest.go*. Run the file using the command `go run gotest.go`. If that command returns “Hello World!”, then Go is successfully installed and functional.
-```golang
-package main
-import "fmt"
-func main() {
-    fmt.Printf("Hello World!\n")
+    Ok(())
 }
 ```
 
-4. Now we need to fetch the gocloud repository and other necessary packages. Run the following commands in order:
-```
-$ go get github.com/cloudlibz/gocloud
-$ go get golang.org/x/oauth2
-$ go get cloud.google.com/go/compute/metadata
-```
+For more complete examples, see the [`examples/`](examples/) directory — each service has its own markdown file with copy-pasteable snippets.
 
-5. Create a directory called <b>.gocloud</b> in your <b>HOME</b> directory. Download your AWS, Google and DigitalOcean access credentials and store them in a file in your <b>.gocloud</b> folder.
+---
 
-   #### AWS:
-   Save your AWS credentials in a file named *amazoncloudconfig.json*.
-   ```js
-   {
-     "AWSAccessKeyID": "xxxxxxxxxxxx",
-     "AWSSecretKey": "xxxxxxxxxxxx"
-   }
-   ```
-   #### Google Cloud Services:
-   Save your Google Cloud credentials in a file named *googlecloudconfig.json*. The file is downloaded in the required format.
-   #### DigitalOcean:
-   Save your DigitalOcean credentials in a file named *digioceancloudconfig.json*.
-   ```js
-   {
-     "DigiOceanAccessToken": "xxxxxxxxxxxx"
-   }
-   ```
-   #### Ali-cloud:
-   Save your Ali-cloud credentials in a file named *alicloudconfig.json*.
-   ```js
-   {
-     "AliAccessKeyID":"xxxxxxxxxxxx",
-     "AliAccessKeySecret":"xxxxxxxxxxxx"
-   }
-   ```
-   #### Vultr:
-   Save your Vultr credentials in a file named *vultrconfig.json*.
-   ```
-   {
-     "VultrAPIKey":"xxxxxxxxxxxx"
-   }
-   ```
+## LLM Provider Abstraction
 
-   You can also set your credentials as environment variables.  
-   #### AWS:  
-   ```
-   export AWSAccessKeyID =  "xxxxxxxxxxxx"
-   export AWSSecretKey = "xxxxxxxxxxxx"
-   ```
-   #### Google Cloud Services:
-   ```
-   export PrivateKey =  "xxxxxxxxxxxx"
-   export Type =  "xxxxxxxxxxxx"
-   export ProjectID = "xxxxxxxxxxxx"
-   export PrivateKeyID = "xxxxxxxxxxxx"
-   export ClientEmail = "xxxxxxxxxxxx"
-   export ClientID = "xxxxxxxxxxxx"
-   export AuthURI = "xxxxxxxxxxxx"
-   export TokenURI = "xxxxxxxxxxxx"
-   export AuthProviderX509CertURL = "xxxxxxxxxxxx"
-   export ClientX509CertURL =  "xxxxxxxxxxxx"
-   ```
-   #### DigitalOcean:  
-   ```
-   export DigiOceanAccessToken =  "xxxxxxxxxxxx"
-   ```
-   #### Ali-cloud:
-   ```
-   export AliAccessKeyID =  "xxxxxxxxxxxx"
-   export AliAccessKeySecret =  "xxxxxxxxxxxx"
-   ```
-   #### Vultr:
-   ```
-   export VultrAPIKey =  "xxxxxxxxxxxx"
-   ```
+One of the newer additions to RustCloud is a unified interface for interacting with large language model (LLM) providers. The goal is the same as the rest of the library: write your AI code once, swap the backend provider without touching application logic.
 
-6. You are all set to use gocloud! Check out the following YouTube videos for more information and usage examples:
-https://youtu.be/4LxsAeoonlY?list=PLOdfztY25UNnxK_0KRRHSngJIyVLDKZxq&t=3
+### The `LlmProvider` trait
 
-## Development setup
+```rust
+use rustcloud::traits::llm_provider::LlmProvider;
+use rustcloud::types::llm::{LlmRequest, ModelRef, Message};
 
-```
-$ git clone https://github.com/cloudlibz/gocloud
-$ cd gocloud
+// Any provider that implements LlmProvider can be used here
+async fn ask(provider: &dyn LlmProvider, question: &str) {
+    let req = LlmRequest {
+        model: ModelRef::Logical {
+            family: "gemini".to_string(),
+            tier: Some("pro".to_string()),
+        },
+        messages: vec![Message {
+            role: "user".to_string(),
+            content: question.to_string(),
+        }],
+        max_tokens: Some(512),
+        temperature: Some(0.7),
+        system_prompt: None,
+    };
+
+    let response = provider.generate(req).await.unwrap();
+    println!("{}", response.text);
+}
 ```
 
-## Unit tests
+### Available operations
 
-```
-$ cd gocloud
-$ go test -v ./...
+| Method | Description |
+|---|---|
+| `generate` | Standard text generation (request/response) |
+| `stream` | Streaming generation via async `Stream` |
+| `embed` | Get embeddings for a list of texts |
+| `generate_with_tools` | Text generation with tool/function calling |
+
+### `ModelRef` — flexible model targeting
+
+Instead of embedding provider-specific model IDs everywhere, `ModelRef` gives you three options:
+
+```rust
+// Reference a specific provider model ID (e.g., for Bedrock, Vertex AI)
+ModelRef::Provider("anthropic.claude-3-sonnet-20240229-v1:0".to_string())
+
+// Reference a model logically — the provider implementation resolves this
+ModelRef::Logical { family: "claude".to_string(), tier: Some("sonnet".to_string()) }
+
+// Reference a named deployment (e.g., Azure OpenAI deployments)
+ModelRef::Deployment("my-gpt4-deployment".to_string())
 ```
 
-<b>Please make sure to delete all your instances, storage blocks, load balancers, containers, and DNS settings once you run the tests by visiting the respective web portals of the cloud providers.</b>
+This abstraction is what makes it practical to target Vertex AI, AWS Bedrock, and Azure OpenAI from the same calling code.
+
+> The GSoC 2026 project is extending this by adding concrete implementations for **BigQuery**, **Vertex AI**, **AWS Bedrock GenAI**, and **Azure OpenAI**. If you're interested in contributing, see [issue #36](https://github.com/c2siorg/RustCloud/issues/36) and the `#rust-cloud` Slack channel.
+
+---
+
+## Development
+
+```sh
+git clone https://github.com/c2siorg/RustCloud
+cd RustCloud/rustcloud
+cargo build
+```
+
+Before submitting a PR, run the formatter and linter:
+
+```sh
+cargo fmt
+cargo clippy -- -D warnings
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contribution guide.
+
+---
+
+## Running Tests
+
+```sh
+cd RustCloud/rustcloud
+cargo test
+```
+
+To run tests for a specific provider:
+
+```sh
+cargo test aws      # all AWS tests
+cargo test gcp      # all GCP tests
+```
+
+**Important:** Tests that create real cloud resources will create live infrastructure. Make sure you clean up any instances, storage buckets, load balancers, and DNS records after running integration tests — check each provider's console.
+
+> **GCP note:** Some GCP tests currently have a known compilation issue with struct initialization (see [#14](https://github.com/c2siorg/RustCloud/issues/14)). Unit tests and AWS tests compile and run correctly.
+
+---
+
+## Contributing
+
+Contributions are welcome. A few things to keep in mind:
+
+- Comment on an issue before starting work — it avoids duplicate effort
+- Keep PRs focused; one logical change per PR is easier to review
+- Run `cargo fmt` and `cargo clippy` before pushing
+- Add tests for new functionality
+
+For details, see [CONTRIBUTING.md](CONTRIBUTING.md). To discuss ideas or ask questions, join the `#rust-cloud` channel on [c2si.slack.com](https://c2si.slack.com).
+
+---
+
+## License
+
+Apache 2.0 — see [LICENSE](LICENSE).
