@@ -24,8 +24,10 @@ pub async fn create_instance(
                     "No instances were created",
                 )));
             }
-            let instance_id =
-                run_instances.instances()[0].instance_id().unwrap().to_string();
+            let instance_id = run_instances.instances()[0]
+                .instance_id()
+                .unwrap()
+                .to_string();
             if let Err(e) = client
                 .create_tags()
                 .resources(&instance_id)

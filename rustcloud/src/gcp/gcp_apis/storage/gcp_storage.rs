@@ -121,12 +121,10 @@ impl GoogleStorage {
             .send()
             .await?;
 
+        let status = resp.status().as_u16();
         let body = resp.text().await.unwrap_or_default();
         let mut response: HashMap<String, Value> = HashMap::new();
-        response.insert(
-            "status".to_string(),
-            Value::Number(resp.status().as_u16().into()),
-        );
+        response.insert("status".to_string(), Value::Number(status.into()));
         response.insert("body".to_string(), Value::String(body));
 
         Ok(response)
@@ -149,13 +147,11 @@ impl GoogleStorage {
             .send()
             .await?;
 
+        let status = resp.status().as_u16();
         let body = resp.text().await.unwrap_or_default();
 
         let mut response = HashMap::new();
-        response.insert(
-            "status".to_string(),
-            Value::Number(resp.status().as_u16().into()),
-        );
+        response.insert("status".to_string(), Value::Number(status.into()));
         response.insert("body".to_string(), Value::String(body));
 
         Ok(response)
@@ -243,13 +239,11 @@ impl GoogleStorage {
             .send()
             .await?;
 
+        let status = resp.status().as_u16();
         let body = resp.text().await.unwrap_or_default();
 
         let mut response = HashMap::new();
-        response.insert(
-            "status".to_string(),
-            Value::Number(resp.status().as_u16().into()),
-        );
+        response.insert("status".to_string(), Value::Number(status.into()));
         response.insert("body".to_string(), Value::String(body));
 
         Ok(response)

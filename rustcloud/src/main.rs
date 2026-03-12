@@ -1,5 +1,5 @@
-mod tests;
 pub mod errors;
+mod tests;
 pub mod types {
     pub mod llm;
 }
@@ -7,12 +7,12 @@ pub mod traits {
     pub mod llm_provider;
     pub mod token_provider;
 }
-pub mod azure{
-    pub mod azure_apis{
-        pub mod auth{
+pub mod azure {
+    pub mod azure_apis {
+        pub mod auth {
             pub mod azure_auth;
         }
-        pub mod storage{
+        pub mod storage {
             pub mod azure_blob;
         }
     }
@@ -59,8 +59,8 @@ pub mod gcp {
             pub mod gcp_kubernetes;
         }
         pub mod database {
-            pub mod gcp_bigtable;
             pub mod gcp_bigquery;
+            pub mod gcp_bigtable;
         }
         pub mod network {
             pub mod gcp_dns;
