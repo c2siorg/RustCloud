@@ -16,7 +16,7 @@ impl GoogleStorage {
         }
     }
 
-    async fn create_disk(
+    pub async fn create_disk(
         &self,
         request: HashMap<String, Value>,
     ) -> Result<HashMap<String, Value>, reqwest::Error> {
@@ -121,18 +121,19 @@ impl GoogleStorage {
             .send()
             .await?;
 
+        let status = resp.status().as_u16();
         let body = resp.text().await.unwrap_or_default();
         let mut response: HashMap<String, Value> = HashMap::new();
         response.insert(
             "status".to_string(),
-            Value::Number(resp.status().as_u16().into()),
+            Value::Number(status.into()),
         );
         response.insert("body".to_string(), Value::String(body));
 
         Ok(response)
     }
 
-    async fn delete_disk(
+    pub async fn delete_disk(
         &self,
         request: HashMap<String, String>,
     ) -> Result<HashMap<String, Value>, reqwest::Error> {
@@ -149,19 +150,20 @@ impl GoogleStorage {
             .send()
             .await?;
 
+        let status = resp.status().as_u16();
         let body = resp.text().await.unwrap_or_default();
 
         let mut response = HashMap::new();
         response.insert(
             "status".to_string(),
-            Value::Number(resp.status().as_u16().into()),
+            Value::Number(status.into()),
         );
         response.insert("body".to_string(), Value::String(body));
 
         Ok(response)
     }
 
-    async fn create_snapshot(
+    pub async fn create_snapshot(
         &self,
         request: HashMap<String, Value>,
     ) -> Result<HashMap<String, Value>, reqwest::Error> {
@@ -243,12 +245,13 @@ impl GoogleStorage {
             .send()
             .await?;
 
+        let status = resp.status().as_u16();
         let body = resp.text().await.unwrap_or_default();
 
         let mut response = HashMap::new();
         response.insert(
             "status".to_string(),
-            Value::Number(resp.status().as_u16().into()),
+            Value::Number(status.into()),
         );
         response.insert("body".to_string(), Value::String(body));
 
