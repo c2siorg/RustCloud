@@ -1,4 +1,10 @@
 mod azure_blob_operations;
+mod azure_vm_operations;
+mod azure_nic_operations;
+mod azure_public_ip_operations;
+mod azure_resource_group_operations;
+mod azure_subnet_operations;
+mod azure_vnet_operations;
 mod aws_archival_operations;
 mod aws_block_operations;
 mod aws_bucket_operations;

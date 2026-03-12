@@ -11,9 +11,23 @@ pub mod azure{
     pub mod azure_apis{
         pub mod auth{
             pub mod azure_auth;
+            pub mod azure_cli_auth;
+
+        }
+        pub mod management{
+            pub mod azure_resource_group;
+        }
+        pub mod network{
+            pub mod azure_nic;
+            pub mod azure_public_ip;
+            pub mod azure_subnet;
+            pub mod azure_vnet;
         }
         pub mod storage{
             pub mod azure_blob;
+        }
+        pub mod compute{
+            pub mod azure_vm;
         }
     }
 }
