@@ -149,11 +149,11 @@ async fn test_get_item() {
         &client,
         table_name,
         key,
-        None, // attributes_to_get
+        None,        // attributes_to_get
         Some(false), // consistent_read
-        None, // return_consumed_capacity
-        None, // projection_expression
-        None, // expression_attribute_names
+        None,        // return_consumed_capacity
+        None,        // projection_expression
+        None,        // expression_attribute_names
     )
     .await;
 
@@ -167,7 +167,10 @@ async fn test_put_item() {
     let table_name = "test-table".to_string();
     let mut item = HashMap::new();
     item.insert("id".to_string(), AttributeValue::S("test-id".to_string()));
-    item.insert("name".to_string(), AttributeValue::S("test-name".to_string()));
+    item.insert(
+        "name".to_string(),
+        AttributeValue::S("test-name".to_string()),
+    );
 
     let result = put_item(
         &client,
@@ -204,13 +207,13 @@ async fn test_update_item() {
         None, // expected
         None, // conditional_operator
         Some(ReturnValue::AllNew),
-        None, // return_consumed_capacity
-        None, // return_item_collection_metrics
+        None,                              // return_consumed_capacity
+        None,                              // return_item_collection_metrics
         Some("SET #n = :val".to_string()), // update_expression
-        None, // condition_expression
-        None, // expression_attribute_names
-        None, // expression_attribute_values
-        None, // return_values_on_condition_check_failure
+        None,                              // condition_expression
+        None,                              // expression_attribute_names
+        None,                              // expression_attribute_values
+        None,                              // return_values_on_condition_check_failure
     )
     .await;
 
@@ -257,9 +260,7 @@ async fn test_batch_write_item() {
         .build()
         .unwrap();
 
-    let write_request = WriteRequest::builder()
-        .put_request(put_request)
-        .build();
+    let write_request = WriteRequest::builder().put_request(put_request).build();
 
     let mut request_items = HashMap::new();
     request_items.insert("test-table".to_string(), vec![write_request]);
