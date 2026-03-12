@@ -1,5 +1,6 @@
 mod azure_blob_operations;
 mod azure_vm_operations;
+mod azure_vm_scale_set_operations;
 mod azure_nic_operations;
 mod azure_public_ip_operations;
 mod azure_resource_group_operations;
