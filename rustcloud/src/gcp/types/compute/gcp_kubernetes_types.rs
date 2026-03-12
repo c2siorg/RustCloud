@@ -4,13 +4,15 @@ use serde::{Deserialize, Serialize};
 
 // Define request and response structs based on your API specification
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateClusterRequest {
-    pub projectId: String,
+    pub project_id: String,
     pub zone: String,
     pub cluster: HashMap<String, String>,
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DeleteClusterRequest {
     pub project_id: String,
     pub zone: String,
@@ -23,12 +25,14 @@ struct ListClustersResponse {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ListClustersRequest {
     pub project_id: String,
     pub zone: String,
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetClusterRequest {
     pub project_id: String,
     pub zone: String,
@@ -41,11 +45,12 @@ struct GetClusterResponse {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateNodePoolRequest {
-    pub projectId: String,
+    pub project_id: String,
     pub zone: String,
-    pub clusterId: String,
-    pub nodePool: HashMap<String, String>,
+    pub cluster_id: String,
+    pub node_pool: HashMap<String, String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -54,6 +59,7 @@ struct CreateNodePoolResponse {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DeleteNodePoolRequest {
     pub project_id: String,
     pub zone: String,
@@ -67,6 +73,7 @@ struct GetNodePoolResponse {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetNodePoolRequest {
     pub project_id: String,
     pub zone: String,
@@ -75,6 +82,7 @@ pub struct GetNodePoolRequest {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ListNodePoolsRequest {
     pub project_id: String,
     pub zone: String,
@@ -87,11 +95,12 @@ struct ListNodePoolsResponse {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SetAddonsConfigRequest {
-    pub projectId: String,
+    pub project_id: String,
     pub zone: String,
-    pub clusterId: String,
-    pub addonsConfig: HashMap<String, String>, // Add other fields as required
+    pub cluster_id: String,
+    pub addons_config: HashMap<String, String>, // Add other fields as required
 }
 
 #[derive(Debug, Deserialize)]
