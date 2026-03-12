@@ -6,6 +6,16 @@ pub mod types {
 pub mod traits {
     pub mod llm_provider;
 }
+pub mod azure{
+    pub mod azure_apis{
+        pub mod auth{
+            pub mod azure_auth;
+        }
+        pub mod storage{
+            pub mod azure_blob;
+        }
+    }
+}
 pub mod aws {
     pub mod aws_apis {
         pub mod compute {
