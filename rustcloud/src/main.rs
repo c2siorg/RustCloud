@@ -15,6 +15,9 @@ pub mod azure{
         pub mod storage{
             pub mod azure_blob;
         }
+        pub mod artificial_intelligence {
+            pub mod azure_openai;
+        }
     }
 }
 pub mod aws {
