@@ -22,14 +22,13 @@ impl Droplet {
         request: HashMap<String, Value>,
     ) -> Result<HashMap<String, Value>, reqwest::Error> {
         let url = format!("{}/droplets", self.base_url);
-        let body = serde_json::to_string(&request).unwrap();
 
         let resp = self
             .client
             .post(&url)
             .header("Content-Type", "application/json")
             .header(AUTHORIZATION, format!("Bearer {}", self.token))
-            .body(body)
+            .json(&request)
             .send()
             .await?;
 
