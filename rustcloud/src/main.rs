@@ -22,6 +22,8 @@ pub mod azure{
             pub mod azure_public_ip;
             pub mod azure_subnet;
             pub mod azure_vnet;
+            pub mod azure_load_balancer;
+            pub mod azure_dns;
         }
         pub mod storage{
             pub mod azure_blob;

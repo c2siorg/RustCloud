@@ -21,6 +21,8 @@ mod azure_subnet_operations;
 mod azure_vm_operations;
 mod azure_vm_scale_set_operations;
 mod azure_vnet_operations;
+mod azure_load_balancer_operations;
+mod azure_dns_operations;
 mod gcp_automl_operations;
 mod gcp_bigquery_operations;
 mod gcp_bigtable_operations;

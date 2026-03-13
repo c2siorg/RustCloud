@@ -35,8 +35,11 @@ impl AzurePublicIPClient {
 
         let body = serde_json::json!({
             "location": location,
+            "sku": {
+                "name": "Standard"
+            },
             "properties": {
-                "publicIPAllocationMethod": "Dynamic"
+                "publicIPAllocationMethod": "Static"
             }
         });
 
