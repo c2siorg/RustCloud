@@ -1,12 +1,26 @@
 use reqwest::{header::AUTHORIZATION, Client, Method};
 use serde_json::json;
 use std::collections::HashMap;
+use std::io;
 
 use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
 
 pub struct GCE {
     client: Client,
     base_url: String,
+}
+
+fn get_request_value<'a>(
+    request: &'a HashMap<String, String>,
+    keys: &[&str],
+    field_name: &str,
+) -> Result<&'a String, Box<dyn std::error::Error>> {
+    keys.iter().find_map(|key| request.get(*key)).ok_or_else(|| {
+        Box::new(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            format!("missing required field: {field_name}"),
+        )) as Box<dyn std::error::Error>
+    })
 }
 
 impl GCE {
@@ -27,9 +41,15 @@ impl GCE {
 
         for (key, value) in request {
             match key.as_str() {
-                "projectid" => project_id = value.as_str().unwrap().to_string(),
-                "Zone" => {
-                    zone = value.as_str().unwrap().to_string();
+                "projectid" | "project_id" => {
+                    if let Some(project) = value.as_str() {
+                        project_id = project.to_string();
+                    }
+                }
+                "Zone" | "zone" => {
+                    if let Some(region_zone) = value.as_str() {
+                        zone = region_zone.to_string();
+                    }
                     gce_instance.insert("Zone", value);
                 }
                 "selfLink" => {
@@ -157,7 +177,20 @@ impl GCE {
             }
         }
 
-        let gce_instance_json = serde_json::to_string(&gce_instance).unwrap();
+        if project_id.is_empty() {
+            return Err(Box::new(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "missing required field: project_id",
+            )));
+        }
+        if zone.is_empty() {
+            return Err(Box::new(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "missing required field: zone",
+            )));
+        }
+
+        let gce_instance_json = serde_json::to_string(&gce_instance)?;
         let url = format!(
             "{}/projects/{}/zones/{}/instances",
             self.base_url, project_id, zone
@@ -187,9 +220,9 @@ impl GCE {
         &self,
         request: HashMap<String, String>,
     ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
-        let project_id = request.get("projectid").unwrap();
-        let zone = request.get("Zone").unwrap();
-        let instance = request.get("instance").unwrap();
+        let project_id = get_request_value(&request, &["project_id", "projectid"], "project_id")?;
+        let zone = get_request_value(&request, &["zone", "Zone"], "zone")?;
+        let instance = get_request_value(&request, &["instance"], "instance")?;
         let url = format!(
             "{}/projects/{}/zones/{}/instances/{}/start",
             self.base_url, project_id, zone, instance
@@ -218,9 +251,9 @@ impl GCE {
         &self,
         request: HashMap<String, String>,
     ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
-        let project_id = request.get("projectid").unwrap();
-        let zone = request.get("Zone").unwrap();
-        let instance = request.get("instance").unwrap();
+        let project_id = get_request_value(&request, &["project_id", "projectid"], "project_id")?;
+        let zone = get_request_value(&request, &["zone", "Zone"], "zone")?;
+        let instance = get_request_value(&request, &["instance"], "instance")?;
         let url = format!(
             "{}/projects/{}/zones/{}/instances/{}/stop",
             self.base_url, project_id, zone, instance
@@ -249,9 +282,9 @@ impl GCE {
         &self,
         request: HashMap<String, String>,
     ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
-        let project_id = request.get("projectid").unwrap();
-        let zone = request.get("Zone").unwrap();
-        let instance = request.get("instance").unwrap();
+        let project_id = get_request_value(&request, &["project_id", "projectid"], "project_id")?;
+        let zone = get_request_value(&request, &["zone", "Zone"], "zone")?;
+        let instance = get_request_value(&request, &["instance"], "instance")?;
         let url = format!(
             "{}/projects/{}/zones/{}/instances/{}",
             self.base_url, project_id, zone, instance
@@ -280,9 +313,9 @@ impl GCE {
         &self,
         request: HashMap<String, String>,
     ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
-        let project_id = request.get("projectid").unwrap();
-        let zone = request.get("Zone").unwrap();
-        let instance = request.get("instance").unwrap();
+        let project_id = get_request_value(&request, &["project_id", "projectid"], "project_id")?;
+        let zone = get_request_value(&request, &["zone", "Zone"], "zone")?;
+        let instance = get_request_value(&request, &["instance"], "instance")?;
         let url = format!(
             "{}/projects/{}/zones/{}/instances/{}/reset",
             self.base_url, project_id, zone, instance
@@ -311,8 +344,8 @@ impl GCE {
         &self,
         request: HashMap<String, String>,
     ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
-        let project_id = request.get("projectid").unwrap();
-        let zone = request.get("Zone").unwrap();
+        let project_id = get_request_value(&request, &["project_id", "projectid"], "project_id")?;
+        let zone = get_request_value(&request, &["zone", "Zone"], "zone")?;
         let url = format!(
             "{}/projects/{}/zones/{}/instances/",
             self.base_url, project_id, zone
