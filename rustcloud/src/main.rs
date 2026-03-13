@@ -56,6 +56,9 @@ pub mod gcp {
         pub mod artificial_intelligence {
             pub mod gcp_automl;
             pub mod vertex;
+            pub mod gcp_vertex_ai;
+            pub mod gcp_gemini;
+            pub mod gcp_genai;
         }
         pub mod compute {
             pub mod gcp_compute_engine;
