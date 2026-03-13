@@ -1,6 +1,6 @@
 # RustCloud
 
-RustCloud is a Rust library that hides the differences between APIs provided by various cloud providers (AWS, GCP, Azure, and more), letting you manage cloud resources through a single, consistent interface.
+RustCloud is a Rust library that hides the differences between APIs provided by various cloud providers (AWS, GCP, Azure, and DigitalOcean), letting you manage cloud resources through a single, consistent interface.
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-2021%20edition-orange.svg)](https://www.rust-lang.org)
@@ -79,7 +79,7 @@ Examples: [`examples/aws/`](examples/aws/)
 
 | Category | Service |
 |---|---|
-| AI / ML | AutoML |
+| AI / ML | AutoML (legacy API) |
 | App Services | Cloud Pub/Sub |
 | Compute | Compute Engine, GKE |
 | Database | Bigtable, BigQuery |
@@ -88,14 +88,16 @@ Examples: [`examples/aws/`](examples/aws/)
 
 Examples: [`examples/gcp/`](examples/gcp/)
 
-### Azure *(in progress)*
+### Azure *(limited support)*
 
 | Category | Service |
 |---|---|
-| Auth | Azure authentication |
-| Storage | Blob Storage |
+| Auth | Azure authentication helpers |
+| Storage | Blob Storage (container operations) |
 
-### DigitalOcean *(in progress)*
+Examples: coming soon.
+
+### DigitalOcean
 
 | Category | Service |
 |---|---|
@@ -103,6 +105,8 @@ Examples: [`examples/gcp/`](examples/gcp/)
 | Network | Load Balancer |
 | DNS | DigitalOcean DNS |
 | Storage | Block Storage |
+
+Examples: coming soon.
 
 ---
 
