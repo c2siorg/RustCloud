@@ -74,6 +74,7 @@ All I/O is async (backed by Tokio), and errors are returned as the `CloudError` 
 | Security | [IAM](examples/aws/security/iam.md), [KMS](examples/aws/security/kms.md) |
 | Storage | [S3](examples/aws/storage/bucket.md), [Glacier](examples/aws/storage/archival.md), [Block Storage](examples/aws/storage/block.md) |
 | App Services | [SNS](examples/aws/app_services/sns.md) |
+| AI / ML | [Bedrock](examples/aws/artificial_intelligence/bedrock.md) |
 
 ### Google Cloud Platform
 
