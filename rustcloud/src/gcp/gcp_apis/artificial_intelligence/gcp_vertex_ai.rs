@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use futures::channel::mpsc;
 use futures::SinkExt;
+use futures::StreamExt;
 use reqwest::{header::AUTHORIZATION, Client};
 use serde::{Deserialize, Serialize};
 
@@ -11,8 +12,6 @@ use crate::types::llm::{
     EmbedResponse, FinishReason, LlmRequest, LlmResponse, LlmStreamEvent, ToolCallResponse,
     ToolDefinition, UsageStats,
 };
-
-// ── request types ────────────────────────────────────────────────────────────
 
 #[derive(Serialize)]
 struct Part {
@@ -65,8 +64,6 @@ struct GenerateRequest {
     tools: Option<Vec<Tool>>,
 }
 
-// ── response types ────────────────────────────────────────────────────────────
-
 #[derive(Deserialize)]
 struct ResponsePart {
     text: Option<String>,
@@ -106,8 +103,6 @@ struct GenerateResponse {
     usage_metadata: Option<UsageMetadata>,
 }
 
-// ── embed types ───────────────────────────────────────────────────────────────
-
 #[derive(Serialize)]
 struct EmbedInstance {
     content: String,
@@ -132,8 +127,6 @@ struct EmbedPrediction {
 struct EmbedResponse_ {
     predictions: Vec<EmbedPrediction>,
 }
-
-// ── adapter ───────────────────────────────────────────────────────────────────
 
 pub struct VertexAiAdapter {
     client: Client,
@@ -270,7 +263,7 @@ impl LlmProvider for VertexAiAdapter {
             return Err(CloudError::Provider {
                 http_status: status,
                 message: msg,
-                retryable: status >= 500,
+                retryable: status == 429 || status >= 500,
             });
         }
 
@@ -306,41 +299,63 @@ impl LlmProvider for VertexAiAdapter {
             return Err(CloudError::Provider {
                 http_status: status,
                 message: msg,
-                retryable: status >= 500,
+                retryable: status == 429 || status >= 500,
             });
         }
 
         let (mut tx, rx) = mpsc::unbounded::<LlmStreamEvent>();
 
-        let bytes = response
-            .bytes()
-            .await
-            .map_err(|e| CloudError::Network { source: e })?;
-
-        let text = String::from_utf8_lossy(&bytes).to_string();
-
         tokio::spawn(async move {
-            for line in text.lines() {
-                let line = line.trim();
-                if line.starts_with("data: ") {
-                    let json_str = &line[6..];
-                    if json_str == "[DONE]" {
-                        break;
-                    }
-                    if let Ok(resp) = serde_json::from_str::<GenerateResponse>(json_str) {
-                        for candidate in resp.candidates {
-                            if let Some(content) = candidate.content {
-                                for part in content.parts {
-                                    if let Some(t) = part.text {
-                                        tx.send(LlmStreamEvent::DeltaText(t)).await.ok();
+            let mut stream = response.bytes_stream();
+            let mut buffer = String::new();
+            let mut last_finish_reason = FinishReason::Stop;
+            'outer: while let Some(chunk) = stream.next().await {
+                match chunk {
+                    Ok(bytes) => {
+                        buffer.push_str(&String::from_utf8_lossy(&bytes));
+                        loop {
+                            if let Some(pos) = buffer.find('\n') {
+                                let line = buffer[..pos].trim().to_string();
+                                buffer.drain(..=pos);
+                                if line.starts_with("data: ") {
+                                    let json_str = &line[6..];
+                                    if json_str == "[DONE]" {
+                                        break 'outer;
+                                    }
+                                    if let Ok(resp) =
+                                        serde_json::from_str::<GenerateResponse>(json_str)
+                                    {
+                                        for candidate in resp.candidates {
+                                            if let Some(reason) = &candidate.finish_reason {
+                                                last_finish_reason = match reason.as_str() {
+                                                    "STOP" => FinishReason::Stop,
+                                                    "MAX_TOKENS" => FinishReason::Length,
+                                                    other => {
+                                                        FinishReason::Other(other.to_string())
+                                                    }
+                                                };
+                                            }
+                                            if let Some(content) = candidate.content {
+                                                for part in content.parts {
+                                                    if let Some(t) = part.text {
+                                                        tx.send(LlmStreamEvent::DeltaText(t))
+                                                            .await
+                                                            .ok();
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
+                            } else {
+                                break;
                             }
                         }
                     }
+                    Err(_) => break,
                 }
             }
-            tx.send(LlmStreamEvent::Done(FinishReason::Stop)).await.ok();
+            tx.send(LlmStreamEvent::Done(last_finish_reason)).await.ok();
         });
 
         Ok(Box::pin(rx))
@@ -375,7 +390,7 @@ impl LlmProvider for VertexAiAdapter {
             return Err(CloudError::Provider {
                 http_status: status,
                 message: msg,
-                retryable: status >= 500,
+                retryable: status == 429 || status >= 500,
             });
         }
 
@@ -428,7 +443,7 @@ impl LlmProvider for VertexAiAdapter {
             return Err(CloudError::Provider {
                 http_status: status,
                 message: msg,
-                retryable: status >= 500,
+                retryable: status == 429 || status >= 500,
             });
         }
 
@@ -436,6 +451,11 @@ impl LlmProvider for VertexAiAdapter {
             .json()
             .await
             .map_err(|e| CloudError::Network { source: e })?;
+
+        let usage = resp.usage_metadata.map(|u| UsageStats {
+            prompt_tokens: u.prompt_token_count.unwrap_or(0),
+            completion_tokens: u.candidates_token_count.unwrap_or(0),
+        });
 
         let candidate = resp.candidates.into_iter().next().ok_or_else(|| {
             CloudError::Provider {
@@ -463,7 +483,7 @@ impl LlmProvider for VertexAiAdapter {
                     return Ok(ToolCallResponse::Text(LlmResponse {
                         text,
                         finish_reason,
-                        usage: None,
+                        usage,
                     }));
                 }
             }

@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use futures::channel::mpsc;
 use futures::SinkExt;
+use futures::StreamExt;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
@@ -13,8 +14,6 @@ use crate::types::llm::{
 
 const BASE_URL: &str = "https://generativelanguage.googleapis.com/v1beta";
 const EMBED_MODEL: &str = "gemini-embedding-001";
-
-// ── request types ────────────────────────────────────────────────────────────
 
 #[derive(Serialize)]
 struct Part {
@@ -67,8 +66,6 @@ struct GenerateRequest {
     tools: Option<Vec<Tool>>,
 }
 
-// ── response types ────────────────────────────────────────────────────────────
-
 #[derive(Deserialize)]
 struct ResponsePart {
     text: Option<String>,
@@ -108,8 +105,6 @@ struct GenerateResponse {
     usage_metadata: Option<UsageMetadata>,
 }
 
-// ── embed types ───────────────────────────────────────────────────────────────
-
 #[derive(Serialize)]
 struct EmbedPart {
     text: String,
@@ -140,8 +135,6 @@ struct EmbedValues {
 struct BatchEmbedResponse {
     embeddings: Vec<EmbedValues>,
 }
-
-// ── adapter ───────────────────────────────────────────────────────────────────
 
 pub struct GeminiAdapter {
     client: Client,
@@ -226,8 +219,13 @@ impl GeminiAdapter {
 
         let text = candidate
             .content
-            .and_then(|c| c.parts.into_iter().next())
-            .and_then(|p| p.text)
+            .map(|c| {
+                c.parts
+                    .into_iter()
+                    .filter_map(|p| p.text)
+                    .collect::<Vec<_>>()
+                    .join("")
+            })
             .unwrap_or_default();
 
         let usage = resp.usage_metadata.map(|u| UsageStats {
@@ -299,32 +297,44 @@ impl LlmProvider for GeminiAdapter {
 
         let (mut tx, rx) = mpsc::unbounded::<LlmStreamEvent>();
 
-        let bytes = response
-            .bytes()
-            .await
-            .map_err(|e| CloudError::Network { source: e })?;
-
-        let text = String::from_utf8_lossy(&bytes).to_string();
-
         tokio::spawn(async move {
-            for line in text.lines() {
-                let line = line.trim();
-                if line.starts_with("data: ") {
-                    let json_str = &line[6..];
-                    if json_str == "[DONE]" {
-                        break;
-                    }
-                    if let Ok(resp) = serde_json::from_str::<GenerateResponse>(json_str) {
-                        for candidate in resp.candidates {
-                            if let Some(content) = candidate.content {
-                                for part in content.parts {
-                                    if let Some(t) = part.text {
-                                        tx.send(LlmStreamEvent::DeltaText(t)).await.ok();
+            let mut stream = response.bytes_stream();
+            let mut buffer = String::new();
+            'outer: while let Some(chunk) = stream.next().await {
+                match chunk {
+                    Ok(bytes) => {
+                        buffer.push_str(&String::from_utf8_lossy(&bytes));
+                        loop {
+                            if let Some(pos) = buffer.find('\n') {
+                                let line = buffer[..pos].trim().to_string();
+                                buffer.drain(..=pos);
+                                if line.starts_with("data: ") {
+                                    let json_str = &line[6..];
+                                    if json_str == "[DONE]" {
+                                        break 'outer;
+                                    }
+                                    if let Ok(resp) =
+                                        serde_json::from_str::<GenerateResponse>(json_str)
+                                    {
+                                        for candidate in resp.candidates {
+                                            if let Some(content) = candidate.content {
+                                                for part in content.parts {
+                                                    if let Some(t) = part.text {
+                                                        tx.send(LlmStreamEvent::DeltaText(t))
+                                                            .await
+                                                            .ok();
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
+                            } else {
+                                break;
                             }
                         }
                     }
+                    Err(_) => break,
                 }
             }
             tx.send(LlmStreamEvent::Done(FinishReason::Stop)).await.ok();

@@ -8,9 +8,11 @@ use crate::types::llm::{LlmRequest, Message, ModelRef, ToolDefinition};
 use futures::StreamExt;
 
 fn create_adapter() -> VertexAiAdapter {
-    let _ = rustls::crypto::ring::default_provider().install_default();
+    rustls::crypto::ring::default_provider().install_default().ok();
+    let project_id = std::env::var("GCP_PROJECT_ID")
+        .expect("GCP_PROJECT_ID must be set to run Vertex AI integration tests");
     VertexAiAdapter::new(
-        "psychic-binder-472611-g9".to_string(),
+        project_id,
         "us-central1".to_string(),
         "gemini-2.0-flash-001".to_string(),
     )
