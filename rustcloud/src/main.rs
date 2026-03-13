@@ -43,6 +43,12 @@ pub mod aws {
             pub mod aws_block_storage;
             pub mod aws_storage_bucket;
         }
+        pub mod app_services {
+            pub mod aws_sns;
+        }
+        pub mod artificial_intelligence {
+            pub mod aws_bedrock;
+        }
     }
 }
 
