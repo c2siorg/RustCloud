@@ -27,7 +27,7 @@ impl AzureBlobClient {
         
         let resource = "/?comp=list";
         
-        let (auth, date) = AzureAuth::generate_headers("GET", &self.account, resource);
+        let (auth, date) = AzureAuth::generate_headers("GET", &self.account, resource)?;
         
 
         let url = format!("{}?comp=list", self.base_url);
@@ -57,7 +57,7 @@ impl AzureBlobClient {
         
         let resource = format!("/{}?restype=container", container);
         
-        let (auth, date) = AzureAuth::generate_headers("PUT", &self.account, &resource);
+        let (auth, date) = AzureAuth::generate_headers("PUT", &self.account, &resource)?;
         let url = format!("{}/{}?restype=container", self.base_url, container);
         
         let response = self
@@ -86,7 +86,7 @@ impl AzureBlobClient {
         
         let resource = format!("/{}?restype=container", container);
         
-        let (auth, date) = AzureAuth::generate_headers("DELETE", &self.account, &resource);
+        let (auth, date) = AzureAuth::generate_headers("DELETE", &self.account, &resource)?;
         
         let url = format!("{}/{}?restype=container", self.base_url, container);
         
