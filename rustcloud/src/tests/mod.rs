@@ -12,6 +12,7 @@ mod aws_loadbalancer_operations;
 mod aws_monitoring_operations;
 mod azure_blob_operations;
 mod azure_container_instance_operations;
+mod azure_function_operations;
 mod azure_kubernetes_service_operations;
 mod azure_nic_operations;
 mod azure_public_ip_operations;
