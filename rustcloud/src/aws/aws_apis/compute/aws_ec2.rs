@@ -100,25 +100,43 @@ pub async fn show_all_events(client: &Client) -> Result<(), Error> {
     match resp {
         Ok(result) => {
             for region in result.regions.unwrap_or_default() {
-                let reg: &'static str = Box::leak(Box::from(region.region_name().unwrap()));
-                let region_provider = RegionProviderChain::default_provider().or_else(reg);
+                let Some(region_name) = region.region_name() else {
+                    continue;
+                };
+                let region_provider =
+                    RegionProviderChain::default_provider().or_else(region_name.to_string());
                 let config = aws_config::from_env().region(region_provider).load().await;
                 let new_client = Client::new(&config);
 
-                let resp = new_client.describe_instance_status().send().await;
-
-                println!("Instances in region {}:", reg);
+                println!("Instances in region {}:", region_name);
                 println!();
 
-                for status in resp.unwrap().instance_statuses() {
-                    println!(
-                        "  Events scheduled for instance ID: {}",
-                        status.instance_id().unwrap_or_default()
-                    );
-                    for event in status.events() {
-                        println!("    Event ID:     {}", event.instance_event_id().unwrap());
-                        println!("    Description:  {}", event.description().unwrap());
-                        println!("    Event code:   {}", event.code().unwrap().as_ref());
+                match new_client.describe_instance_status().send().await {
+                    Ok(instance_statuses) => {
+                        for status in instance_statuses.instance_statuses() {
+                            println!(
+                                "  Events scheduled for instance ID: {}",
+                                status.instance_id().unwrap_or_default()
+                            );
+                            for event in status.events() {
+                                println!(
+                                    "    Event ID:     {}",
+                                    event.instance_event_id().unwrap_or("N/A")
+                                );
+                                println!(
+                                    "    Description:  {}",
+                                    event.description().unwrap_or("N/A")
+                                );
+                                println!(
+                                    "    Event code:   {}",
+                                    event.code().map(|code| code.as_ref()).unwrap_or("N/A")
+                                );
+                                println!();
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        println!("  Failed to describe instance status: {:?}", e);
                         println!();
                     }
                 }
