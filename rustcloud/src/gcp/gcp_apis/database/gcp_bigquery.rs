@@ -72,9 +72,7 @@ impl BigQuery {
         Ok(json!({ "status": status.as_u16(), "body": body }))
     }
 
-    pub async fn list_datasets(
-        &self,
-    ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+    pub async fn list_datasets(&self) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
         let url = format!("{}/projects/{}/datasets", self.base_url, self.project_id);
 
         let token = retrieve_token().await?;
