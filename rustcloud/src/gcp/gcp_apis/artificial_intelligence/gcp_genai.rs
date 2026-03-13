@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use futures::channel::mpsc;
 use futures::SinkExt;
+use futures::StreamExt;
 use reqwest::{header::AUTHORIZATION, Client};
 use serde::{Deserialize, Serialize};
 
@@ -11,10 +12,6 @@ use crate::types::llm::{
     EmbedResponse, FinishReason, LlmRequest, LlmResponse, LlmStreamEvent, ToolCallResponse,
     ToolDefinition, UsageStats,
 };
-
-// ── backend selection ─────────────────────────────────────────────────────────
-// Follows the same pattern as the official Go SDK (google.golang.org/genai)
-// which unifies both backends behind a single client interface.
 
 /// Selects which Google GenAI backend to use.
 pub enum Backend {
@@ -27,8 +24,6 @@ pub enum Backend {
 const GEMINI_BASE: &str = "https://generativelanguage.googleapis.com/v1beta";
 const GEMINI_EMBED_MODEL: &str = "gemini-embedding-001";
 const VERTEX_EMBED_MODEL: &str = "text-embedding-004";
-
-// ── request types ─────────────────────────────────────────────────────────────
 
 #[derive(Serialize)]
 struct Part {
@@ -81,8 +76,6 @@ struct GenerateRequest {
     tools: Option<Vec<Tool>>,
 }
 
-// ── response types ────────────────────────────────────────────────────────────
-
 #[derive(Deserialize)]
 struct ResponsePart {
     text: Option<String>,
@@ -122,8 +115,6 @@ struct GenerateResponse {
     usage_metadata: Option<UsageMetadata>,
 }
 
-// ── embed types — Gemini API (batchEmbedContents) ─────────────────────────────
-
 #[derive(Serialize)]
 struct GeminiEmbedPart {
     text: String,
@@ -155,8 +146,6 @@ struct GeminiBatchEmbedResponse {
     embeddings: Vec<GeminiEmbedValues>,
 }
 
-// ── embed types — Vertex AI (predict) ────────────────────────────────────────
-
 #[derive(Serialize)]
 struct VertexEmbedInstance {
     content: String,
@@ -181,8 +170,6 @@ struct VertexEmbedPrediction {
 struct VertexEmbedResponse {
     predictions: Vec<VertexEmbedPrediction>,
 }
-
-// ── adapter ───────────────────────────────────────────────────────────────────
 
 pub struct GoogleGenAiAdapter {
     client: Client,
@@ -384,32 +371,44 @@ impl LlmProvider for GoogleGenAiAdapter {
 
         let (mut tx, rx) = mpsc::unbounded::<LlmStreamEvent>();
 
-        let bytes = response
-            .bytes()
-            .await
-            .map_err(|e| CloudError::Network { source: e })?;
-
-        let text = String::from_utf8_lossy(&bytes).to_string();
-
         tokio::spawn(async move {
-            for line in text.lines() {
-                let line = line.trim();
-                if line.starts_with("data: ") {
-                    let json_str = &line[6..];
-                    if json_str == "[DONE]" {
-                        break;
-                    }
-                    if let Ok(resp) = serde_json::from_str::<GenerateResponse>(json_str) {
-                        for candidate in resp.candidates {
-                            if let Some(content) = candidate.content {
-                                for part in content.parts {
-                                    if let Some(t) = part.text {
-                                        tx.send(LlmStreamEvent::DeltaText(t)).await.ok();
+            let mut stream = response.bytes_stream();
+            let mut buffer = String::new();
+            'outer: while let Some(chunk) = stream.next().await {
+                match chunk {
+                    Ok(bytes) => {
+                        buffer.push_str(&String::from_utf8_lossy(&bytes));
+                        loop {
+                            if let Some(pos) = buffer.find('\n') {
+                                let line = buffer[..pos].trim().to_string();
+                                buffer.drain(..=pos);
+                                if line.starts_with("data: ") {
+                                    let json_str = &line[6..];
+                                    if json_str == "[DONE]" {
+                                        break 'outer;
+                                    }
+                                    if let Ok(resp) =
+                                        serde_json::from_str::<GenerateResponse>(json_str)
+                                    {
+                                        for candidate in resp.candidates {
+                                            if let Some(content) = candidate.content {
+                                                for part in content.parts {
+                                                    if let Some(t) = part.text {
+                                                        tx.send(LlmStreamEvent::DeltaText(t))
+                                                            .await
+                                                            .ok();
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
+                            } else {
+                                break;
                             }
                         }
                     }
+                    Err(_) => break,
                 }
             }
             tx.send(LlmStreamEvent::Done(FinishReason::Stop)).await.ok();

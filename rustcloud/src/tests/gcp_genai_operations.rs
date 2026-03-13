@@ -9,7 +9,8 @@ use futures::StreamExt;
 
 fn create_adapter() -> GoogleGenAiAdapter {
     let _ = rustls::crypto::ring::default_provider().install_default();
-    let api_key = std::env::var("GEMINI_API_KEY").unwrap_or_default();
+    let api_key = std::env::var("GEMINI_API_KEY")
+        .expect("GEMINI_API_KEY must be set to run GenAI integration tests");
     GoogleGenAiAdapter::new(
         Backend::GeminiApi { api_key },
         "gemini-2.5-flash".to_string(),
