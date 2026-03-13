@@ -15,6 +15,9 @@ pub mod azure{
         pub mod storage{
             pub mod azure_blob;
         }
+        pub mod artificial_intelligence {
+            pub mod azure_openai;
+        }
     }
 }
 pub mod aws {
@@ -42,6 +45,12 @@ pub mod aws {
             pub mod aws_archival_storage;
             pub mod aws_block_storage;
             pub mod aws_storage_bucket;
+        }
+        pub mod app_services {
+            pub mod aws_sns;
+        }
+        pub mod artificial_intelligence {
+            pub mod aws_bedrock;
         }
     }
 }
