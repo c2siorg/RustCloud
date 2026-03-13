@@ -1,4 +1,4 @@
-mod tests;
+﻿mod tests;
 pub mod errors;
 pub mod types {
     pub mod llm;
@@ -42,6 +42,12 @@ pub mod aws {
             pub mod aws_archival_storage;
             pub mod aws_block_storage;
             pub mod aws_storage_bucket;
+        }
+        pub mod app_services {
+            pub mod aws_sns;
+        }
+        pub mod artificial_intelligence {
+            pub mod aws_bedrock;
         }
     }
 }
