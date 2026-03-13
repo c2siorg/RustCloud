@@ -103,8 +103,8 @@ pub async fn show_all_events(client: &Client) -> Result<(), Error> {
                 let Some(region_name) = region.region_name() else {
                     continue;
                 };
-                let region_provider =
-                    RegionProviderChain::default_provider().or_else(region_name.to_string());
+                let region_provider = RegionProviderChain::default_provider()
+                    .or_else(aws_sdk_ec2::config::Region::new(region_name.to_owned()));
                 let config = aws_config::from_env().region(region_provider).load().await;
                 let new_client = Client::new(&config);
 
