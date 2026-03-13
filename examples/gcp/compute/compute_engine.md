@@ -35,8 +35,8 @@ async fn main() {
     let gce_client = GCE::new();
 
     let mut request = HashMap::new();
-    request.insert("projectid".to_string(), json!("my-gcp-project"));
-    request.insert("Zone".to_string(), json!("us-central1-a"));
+    request.insert("project_id".to_string(), json!("my-gcp-project"));
+    request.insert("zone".to_string(), json!("us-central1-a"));
     request.insert("Name".to_string(), json!("my-instance"));
     request.insert("MachineType".to_string(), json!("n1-standard-1"));
     // Add other parameters as needed
@@ -57,8 +57,8 @@ async fn main() {
     let gce_client = GCE::new();
 
     let mut request = HashMap::new();
-    request.insert("projectid".to_string(), "my-gcp-project".to_string());
-    request.insert("Zone".to_string(), "us-central1-a".to_string());
+    request.insert("project_id".to_string(), "my-gcp-project".to_string());
+    request.insert("zone".to_string(), "us-central1-a".to_string());
     request.insert("instance".to_string(), "my-instance".to_string());
 
     let response = gce_client.start_node(request).await.unwrap();
@@ -77,8 +77,8 @@ async fn main() {
     let gce_client = GCE::new();
 
     let mut request = HashMap::new();
-    request.insert("projectid".to_string(), "my-gcp-project".to_string());
-    request.insert("Zone".to_string(), "us-central1-a".to_string());
+    request.insert("project_id".to_string(), "my-gcp-project".to_string());
+    request.insert("zone".to_string(), "us-central1-a".to_string());
     request.insert("instance".to_string(), "my-instance".to_string());
 
     let response = gce_client.stop_node(request).await.unwrap();
@@ -97,8 +97,8 @@ async fn main() {
     let gce_client = GCE::new();
 
     let mut request = HashMap::new();
-    request.insert("projectid".to_string(), "my-gcp-project".to_string());
-    request.insert("Zone".to_string(), "us-central1-a".to_string());
+    request.insert("project_id".to_string(), "my-gcp-project".to_string());
+    request.insert("zone".to_string(), "us-central1-a".to_string());
     request.insert("instance".to_string(), "my-instance".to_string());
 
     let response = gce_client.delete_node(request).await.unwrap();
@@ -117,8 +117,8 @@ async fn main() {
     let gce_client = GCE::new();
 
     let mut request = HashMap::new();
-    request.insert("projectid".to_string(), "my-gcp-project".to_string());
-    request.insert("Zone".to_string(), "us-central1-a".to_string());
+    request.insert("project_id".to_string(), "my-gcp-project".to_string());
+    request.insert("zone".to_string(), "us-central1-a".to_string());
     request.insert("instance".to_string(), "my-instance".to_string());
 
     let response = gce_client.reboot_node(request).await.unwrap();
@@ -137,8 +137,8 @@ async fn main() {
     let gce_client = GCE::new();
 
     let mut request = HashMap::new();
-    request.insert("projectid".to_string(), "my-gcp-project".to_string());
-    request.insert("Zone".to_string(), "us-central1-a".to_string());
+    request.insert("project_id".to_string(), "my-gcp-project".to_string());
+    request.insert("zone".to_string(), "us-central1-a".to_string());
 
     let response = gce_client.list_node(request).await.unwrap();
     println!("{:?}", response);
