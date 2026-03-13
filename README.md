@@ -13,6 +13,7 @@ RustCloud is a Rust library that hides the differences between APIs provided by 
 ## Table of Contents
 
 - [Overview](#overview)
+- [RustCloud vs Apache OpenDAL](#rustcloud-vs-apache-opendal)
 - [Service Types](#service-types)
 - [Supported Providers](#supported-providers)
 - [Getting Started](#getting-started)
@@ -43,6 +44,22 @@ Your application code
 ```
 
 All I/O is async (backed by Tokio), and errors are returned as the `CloudError` enum so you can match on them precisely.
+
+---
+
+## RustCloud vs Apache OpenDAL
+
+Both projects reduce provider lock-in, but they solve different layers of the cloud stack:
+
+| Dimension | RustCloud | Apache OpenDAL |
+|---|---|---|
+| Primary focus | Unified cloud service operations across providers | Unified data access layer for storage backends |
+| Main abstraction | Service-category traits (compute, network, AI/ML, storage, etc.) | Storage operators for object/file-like access |
+| Typical use case | Multi-cloud infrastructure + service orchestration from one Rust API | Read/write/list data through one storage API |
+| Breadth in this repo | AWS, GCP, Azure, and DigitalOcean modules (status varies by provider) | Not part of this repo; external project focused on storage connectors |
+| Best fit | You need one library for multiple cloud service categories | You mainly need a storage portability layer |
+
+In short: if your goal is cloud-service orchestration, RustCloud is the direct fit. If your goal is storage portability across many backends, OpenDAL is a strong companion project.
 
 ---
 
