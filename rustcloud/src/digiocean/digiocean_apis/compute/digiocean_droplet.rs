@@ -2,6 +2,8 @@ use reqwest::header::AUTHORIZATION;
 use serde_json::Value;
 use std::collections::HashMap;
 
+use crate::errors::CloudError;
+
 pub struct Droplet {
     client: reqwest::Client,
     base_url: String,
@@ -20,9 +22,10 @@ impl Droplet {
     pub async fn create_droplet(
         &self,
         request: HashMap<String, Value>,
-    ) -> Result<HashMap<String, Value>, reqwest::Error> {
+    ) -> Result<HashMap<String, Value>, CloudError> {
         let url = format!("{}/droplets", self.base_url);
-        let body = serde_json::to_string(&request).unwrap();
+        let body =
+            serde_json::to_string(&request).map_err(|source| CloudError::Serialization { source })?;
 
         let resp = self
             .client
@@ -31,14 +34,18 @@ impl Droplet {
             .header(AUTHORIZATION, format!("Bearer {}", self.token))
             .body(body)
             .send()
-            .await?;
+            .await
+            .map_err(|source| CloudError::Network { source })?;
 
         let mut response: HashMap<String, Value> = HashMap::new();
         response.insert(
             "status".to_string(),
             Value::Number(resp.status().as_u16().into()),
         );
-        let body = resp.text().await.unwrap_or_default();
+        let body = resp
+            .text()
+            .await
+            .map_err(|source| CloudError::Network { source })?;
         response.insert("body".to_string(), Value::String(body));
         Ok(response)
     }
@@ -46,7 +53,7 @@ impl Droplet {
     pub async fn delete_droplet(
         &self,
         droplet_id: &str,
-    ) -> Result<HashMap<String, Value>, reqwest::Error> {
+    ) -> Result<HashMap<String, Value>, CloudError> {
         let url = format!("{}/droplets/{}", self.base_url, droplet_id);
 
         let resp = self
@@ -54,19 +61,23 @@ impl Droplet {
             .delete(&url)
             .header(AUTHORIZATION, format!("Bearer {}", self.token))
             .send()
-            .await?;
+            .await
+            .map_err(|source| CloudError::Network { source })?;
 
         let mut response: HashMap<String, Value> = HashMap::new();
         response.insert(
             "status".to_string(),
             Value::Number(resp.status().as_u16().into()),
         );
-        let body = resp.text().await.unwrap_or_default();
+        let body = resp
+            .text()
+            .await
+            .map_err(|source| CloudError::Network { source })?;
         response.insert("body".to_string(), Value::String(body));
         Ok(response)
     }
 
-    pub async fn list_droplets(&self) -> Result<HashMap<String, Value>, reqwest::Error> {
+    pub async fn list_droplets(&self) -> Result<HashMap<String, Value>, CloudError> {
         let url = format!("{}/droplets", self.base_url);
 
         let resp = self
@@ -74,14 +85,18 @@ impl Droplet {
             .get(&url)
             .header(AUTHORIZATION, format!("Bearer {}", self.token))
             .send()
-            .await?;
+            .await
+            .map_err(|source| CloudError::Network { source })?;
 
         let mut response: HashMap<String, Value> = HashMap::new();
         response.insert(
             "status".to_string(),
             Value::Number(resp.status().as_u16().into()),
         );
-        let body = resp.text().await.unwrap_or_default();
+        let body = resp
+            .text()
+            .await
+            .map_err(|source| CloudError::Network { source })?;
         response.insert("body".to_string(), Value::String(body));
         Ok(response)
     }
