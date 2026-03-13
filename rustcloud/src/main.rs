@@ -24,6 +24,8 @@ pub mod azure{
             pub mod azure_vnet;
             pub mod azure_load_balancer;
             pub mod azure_dns;
+            pub mod azure_nat_gateway;
+            pub mod azure_application_gateway;
         }
         pub mod storage{
             pub mod azure_blob;
