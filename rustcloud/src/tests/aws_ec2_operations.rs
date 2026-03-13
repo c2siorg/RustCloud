@@ -98,7 +98,9 @@ async fn test_start_instance() {
     let client = create_client().await;
     let instance_id = create_test_instance(&client).await;
     wait_for_instance_state(&client, &instance_id, "running").await;
-    stop_instance(&client, &instance_id).await.expect("stop_instance failed");
+    stop_instance(&client, &instance_id)
+        .await
+        .expect("stop_instance failed");
     wait_for_instance_state(&client, &instance_id, "stopped").await;
     let result = start_instance(&client, &instance_id).await;
     cleanup_test_instance(&client, &instance_id).await;

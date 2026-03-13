@@ -4,6 +4,10 @@ use reqwest::{header::AUTHORIZATION, Client, Response};
 use serde_json::to_string;
 use std::collections::HashMap;
 
+#[deprecated(
+    since = "0.2.0",
+    note = "Use VertexAI instead. Google AutoML API is deprecated in favor of Vertex AI."
+)]
 pub struct AutoML {
     client: Client,
     base_url: String,
