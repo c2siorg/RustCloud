@@ -3,6 +3,13 @@ name = "rustcloud"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = []
+live-tests-all = ["live-tests-aws", "live-tests-gcp", "live-tests-azure"]
+live-tests-aws = []
+live-tests-gcp = []
+live-tests-azure = []
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
