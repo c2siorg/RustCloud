@@ -44,6 +44,21 @@ We aim for comprehensive test coverage to ensure the reliability of `rustcloud`.
 
 **Note:** Add tests for your changes to ensure they work correctly. Aim for high coverage to catch potential issues early. 
 
+Run the default library/unit test suite before opening a PR:
+
+```sh
+cd rustcloud
+cargo test --lib
+```
+
+Provider integration tests are opt-in and create live infrastructure. Run only when you have valid credentials and a cleanup plan:
+
+```sh
+cargo test --lib --features live-tests-aws
+cargo test --lib --features live-tests-gcp
+cargo test --lib --features live-tests-azure
+```
+
 ---
 
 # Code of Conduct

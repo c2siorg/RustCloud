@@ -296,19 +296,25 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contribution guide.
 
 ```sh
 cd RustCloud/rustcloud
-cargo test
+cargo test --lib
 ```
 
+Live cloud integration tests are opt-in (to avoid creating infrastructure by accident).
 To run tests for a specific provider:
 
 ```sh
-cargo test aws      # all AWS tests
-cargo test gcp      # all GCP tests
+cargo test --lib --features live-tests-aws
+cargo test --lib --features live-tests-gcp
+cargo test --lib --features live-tests-azure
 ```
 
-**Important:** Tests that create real cloud resources will create live infrastructure. Make sure you clean up any instances, storage buckets, load balancers, and DNS records after running integration tests — check each provider's console.
+To run all live provider tests:
 
-> **GCP note:** Some GCP tests currently have a known compilation issue with struct initialization (see [#14](https://github.com/c2siorg/RustCloud/issues/14)). Unit tests and AWS tests compile and run correctly.
+```sh
+cargo test --lib --features live-tests-all
+```
+
+**Important:** These tests create real cloud resources. Use dedicated test accounts and clean up instances, storage buckets, load balancers, and DNS records after each run.
 
 ---
 
