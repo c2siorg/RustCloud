@@ -93,6 +93,7 @@ All I/O is async (backed by Tokio), and errors are returned as the `CloudError` 
 |---|---|
 | Auth | Azure authentication |
 | Storage | Blob Storage |
+| AI / ML | [Azure OpenAI](examples/azure/artificial_intelligence/azure_openai.md) |
 
 ### DigitalOcean *(in progress)*
 
