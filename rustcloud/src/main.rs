@@ -53,6 +53,7 @@ pub mod gcp {
         }
         pub mod artificial_intelligence {
             pub mod gcp_automl;
+            pub mod gcp_vertex_ai;
         }
         pub mod compute {
             pub mod gcp_compute_engine;
@@ -74,6 +75,11 @@ pub mod gcp {
         }
     }
     pub mod types;
+}
+
+pub mod genai {
+    pub mod client;
+    pub mod routing;
 }
 
 pub mod digiocean {
