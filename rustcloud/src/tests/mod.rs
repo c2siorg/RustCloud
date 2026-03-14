@@ -14,6 +14,7 @@ mod azure_application_gateway_operations;
 mod azure_blob_operations;
 mod azure_container_instance_operations;
 mod azure_dns_operations;
+mod azure_file_storage_operations;
 mod azure_function_operations;
 mod azure_kubernetes_service_operations;
 mod azure_load_balancer_operations;
