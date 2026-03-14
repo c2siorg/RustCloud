@@ -30,6 +30,7 @@ pub mod azure{
         pub mod storage{
             pub mod azure_blob;
             pub mod azure_storage_account;
+            pub mod azure_queue_storage;
         }
         pub mod compute{
             pub mod azure_vm;

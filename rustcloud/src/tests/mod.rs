@@ -20,6 +20,7 @@ mod azure_load_balancer_operations;
 mod azure_nat_gateway_operations;
 mod azure_nic_operations;
 mod azure_public_ip_operations;
+mod azure_queue_storage_operations;
 mod azure_resource_group_operations;
 mod azure_storage_account_operations;
 mod azure_subnet_operations;
