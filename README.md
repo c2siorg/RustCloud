@@ -80,7 +80,7 @@ All I/O is async (backed by Tokio), and errors are returned as the `CloudError` 
 
 | Category | Service |
 |---|---|
-| AI / ML | [AutoML](examples/gcp/artificial_intelligence/automl.md) |
+| AI / ML | [AutoML](examples/gcp/artificial_intelligence/automl.md), [Vertex AI](examples/gcp/artificial_intelligence/vertex_ai.md) |
 | App Services | [Cloud Pub/Sub](examples/gcp/app_services/notifications.md) |
 | Compute | [Compute Engine](examples/gcp/compute/compute_engine.md), [GKE](examples/gcp/compute/kubernetes.md) |
 | Database | [Bigtable](examples/gcp/database/bigtable.md), BigQuery |
@@ -94,6 +94,12 @@ All I/O is async (backed by Tokio), and errors are returned as the `CloudError` 
 | Auth | Azure authentication |
 | Storage | Blob Storage |
 | AI / ML | [Azure OpenAI](examples/azure/artificial_intelligence/azure_openai.md) |
+
+### Multi-Cloud
+
+| API | Description |
+|---|---|
+| [Unified GenAI Client](examples/unified_genai.md) | Route LLM requests across AWS, GCP, and Azure with a single interface |
 
 ### DigitalOcean *(in progress)*
 

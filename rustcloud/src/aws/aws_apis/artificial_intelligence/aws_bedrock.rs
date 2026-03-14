@@ -71,7 +71,11 @@ fn build_messages(req: &LlmRequest) -> Result<Vec<BedrockMessage>, CloudError> {
                 .role(role)
                 .content(ContentBlock::Text(msg.content.clone()))
                 .build()
-                .map_err(|e| CloudError::ProviderError(e.to_string()))
+                .map_err(|e| CloudError::Provider {
+                    http_status: 0,
+                    message: e.to_string(),
+                    retryable: false,
+                })
         })
         .collect()
 }
@@ -133,7 +137,11 @@ impl LlmProvider for BedrockProvider {
         let response = builder
             .send()
             .await
-            .map_err(|e| CloudError::ProviderError(e.to_string()))?;
+            .map_err(|e| CloudError::Provider {
+                http_status: 0,
+                message: e.to_string(),
+                retryable: false,
+            })?;
 
         let text = match response.output() {
             Some(ConverseOutput::Message(msg)) => msg
@@ -182,7 +190,11 @@ impl LlmProvider for BedrockProvider {
         let output = builder
             .send()
             .await
-            .map_err(|e| CloudError::ProviderError(e.to_string()))?;
+            .map_err(|e| CloudError::Provider {
+                http_status: 0,
+                message: e.to_string(),
+                retryable: false,
+            })?;
 
         let event_stream = output.stream;
         let events: Vec<LlmStreamEvent> = event_stream
@@ -218,9 +230,11 @@ impl LlmProvider for BedrockProvider {
                         _ => None,
                     }
                 }
-                Err(e) => Some(LlmStreamEvent::Error(CloudError::ProviderError(
-                    e.to_string(),
-                ))),
+                Err(e) => Some(LlmStreamEvent::Error(CloudError::Provider {
+                    http_status: 0,
+                    message: e.to_string(),
+                    retryable: true,
+                })),
             })
             .collect();
 
@@ -242,16 +256,20 @@ impl LlmProvider for BedrockProvider {
                 .content_type("application/json")
                 .send()
                 .await
-                .map_err(|e| CloudError::ProviderError(e.to_string()))?;
+                .map_err(|e| CloudError::Provider {
+                    http_status: 0,
+                    message: e.to_string(),
+                    retryable: false,
+                })?;
 
             let response_body: Value =
                 serde_json::from_slice(response.body().as_ref())
-                    .map_err(|e| CloudError::ProviderError(e.to_string()))?;
+                    .map_err(|e| CloudError::Serialization { source: e })?;
 
             let embedding: Vec<f32> = serde_json::from_value(
                 response_body["embedding"].clone(),
             )
-            .map_err(|e| CloudError::ProviderError(e.to_string()))?;
+            .map_err(|e| CloudError::Serialization { source: e })?;
 
             println!("Embedding dimension: {}", embedding.len());
             embeddings.push(embedding);
@@ -281,7 +299,11 @@ impl LlmProvider for BedrockProvider {
                     .description(&tool.description)
                     .input_schema(ToolInputSchema::Json(schema_doc))
                     .build()
-                    .map_err(|e| CloudError::ProviderError(e.to_string()));
+                    .map_err(|e| CloudError::Provider {
+                        http_status: 0,
+                        message: e.to_string(),
+                        retryable: false,
+                    });
                 spec.map(Tool::ToolSpec)
             })
             .collect::<Result<Vec<_>, _>>()?;
@@ -294,19 +316,31 @@ impl LlmProvider for BedrockProvider {
             builder = builder.system(SystemContentBlock::Text(system.clone()));
         }
         builder = builder.inference_config(inference_config);
+
+        // All tools must go into a single ToolConfiguration — not one per call
+        let mut tool_config_builder =
+            aws_sdk_bedrockruntime::types::ToolConfiguration::builder();
         for tool in bedrock_tools {
-            builder = builder.tool_config(
-                aws_sdk_bedrockruntime::types::ToolConfiguration::builder()
-                    .tools(tool)
-                    .build()
-                    .map_err(|e| CloudError::ProviderError(e.to_string()))?,
-            );
+            tool_config_builder = tool_config_builder.tools(tool);
         }
+        builder = builder.tool_config(
+            tool_config_builder
+                .build()
+                .map_err(|e| CloudError::Provider {
+                    http_status: 0,
+                    message: e.to_string(),
+                    retryable: false,
+                })?,
+        );
 
         let response = builder
             .send()
             .await
-            .map_err(|e| CloudError::ProviderError(e.to_string()))?;
+            .map_err(|e| CloudError::Provider {
+                http_status: 0,
+                message: e.to_string(),
+                retryable: false,
+            })?;
 
         let finish_reason = map_stop_reason(response.stop_reason());
 
