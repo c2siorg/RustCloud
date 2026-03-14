@@ -19,13 +19,12 @@ pub async fn create_instance(
     match run_instances {
         Ok(run_instances) => {
             if run_instances.instances().is_empty() {
-                return Err(Box::new(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "No instances were created",
-                )));
+                return Err(Box::new(std::io::Error::other("No instances were created")));
             }
-            let instance_id =
-                run_instances.instances()[0].instance_id().unwrap().to_string();
+            let instance_id = run_instances.instances()[0]
+                .instance_id()
+                .unwrap()
+                .to_string();
             if let Err(e) = client
                 .create_tags()
                 .resources(&instance_id)

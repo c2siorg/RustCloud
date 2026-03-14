@@ -7,6 +7,7 @@ use serde_json::to_string;
 pub struct Bigtable {
     client: Client,
     base_url: String,
+    #[allow(dead_code)]
     project_id: String,
 }
 

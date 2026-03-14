@@ -1,13 +1,9 @@
 use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
 use crate::gcp::types::network::gcp_dns_types::*;
-use chrono;
 use reqwest::{header::AUTHORIZATION, Client};
 use serde_json::to_string;
 use std::collections::HashMap;
 use std::error::Error;
-
-const UNIX_DATE: &str = "%a %b %e %H:%M:%S %Z %Y";
-const RFC3339: &str = "%Y-%m-%dT%H:%M:%S%.f%:z";
 
 pub struct GoogleDns {
     client: Client,

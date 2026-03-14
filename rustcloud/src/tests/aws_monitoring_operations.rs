@@ -1,16 +1,13 @@
 use crate::aws::aws_apis::management::aws_monitoring::*;
-use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_cloudwatch::types::{
     ComparisonOperator, Metric, MetricDataQuery, MetricStat, ScanBy, Statistic,
 };
 use aws_sdk_cloudwatch::Client;
 use aws_sdk_ec2::primitives::DateTime;
-use std::collections::HashMap;
 
 async fn create_client() -> Client {
-    let config = aws_config::load_from_env().await;
-    let client = Client::new(&config);
-    return client;
+    let config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
+    Client::new(&config)
 }
 
 #[tokio::test]

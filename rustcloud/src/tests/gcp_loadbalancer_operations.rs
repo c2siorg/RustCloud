@@ -1,6 +1,5 @@
 use crate::gcp::gcp_apis::network::gcp_loadbalancer::*;
 use std::collections::HashMap;
-use tokio::test;
 
 async fn create_client() -> GoogleLoadBalancer {
     GoogleLoadBalancer::new("your_project_id")

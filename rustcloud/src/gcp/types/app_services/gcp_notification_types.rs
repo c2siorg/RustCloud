@@ -3,6 +3,7 @@ use std::collections::HashMap;
 
 // Structs for request payloads
 
+#[allow(non_camel_case_types)]
 pub enum State {
     STATE_UNSPECIFIED,
     ACTIVE,

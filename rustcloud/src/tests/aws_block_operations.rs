@@ -1,12 +1,10 @@
 use crate::aws::aws_apis::storage::aws_block_storage::*;
-use aws_sdk_ec2::config::Region;
 use aws_sdk_ec2::types::{VolumeAttributeName, VolumeType};
-use aws_sdk_ec2::{Client, Config};
+use aws_sdk_ec2::Client;
 
 async fn create_client() -> Client {
-    let config = aws_config::load_from_env().await;
-    let client = Client::new(&config);
-    return client;
+    let config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
+    Client::new(&config)
 }
 
 #[tokio::test]

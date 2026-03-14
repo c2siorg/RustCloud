@@ -1,7 +1,5 @@
 use crate::gcp::gcp_apis::database::gcp_bigtable::*;
 use crate::gcp::types::database::gcp_bigtable_types::*;
-use serde_json::json;
-use tokio::test;
 
 async fn create_client() -> Bigtable {
     Bigtable::new("your_project_id")
