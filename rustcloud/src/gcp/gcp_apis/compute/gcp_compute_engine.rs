@@ -1,8 +1,14 @@
-use reqwest::{header::AUTHORIZATION, Client, Method};
-use serde_json::json;
 use std::collections::HashMap;
 
+use reqwest::{Client, Method};
+use serde_json::{Map, Value};
+
+use crate::gcp::errors::GcpApiError;
 use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
+use crate::gcp::middleware::{
+    array_from_json_field, object_from_json_field, required_json_string, required_string_from_map,
+    send_authorized_json_request,
+};
 
 pub struct GCE {
     client: Client,
@@ -19,321 +25,321 @@ impl GCE {
 
     pub async fn create_node(
         &self,
-        request: HashMap<String, serde_json::Value>,
-    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
-        let mut project_id = String::new();
-        let mut zone = String::new();
-        let mut gce_instance = HashMap::new();
-
-        for (key, value) in request {
-            match key.as_str() {
-                "projectid" => project_id = value.as_str().unwrap().to_string(),
-                "Zone" => {
-                    zone = value.as_str().unwrap().to_string();
-                    gce_instance.insert("Zone", value);
-                }
-                "selfLink" => {
-                    gce_instance.insert("selfLink", value);
-                }
-                "Description" => {
-                    gce_instance.insert("Description", value);
-                }
-                "CanIPForward" => {
-                    gce_instance.insert("CanIPForward", value);
-                }
-                "Name" => {
-                    gce_instance.insert("Name", value);
-                }
-                "MachineType" => {
-                    gce_instance.insert("MachineType", value);
-                }
-                "disk" => {
-                    let disk_param = value.as_array().unwrap();
-                    let mut disks = vec![];
-
-                    for disk_value in disk_param {
-                        let disk_map = disk_value.as_object().unwrap();
-                        let mut disk = HashMap::new();
-                        let mut initialize_param = HashMap::new();
-
-                        for (disk_key, disk_val) in disk_map {
-                            match disk_key.as_str() {
-                                "Type" => {
-                                    disk.insert("Type", disk_val.clone());
-                                }
-                                "Boot" => {
-                                    disk.insert("Boot", disk_val.clone());
-                                }
-                                "Mode" => {
-                                    disk.insert("Mode", disk_val.clone());
-                                }
-                                "AutoDelete" => {
-                                    disk.insert("AutoDelete", disk_val.clone());
-                                }
-                                "DeviceName" => {
-                                    disk.insert("DeviceName", disk_val.clone());
-                                }
-                                "InitializeParams" => {
-                                    let init_params = disk_val.as_object().unwrap();
-                                    initialize_param
-                                        .insert("SourceImage", init_params["SourceImage"].clone());
-                                    initialize_param
-                                        .insert("DiskType", init_params["DiskType"].clone());
-                                    initialize_param
-                                        .insert("DiskSizeGb", init_params["DiskSizeGb"].clone());
-                                    disk.insert("InitializeParams", json!(initialize_param));
-                                }
-                                _ => {}
-                            }
-                        }
-                        disks.push(json!(disk));
-                    }
-                    gce_instance.insert("Disks", json!(disks));
-                }
-                "NetworkInterfaces" => {
-                    let network_interfaces_param = value.as_array().unwrap();
-                    let mut network_interfaces = vec![];
-
-                    for network_interface_value in network_interfaces_param {
-                        let network_interface_map = network_interface_value.as_object().unwrap();
-                        let mut network_interface = HashMap::new();
-                        let mut access_configs = vec![];
-
-                        for (network_interface_key, network_interface_val) in network_interface_map
-                        {
-                            match network_interface_key.as_str() {
-                                "Network" => {
-                                    network_interface
-                                        .insert("Network", network_interface_val.clone());
-                                }
-                                "Subnetwork" => {
-                                    network_interface
-                                        .insert("Subnetwork", network_interface_val.clone());
-                                }
-                                "AccessConfigs" => {
-                                    let access_configs_param =
-                                        network_interface_val.as_array().unwrap();
-                                    for access_config_value in access_configs_param {
-                                        let access_config_map =
-                                            access_config_value.as_object().unwrap();
-                                        let mut access_config = HashMap::new();
-                                        access_config
-                                            .insert("Name", access_config_map["Name"].clone());
-                                        access_config
-                                            .insert("Type", access_config_map["Type"].clone());
-                                        access_configs.push(json!(access_config));
-                                    }
-                                    network_interface
-                                        .insert("AccessConfigs", json!(access_configs));
-                                }
-                                _ => {}
-                            }
-                        }
-                        network_interfaces.push(json!(network_interface));
-                    }
-                    gce_instance.insert("NetworkInterfaces", json!(network_interfaces));
-                }
-                "scheduling" => {
-                    let scheduling_param = value.as_object().unwrap();
-                    let mut scheduling = HashMap::new();
-
-                    for (scheduling_key, scheduling_val) in scheduling_param {
-                        match scheduling_key.as_str() {
-                            "Preemptible" => {
-                                scheduling.insert("Preemptible", scheduling_val.clone());
-                            }
-                            "onHostMaintenance" => {
-                                scheduling.insert("onHostMaintenance", scheduling_val.clone());
-                            }
-                            "automaticRestart" => {
-                                scheduling.insert("automaticRestart", scheduling_val.clone());
-                            }
-                            _ => {}
-                        }
-                    }
-                    gce_instance.insert("Scheduling", json!(scheduling));
-                }
-                _ => {}
-            }
-        }
-
-        let gce_instance_json = serde_json::to_string(&gce_instance).unwrap();
+        request: HashMap<String, Value>,
+    ) -> Result<HashMap<String, String>, GcpApiError> {
+        let (project_id, zone, payload) = build_create_node_payload(&request)?;
         let url = format!(
             "{}/projects/{}/zones/{}/instances",
             self.base_url, project_id, zone
         );
 
-        let token = retrieve_token().await?;
-        let response = self
-            .client
-            .post(&url)
-            .header("Content-Type", "application/json")
-            .header(AUTHORIZATION, format!("Bearer {}", token))
-            .body(gce_instance_json)
-            .send()
-            .await?;
-
-        let status = response.status().as_u16().to_string();
-        let body = response.text().await?;
-
-        let mut create_node_response = HashMap::new();
-        create_node_response.insert("status".to_string(), status);
-        create_node_response.insert("body".to_string(), body);
-
-        Ok(create_node_response)
+        self.execute_request(Method::POST, &url, Some(payload)).await
     }
 
     pub async fn start_node(
         &self,
         request: HashMap<String, String>,
-    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
-        let project_id = request.get("projectid").unwrap();
-        let zone = request.get("Zone").unwrap();
-        let instance = request.get("instance").unwrap();
+    ) -> Result<HashMap<String, String>, GcpApiError> {
+        let (project_id, zone, instance) = extract_node_target(&request)?;
         let url = format!(
             "{}/projects/{}/zones/{}/instances/{}/start",
             self.base_url, project_id, zone, instance
         );
 
-        let token = retrieve_token().await?;
-        let response = self
-            .client
-            .post(&url)
-            .header("Content-Type", "application/json")
-            .header(AUTHORIZATION, format!("Bearer {}", token))
-            .send()
-            .await?;
-
-        let status = response.status().as_u16().to_string();
-        let body = response.text().await?;
-
-        let mut start_node_response = HashMap::new();
-        start_node_response.insert("status".to_string(), status);
-        start_node_response.insert("body".to_string(), body);
-
-        Ok(start_node_response)
+        self.execute_request(Method::POST, &url, None).await
     }
 
     pub async fn stop_node(
         &self,
         request: HashMap<String, String>,
-    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
-        let project_id = request.get("projectid").unwrap();
-        let zone = request.get("Zone").unwrap();
-        let instance = request.get("instance").unwrap();
+    ) -> Result<HashMap<String, String>, GcpApiError> {
+        let (project_id, zone, instance) = extract_node_target(&request)?;
         let url = format!(
             "{}/projects/{}/zones/{}/instances/{}/stop",
             self.base_url, project_id, zone, instance
         );
 
-        let token = retrieve_token().await?;
-        let response = self
-            .client
-            .post(&url)
-            .header("Content-Type", "application/json")
-            .header(AUTHORIZATION, format!("Bearer {}", token))
-            .send()
-            .await?;
-
-        let status = response.status().as_u16().to_string();
-        let body = response.text().await?;
-
-        let mut stop_node_response = HashMap::new();
-        stop_node_response.insert("status".to_string(), status);
-        stop_node_response.insert("body".to_string(), body);
-
-        Ok(stop_node_response)
+        self.execute_request(Method::POST, &url, None).await
     }
 
     pub async fn delete_node(
         &self,
         request: HashMap<String, String>,
-    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
-        let project_id = request.get("projectid").unwrap();
-        let zone = request.get("Zone").unwrap();
-        let instance = request.get("instance").unwrap();
+    ) -> Result<HashMap<String, String>, GcpApiError> {
+        let (project_id, zone, instance) = extract_node_target(&request)?;
         let url = format!(
             "{}/projects/{}/zones/{}/instances/{}",
             self.base_url, project_id, zone, instance
         );
 
-        let token = retrieve_token().await?;
-        let response = self
-            .client
-            .delete(&url)
-            .header("Content-Type", "application/json")
-            .header(AUTHORIZATION, format!("Bearer {}", token))
-            .send()
-            .await?;
-
-        let status = response.status().as_u16().to_string();
-        let body = response.text().await?;
-
-        let mut delete_node_response = HashMap::new();
-        delete_node_response.insert("status".to_string(), status);
-        delete_node_response.insert("body".to_string(), body);
-
-        Ok(delete_node_response)
+        self.execute_request(Method::DELETE, &url, None).await
     }
 
     pub async fn reboot_node(
         &self,
         request: HashMap<String, String>,
-    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
-        let project_id = request.get("projectid").unwrap();
-        let zone = request.get("Zone").unwrap();
-        let instance = request.get("instance").unwrap();
+    ) -> Result<HashMap<String, String>, GcpApiError> {
+        let (project_id, zone, instance) = extract_node_target(&request)?;
         let url = format!(
             "{}/projects/{}/zones/{}/instances/{}/reset",
             self.base_url, project_id, zone, instance
         );
 
-        let token = retrieve_token().await?;
-        let response = self
-            .client
-            .post(&url)
-            .header("Content-Type", "application/json")
-            .header(AUTHORIZATION, format!("Bearer {}", token))
-            .send()
-            .await?;
-
-        let status = response.status().as_u16().to_string();
-        let body = response.text().await?;
-
-        let mut reboot_node_response = HashMap::new();
-        reboot_node_response.insert("status".to_string(), status);
-        reboot_node_response.insert("body".to_string(), body);
-
-        Ok(reboot_node_response)
+        self.execute_request(Method::POST, &url, None).await
     }
 
     pub async fn list_node(
         &self,
         request: HashMap<String, String>,
-    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
-        let project_id = request.get("projectid").unwrap();
-        let zone = request.get("Zone").unwrap();
+    ) -> Result<HashMap<String, String>, GcpApiError> {
+        let (project_id, zone) = extract_project_and_zone(&request)?;
         let url = format!(
             "{}/projects/{}/zones/{}/instances/",
             self.base_url, project_id, zone
         );
 
-        let token = retrieve_token().await?;
-        let response = self
-            .client
-            .request(Method::GET, &url)
-            .header("Content-Type", "application/json")
-            .header(AUTHORIZATION, format!("Bearer {}", token))
-            .send()
-            .await?;
+        self.execute_request(Method::GET, &url, None).await
+    }
 
-        let status = response.status().as_u16().to_string();
-        let body = response.text().await?;
+    async fn execute_request(
+        &self,
+        method: Method,
+        url: &str,
+        body: Option<String>,
+    ) -> Result<HashMap<String, String>, GcpApiError> {
+        let token = retrieve_token()
+            .await
+            .map_err(|error| GcpApiError::Auth {
+                message: error.to_string(),
+            })?;
 
-        let mut list_node_response = HashMap::new();
-        list_node_response.insert("status".to_string(), status);
-        list_node_response.insert("body".to_string(), body);
+        send_authorized_json_request(&self.client, method, url, &token, body).await
+    }
+}
 
-        Ok(list_node_response)
+fn build_create_node_payload(
+    request: &HashMap<String, Value>,
+) -> Result<(String, String, String), GcpApiError> {
+    let project_id = required_json_string(request, "projectid")?;
+    let zone = required_json_string(request, "Zone")?;
+
+    let mut gce_instance = Map::new();
+
+    for key in [
+        "Zone",
+        "selfLink",
+        "Description",
+        "CanIPForward",
+        "Name",
+        "MachineType",
+    ] {
+        if let Some(value) = request.get(key) {
+            gce_instance.insert(key.to_string(), value.clone());
+        }
+    }
+
+    if let Some(disks) = request.get("disk") {
+        gce_instance.insert("Disks".to_string(), parse_disks(disks)?);
+    }
+
+    if let Some(network_interfaces) = request.get("NetworkInterfaces") {
+        gce_instance.insert(
+            "NetworkInterfaces".to_string(),
+            parse_network_interfaces(network_interfaces)?,
+        );
+    }
+
+    if let Some(scheduling) = request.get("scheduling") {
+        gce_instance.insert("Scheduling".to_string(), parse_scheduling(scheduling)?);
+    }
+
+    let payload = serde_json::to_string(&gce_instance)?;
+    Ok((project_id, zone, payload))
+}
+
+fn parse_disks(disks: &Value) -> Result<Value, GcpApiError> {
+    let disk_entries = array_from_json_field(disks, "disk")?;
+    let mut out = Vec::with_capacity(disk_entries.len());
+
+    for disk in disk_entries {
+        let disk_map = object_from_json_field(disk, "disk[]")?;
+        let mut parsed_disk = Map::new();
+
+        for key in ["Type", "Boot", "Mode", "AutoDelete", "DeviceName"] {
+            if let Some(value) = disk_map.get(key) {
+                parsed_disk.insert(key.to_string(), value.clone());
+            }
+        }
+
+        if let Some(initialize_params) = disk_map.get("InitializeParams") {
+            let init_map = object_from_json_field(initialize_params, "InitializeParams")?;
+            let mut parsed_init = Map::new();
+
+            for key in ["SourceImage", "DiskType", "DiskSizeGb"] {
+                if let Some(value) = init_map.get(key) {
+                    parsed_init.insert(key.to_string(), value.clone());
+                }
+            }
+
+            if !parsed_init.is_empty() {
+                parsed_disk.insert("InitializeParams".to_string(), Value::Object(parsed_init));
+            }
+        }
+
+        out.push(Value::Object(parsed_disk));
+    }
+
+    Ok(Value::Array(out))
+}
+
+fn parse_network_interfaces(network_interfaces: &Value) -> Result<Value, GcpApiError> {
+    let interface_entries = array_from_json_field(network_interfaces, "NetworkInterfaces")?;
+    let mut out = Vec::with_capacity(interface_entries.len());
+
+    for network_interface in interface_entries {
+        let interface_map = object_from_json_field(network_interface, "NetworkInterfaces[]")?;
+        let mut parsed_interface = Map::new();
+
+        for key in ["Network", "Subnetwork"] {
+            if let Some(value) = interface_map.get(key) {
+                parsed_interface.insert(key.to_string(), value.clone());
+            }
+        }
+
+        if let Some(access_configs) = interface_map.get("AccessConfigs") {
+            let config_entries = array_from_json_field(access_configs, "AccessConfigs")?;
+            let mut parsed_configs = Vec::with_capacity(config_entries.len());
+
+            for config in config_entries {
+                let config_map = object_from_json_field(config, "AccessConfigs[]")?;
+                let mut parsed_config = Map::new();
+
+                for key in ["Name", "Type"] {
+                    if let Some(value) = config_map.get(key) {
+                        parsed_config.insert(key.to_string(), value.clone());
+                    }
+                }
+
+                parsed_configs.push(Value::Object(parsed_config));
+            }
+
+            parsed_interface.insert("AccessConfigs".to_string(), Value::Array(parsed_configs));
+        }
+
+        out.push(Value::Object(parsed_interface));
+    }
+
+    Ok(Value::Array(out))
+}
+
+fn parse_scheduling(scheduling: &Value) -> Result<Value, GcpApiError> {
+    let scheduling_map = object_from_json_field(scheduling, "scheduling")?;
+    let mut out = Map::new();
+
+    for key in ["Preemptible", "onHostMaintenance", "automaticRestart"] {
+        if let Some(value) = scheduling_map.get(key) {
+            out.insert(key.to_string(), value.clone());
+        }
+    }
+
+    Ok(Value::Object(out))
+}
+
+fn extract_project_and_zone(
+    request: &HashMap<String, String>,
+) -> Result<(String, String), GcpApiError> {
+    let project_id = required_string_from_map(request, "projectid")?;
+    let zone = required_string_from_map(request, "Zone")?;
+    Ok((project_id, zone))
+}
+
+fn extract_node_target(
+    request: &HashMap<String, String>,
+) -> Result<(String, String, String), GcpApiError> {
+    let (project_id, zone) = extract_project_and_zone(request)?;
+    let instance = required_string_from_map(request, "instance")?;
+    Ok((project_id, zone, instance))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn build_create_node_payload_serializes_nested_sections() {
+        let mut request = HashMap::new();
+        request.insert("projectid".to_string(), json!("demo-project"));
+        request.insert("Zone".to_string(), json!("us-central1-a"));
+        request.insert("Name".to_string(), json!("demo-node"));
+        request.insert(
+            "disk".to_string(),
+            json!([{
+                "Type": "PERSISTENT",
+                "Boot": true,
+                "InitializeParams": {
+                    "SourceImage": "img",
+                    "DiskType": "pd-standard",
+                    "DiskSizeGb": "10"
+                }
+            }]),
+        );
+        request.insert(
+            "NetworkInterfaces".to_string(),
+            json!([{
+                "Network": "default",
+                "AccessConfigs": [
+                    {"Name": "External NAT", "Type": "ONE_TO_ONE_NAT"}
+                ]
+            }]),
+        );
+        request.insert(
+            "scheduling".to_string(),
+            json!({
+                "Preemptible": false,
+                "automaticRestart": true
+            }),
+        );
+
+        let (project, zone, payload) = build_create_node_payload(&request).unwrap();
+
+        assert_eq!(project, "demo-project");
+        assert_eq!(zone, "us-central1-a");
+
+        let payload_json: Value = serde_json::from_str(&payload).unwrap();
+        assert_eq!(payload_json["Name"], json!("demo-node"));
+        assert_eq!(payload_json["Disks"][0]["Boot"], json!(true));
+        assert_eq!(
+            payload_json["NetworkInterfaces"][0]["AccessConfigs"][0]["Type"],
+            json!("ONE_TO_ONE_NAT")
+        );
+        assert_eq!(payload_json["Scheduling"]["Preemptible"], json!(false));
+    }
+
+    #[test]
+    fn build_create_node_payload_rejects_missing_project_id() {
+        let mut request = HashMap::new();
+        request.insert("Zone".to_string(), json!("us-central1-a"));
+
+        let error = build_create_node_payload(&request).unwrap_err();
+
+        assert!(matches!(
+            error,
+            GcpApiError::MissingField { field: "projectid" }
+        ));
+    }
+
+    #[test]
+    fn extract_node_target_rejects_missing_instance() {
+        let mut request = HashMap::new();
+        request.insert("projectid".to_string(), "demo-project".to_string());
+        request.insert("Zone".to_string(), "us-central1-a".to_string());
+
+        let error = extract_node_target(&request).unwrap_err();
+
+        assert!(matches!(
+            error,
+            GcpApiError::MissingField { field: "instance" }
+        ));
     }
 }
