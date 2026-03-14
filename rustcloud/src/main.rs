@@ -10,10 +10,35 @@ pub mod traits {
 pub mod azure{
     pub mod azure_apis{
         pub mod auth{
-            pub mod azure_auth;
+            pub mod azure_storage_auth;
+            pub mod azure_cli_auth;
+
+        }
+        pub mod management{
+            pub mod azure_resource_group;
+        }
+        pub mod network{
+            pub mod azure_nic;
+            pub mod azure_public_ip;
+            pub mod azure_subnet;
+            pub mod azure_vnet;
+            pub mod azure_load_balancer;
+            pub mod azure_dns;
+            pub mod azure_nat_gateway;
+            pub mod azure_application_gateway;
         }
         pub mod storage{
             pub mod azure_blob;
+            pub mod azure_storage_account;
+            pub mod azure_queue_storage;
+            pub mod azure_file_storage;
+        }
+        pub mod compute{
+            pub mod azure_vm;
+            pub mod azure_vm_scale_set;
+            pub mod azure_container_instance;
+            pub mod azure_kubernetes_service;
+            pub mod azure_function;
         }
     }
 }

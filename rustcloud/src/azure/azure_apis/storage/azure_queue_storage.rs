@@ -3,24 +3,24 @@ use std::error::Error;
 
 use crate::azure::azure_apis::auth::azure_storage_auth::AzureStorageAuth;
 
-pub struct AzureBlobClient {
+pub struct AzureQueueClient {
     client: Client,
     account: String,
     base_url: String,
 }
 
-impl AzureBlobClient {
+impl AzureQueueClient {
     pub fn new(account: String) -> Self {
-        let base_url = format!("https://{}.blob.core.windows.net", account);
+        let base_url = format!("https://{}.queue.core.windows.net", account);
 
-        AzureBlobClient {
+        AzureQueueClient {
             client: Client::new(),
             account,
             base_url,
         }
     }
 
-    pub async fn list_containers(&self) -> Result<String, Box<dyn Error>> {
+    pub async fn list_queues(&self) -> Result<String, Box<dyn Error>> {
         let resource = "/?comp=list";
 
         let (auth, date) =
@@ -40,23 +40,24 @@ impl AzureBlobClient {
         let status = response.status();
         let body = response.text().await?;
 
-        println!("AZURE LIST BLOB CONTAINERS");
+        println!("AZURE LIST QUEUES");
         println!("Status  : {}", status);
         println!("Response: {}", body);
 
         if !status.is_success() {
-            return Err(format!("List Containers failed: {}", body).into());
+            return Err(format!("List Queues failed: {}", body).into());
         }
 
         Ok(body)
     }
 
-    pub async fn create_container(&self, container: &str) -> Result<String, Box<dyn Error>> {
-        let resource = format!("/{}?restype=container", container);
+    pub async fn create_queue(&self, queue: &str) -> Result<String, Box<dyn Error>> {
+        let resource = format!("/{}", queue);
 
         let (auth, date) =
             AzureStorageAuth::generate_headers("PUT", &self.account, &resource, None, None);
-        let url = format!("{}/{}?restype=container", self.base_url, container);
+
+        let url = format!("{}/{}", self.base_url, queue);
 
         let response = self
             .client
@@ -69,27 +70,26 @@ impl AzureBlobClient {
             .await?;
 
         let status = response.status();
-
         let body = response.text().await?;
 
-        println!("AZURE CREATE BLOB CONTAINER");
+        println!("AZURE CREATE QUEUE");
         println!("Status  : {}", status);
         println!("Response: {}", body);
 
         if !status.is_success() {
-            return Err(format!("Create Container failed: {}", body).into());
+            return Err(format!("Create Queue failed: {}", body).into());
         }
 
         Ok(body)
     }
 
-    pub async fn delete_container(&self, container: &str) -> Result<String, Box<dyn Error>> {
-        let resource = format!("/{}?restype=container", container);
+    pub async fn delete_queue(&self, queue: &str) -> Result<String, Box<dyn Error>> {
+        let resource = format!("/{}", queue);
 
         let (auth, date) =
             AzureStorageAuth::generate_headers("DELETE", &self.account, &resource, None, None);
 
-        let url = format!("{}/{}?restype=container", self.base_url, container);
+        let url = format!("{}/{}", self.base_url, queue);
 
         let response = self
             .client
@@ -101,74 +101,69 @@ impl AzureBlobClient {
             .await?;
 
         let status = response.status();
-
         let body = response.text().await?;
 
-        println!("AZURE DELETE BLOB CONTAINER");
+        println!("AZURE DELETE QUEUE");
         println!("Status  : {}", status);
         println!("Response: {}", body);
 
         if !status.is_success() {
-            return Err(format!("Delete Container failed: {}", body).into());
+            return Err(format!("Delete Queue failed: {}", body).into());
         }
 
         Ok(body)
     }
 
-    pub async fn upload_blob(
-        &self,
-        container: &str,
-        blob_name: &str,
-        data: Vec<u8>,
-    ) -> Result<String, Box<dyn Error>> {
-        let resource = format!("/{}/{}", container, blob_name);
-
-        let (auth, date) = AzureStorageAuth::generate_headers(
-            "PUT",
-            &self.account,
-            &resource,
-            Some(data.len()),
-            Some(vec![("x-ms-blob-type", "BlockBlob")]),
+    pub async fn send_message(&self, queue: &str, message: &str) -> Result<String, Box<dyn Error>> {
+        let body = format!(
+            "<QueueMessage><MessageText>{}</MessageText></QueueMessage>",
+            message
         );
 
-        let url = format!("{}/{}/{}", self.base_url, container, blob_name);
+        let resource = format!("/{}/messages", queue);
+
+        let (auth, date) = AzureStorageAuth::generate_headers(
+            "POST",
+            &self.account,
+            &resource,
+            Some(body.len()),
+            None,
+        );
+
+        let url = format!("{}/{}/messages", self.base_url, queue);
 
         let response = self
             .client
-            .put(&url)
+            .post(&url)
             .header("x-ms-date", date)
             .header("x-ms-version", "2020-10-02")
-            .header("x-ms-blob-type", "BlockBlob")
-            .header("Content-Length", data.len())
+            .header("Content-Length", body.len())
             .header("Authorization", auth)
-            .body(data)
+            .body(body)
             .send()
             .await?;
 
         let status = response.status();
         let body = response.text().await?;
 
-        println!("AZURE UPLOAD BLOB");
+        println!("AZURE SEND MESSAGE");
         println!("Status  : {}", status);
         println!("Response: {}", body);
 
         if !status.is_success() {
-            return Err(format!("Upload Blob failed: {}", body).into());
+            return Err(format!("Send Message failed: {}", body).into());
         }
 
         Ok(body)
     }
 
-    pub async fn list_blobs(&self, container: &str) -> Result<String, Box<dyn Error>> {
-        let resource = format!("/{}?restype=container&comp=list", container);
+    pub async fn receive_messages(&self, queue: &str) -> Result<String, Box<dyn Error>> {
+        let resource = format!("/{}/messages", queue);
 
         let (auth, date) =
             AzureStorageAuth::generate_headers("GET", &self.account, &resource, None, None);
 
-        let url = format!(
-            "{}/{}?restype=container&comp=list",
-            self.base_url, container
-        );
+        let url = format!("{}/{}/messages", self.base_url, queue);
 
         let response = self
             .client
@@ -182,47 +177,12 @@ impl AzureBlobClient {
         let status = response.status();
         let body = response.text().await?;
 
-        println!("AZURE LIST BLOBS");
+        println!("AZURE RECEIVE MESSAGES");
         println!("Status  : {}", status);
         println!("Response: {}", body);
 
         if !status.is_success() {
-            return Err(format!("List Blobs failed: {}", body).into());
-        }
-
-        Ok(body)
-    }
-
-    pub async fn delete_blob(
-        &self,
-        container: &str,
-        blob_name: &str,
-    ) -> Result<String, Box<dyn Error>> {
-        let resource = format!("/{}/{}", container, blob_name);
-
-        let (auth, date) =
-            AzureStorageAuth::generate_headers("DELETE", &self.account, &resource, None, None);
-
-        let url = format!("{}/{}/{}", self.base_url, container, blob_name);
-
-        let response = self
-            .client
-            .delete(&url)
-            .header("x-ms-date", date)
-            .header("x-ms-version", "2020-10-02")
-            .header("Authorization", auth)
-            .send()
-            .await?;
-
-        let status = response.status();
-        let body = response.text().await?;
-
-        println!("AZURE DELETE BLOB");
-        println!("Status  : {}", status);
-        println!("Response: {}", body);
-
-        if !status.is_success() {
-            return Err(format!("Delete Blob failed: {}", body).into());
+            return Err(format!("Receive Messages failed: {}", body).into());
         }
 
         Ok(body)
