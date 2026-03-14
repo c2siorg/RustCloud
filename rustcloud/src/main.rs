@@ -15,6 +15,9 @@ pub mod azure{
         pub mod storage{
             pub mod azure_blob;
         }
+        pub mod artificial_intelligence {
+            pub mod azure_openai;
+        }
     }
 }
 pub mod aws {
@@ -43,6 +46,12 @@ pub mod aws {
             pub mod aws_block_storage;
             pub mod aws_storage_bucket;
         }
+        pub mod app_services {
+            pub mod aws_sns;
+        }
+        pub mod artificial_intelligence {
+            pub mod aws_bedrock;
+        }
     }
 }
 
@@ -53,6 +62,7 @@ pub mod gcp {
         }
         pub mod artificial_intelligence {
             pub mod gcp_automl;
+            pub mod gcp_vertex_ai;
         }
         pub mod compute {
             pub mod gcp_compute_engine;
@@ -74,6 +84,11 @@ pub mod gcp {
         }
     }
     pub mod types;
+}
+
+pub mod genai {
+    pub mod client;
+    pub mod routing;
 }
 
 pub mod digiocean {
