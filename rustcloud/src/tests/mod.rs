@@ -21,6 +21,7 @@ mod azure_nat_gateway_operations;
 mod azure_nic_operations;
 mod azure_public_ip_operations;
 mod azure_resource_group_operations;
+mod azure_storage_account_operations;
 mod azure_subnet_operations;
 mod azure_vm_operations;
 mod azure_vm_scale_set_operations;

@@ -10,7 +10,7 @@ pub mod traits {
 pub mod azure{
     pub mod azure_apis{
         pub mod auth{
-            pub mod azure_auth;
+            pub mod azure_storage_auth;
             pub mod azure_cli_auth;
 
         }
@@ -29,6 +29,7 @@ pub mod azure{
         }
         pub mod storage{
             pub mod azure_blob;
+            pub mod azure_storage_account;
         }
         pub mod compute{
             pub mod azure_vm;
