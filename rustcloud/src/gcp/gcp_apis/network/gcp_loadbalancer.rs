@@ -6,12 +6,10 @@ use serde_json::to_string;
 use std::collections::HashMap;
 use std::error::Error;
 
-const UNIX_DATE: &str = "%a %b %e %H:%M:%S %Z %Y";
-const RFC3339: &str = "%Y-%m-%dT%H:%M:%S%.f%:z";
-
 pub struct GoogleLoadBalancer {
     client: Client,
     base_url: String,
+    #[allow(dead_code)]
     project: String,
 }
 

@@ -1,7 +1,5 @@
 use crate::gcp::gcp_apis::database::gcp_bigtable::*;
 use crate::gcp::types::database::gcp_bigtable_types::*;
-use serde_json::json;
-use tokio::test;
 
 async fn create_client() -> Bigtable {
     Bigtable::new("your_project_id")
@@ -50,13 +48,14 @@ async fn test_create_tables() {
     let parent = "projects/your_project_id/instances/your_instance_id";
     let table_id = "your_table_id";
     let table = Table {
-        // Populate Table struct fields
+        granularity: "MILLIS".to_string(),
+        name: "your_table_name".to_string(),
     };
     let initial_splits = vec![InitialSplits {
-            // Populate InitialSplits struct fields
-        }];
+        key: "split_key".to_string(),
+    }];
     let cluster_states = ClusterStates {
-        // Populate ClusterStates struct fields
+        replication_state: "READY".to_string(),
     };
 
     let result = client

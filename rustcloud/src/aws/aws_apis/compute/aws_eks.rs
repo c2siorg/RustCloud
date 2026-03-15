@@ -1,7 +1,5 @@
 #![allow(clippy::result_large_err)]
 
-use aws_sdk_eks::operation::create_cluster::CreateClusterError;
-use aws_sdk_eks::operation::delete_cluster::DeleteClusterError;
 use aws_sdk_eks::types::{
     AmiTypes, CapacityTypes, KubernetesNetworkConfigRequest, LaunchTemplateSpecification, Logging,
     NodegroupScalingConfig, NodegroupUpdateConfig, RemoteAccessConfig, Taint,

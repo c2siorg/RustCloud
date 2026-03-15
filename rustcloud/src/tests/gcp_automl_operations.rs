@@ -1,6 +1,4 @@
 use crate::gcp::gcp_apis::artificial_intelligence::gcp_automl::*;
-use std::collections::HashMap;
-use tokio::test;
 
 async fn create_client() -> AutoML {
     AutoML::new("your_project_id")

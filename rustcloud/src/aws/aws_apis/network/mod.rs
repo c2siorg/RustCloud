@@ -1,2 +1,2 @@
-mod aws_dns;
-mod aws_loadbalancer;
+pub mod aws_dns;
+pub mod aws_loadbalancer;

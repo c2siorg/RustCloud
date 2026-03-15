@@ -1,14 +1,11 @@
 use crate::aws::aws_apis::compute::aws_ecs::*;
 
-use aws_config;
-use aws_sdk_ecs::config::Region;
-use aws_sdk_ecs::types::{ClusterConfiguration, ClusterSetting, ClusterSettingName, Tag};
-use aws_sdk_ecs::{Client, Config};
+use aws_sdk_ecs::types::{ClusterConfiguration, Tag};
+use aws_sdk_ecs::Client;
 
 async fn create_client() -> Client {
-    let config = aws_config::load_from_env().await;
-    let client = Client::new(&config);
-    return client;
+    let config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
+    Client::new(&config)
 }
 #[tokio::test]
 async fn test_create_ecs_cluster() {
