@@ -18,6 +18,9 @@ pub mod azure{
         pub mod artificial_intelligence {
             pub mod azure_openai;
         }
+        pub mod security {
+            pub mod azure_key_vault;
+        }
     }
 }
 pub mod aws {
@@ -40,6 +43,7 @@ pub mod aws {
         pub mod security {
             pub mod aws_iam;
             pub mod aws_keymanagement;
+            pub mod aws_secrets_manager;
         }
         pub mod storage {
             pub mod aws_archival_storage;
@@ -48,6 +52,7 @@ pub mod aws {
         }
         pub mod app_services {
             pub mod aws_sns;
+            pub mod aws_sqs;
         }
         pub mod artificial_intelligence {
             pub mod aws_bedrock;
@@ -77,6 +82,7 @@ pub mod gcp {
             pub mod gcp_loadbalancer;
         }
         pub mod storage {
+            pub mod gcp_object_storage;
             pub mod gcp_storage;
         }
         pub mod auth {
@@ -88,6 +94,7 @@ pub mod gcp {
 
 pub mod genai {
     pub mod client;
+    pub mod retry;
     pub mod routing;
 }
 
