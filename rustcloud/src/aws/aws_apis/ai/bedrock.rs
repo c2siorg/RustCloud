@@ -68,7 +68,7 @@ impl LlmProvider for AwsBedrockGenAI {
                 retryable: false 
             })?;
 
-        let output_bytes = response.body.unwrap().into_inner();
+        let output_bytes = response.body.into_inner();
         let output_str = String::from_utf8(output_bytes).unwrap_or_default();
         let output_json: Value = serde_json::from_str(&output_str).unwrap_or_default();
         

@@ -1,0 +1,442 @@
+warning: unused manifest key: language
+warning: rustcloud v0.1.0 (C:\Users\HP\OneDrive\Desktop\RustCloud\rustcloud) ignoring invalid dependency `rustcloud` which is missing a lib target
+    Checking rustcloud v0.1.0 (C:\Users\HP\OneDrive\Desktop\RustCloud\rustcloud)
+warning: unused import: `aws_sdk_glacier::config::Region`
+ --> src\tests\aws_archival_operations.rs:2:5
+  |
+2 | use aws_sdk_glacier::config::Region;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Config`
+ --> src\tests\aws_archival_operations.rs:3:31
+  |
+3 | use aws_sdk_glacier::{Client, Config};
+  |                               ^^^^^^
+
+warning: unused import: `aws_sdk_ec2::config::Region`
+ --> src\tests\aws_block_operations.rs:2:5
+  |
+2 | use aws_sdk_ec2::config::Region;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Config`
+ --> src\tests\aws_block_operations.rs:4:27
+  |
+4 | use aws_sdk_ec2::{Client, Config};
+  |                           ^^^^^^
+
+warning: unused imports: `Error`, `ObjectOwnership`, and `RequestPayer`
+ --> src\tests\aws_bucket_operations.rs:6:9
+  |
+6 |         ObjectOwnership, RequestPayer,
+  |         ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^
+7 |     },
+8 |     Client, Error,
+  |             ^^^^^
+
+warning: unused import: `aws_config::meta::region::RegionProviderChain`
+ --> src\tests\aws_dns_operations.rs:2:5
+  |
+2 | use aws_config::meta::region::RegionProviderChain;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ResourceRecordSet` and `config::Config`
+ --> src\tests\aws_dns_operations.rs:5:5
+  |
+5 |     config::Config,
+  |     ^^^^^^^^^^^^^^
+...
+8 |         ResourceRecordSet, RrType, Vpc, VpcRegion,
+  |         ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `aws_sdk_dynamodb::config::Region`
+ --> src\tests\aws_dynamodb_operations.rs:2:5
+  |
+2 | use aws_sdk_dynamodb::config::Region;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `AttributeValueUpdate`, `GlobalSecondaryIndex`, `LocalSecondaryIndex`, `SseSpecification`, and `StreamSpecification`
+ --> src\tests\aws_dynamodb_operations.rs:4:42
+  |
+4 |     AttributeDefinition, AttributeValue, AttributeValueUpdate, BillingMode, ComparisonOperator,
+  |                                          ^^^^^^^^^^^^^^^^^^^^
+5 |     Condition, GlobalSecondaryIndex, KeySchemaElement, KeyType, LocalSecondaryIndex,
+  |                ^^^^^^^^^^^^^^^^^^^^                             ^^^^^^^^^^^^^^^^^^^
+6 |     ProvisionedThroughput, PutRequest, ReturnConsumedCapacity, ReturnValue, ScalarAttributeType,
+7 |     Select, SseSpecification, StreamSpecification, TableClass, WriteRequest,
+  |             ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Config`
+ --> src\tests\aws_dynamodb_operations.rs:9:32
+  |
+9 | use aws_sdk_dynamodb::{Client, Config};
+  |                                ^^^^^^
+
+warning: unused import: `aws_sdk_ecs::config::Region`
+ --> src\tests\aws_ecs_operations.rs:4:5
+  |
+4 | use aws_sdk_ecs::config::Region;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ClusterSettingName` and `ClusterSetting`
+ --> src\tests\aws_ecs_operations.rs:5:48
+  |
+5 | use aws_sdk_ecs::types::{ClusterConfiguration, ClusterSetting, ClusterSettingName, Tag};
+  |                                                ^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Config`
+ --> src\tests\aws_ecs_operations.rs:6:27
+  |
+6 | use aws_sdk_ecs::{Client, Config};
+  |                           ^^^^^^
+
+warning: unused import: `aws_sdk_eks::config::Region`
+ --> src\tests\aws_eks_operations.rs:2:5
+  |
+2 | use aws_sdk_eks::config::Region;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `aws_sdk_eks::error::SdkError`
+ --> src\tests\aws_eks_operations.rs:3:5
+  |
+3 | use aws_sdk_eks::error::SdkError;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `KubernetesNetworkConfigRequest`
+ --> src\tests\aws_eks_operations.rs:5:15
+  |
+5 |     AmiTypes, KubernetesNetworkConfigRequest, Logging, NodegroupScalingConfig,
+  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Config`
+ --> src\tests\aws_eks_operations.rs:8:27
+  |
+8 | use aws_sdk_eks::{Client, Config};
+  |                           ^^^^^^
+
+warning: unused import: `aws_sdk_iam::config::Region`
+ --> src\tests\aws_iam_operations.rs:2:5
+  |
+2 | use aws_sdk_iam::config::Region;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Config`
+ --> src\tests\aws_iam_operations.rs:3:27
+  |
+3 | use aws_sdk_iam::{Client, Config};
+  |                           ^^^^^^
+
+warning: unused import: `aws_sdk_kms::config::Region`
+ --> src\tests\aws_kms_operations.rs:2:5
+  |
+2 | use aws_sdk_kms::config::Region;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Tag`
+ --> src\tests\aws_kms_operations.rs:3:61
+  |
+3 | use aws_sdk_kms::types::{KeySpec, KeyUsageType, OriginType, Tag};
+  |                                                             ^^^
+
+warning: unused import: `Config`
+ --> src\tests\aws_kms_operations.rs:4:27
+  |
+4 | use aws_sdk_kms::{Client, Config};
+  |                           ^^^^^^
+
+warning: unused import: `aws_sdk_elasticloadbalancing::config::Region`
+ --> src\tests\aws_loadbalancer_operations.rs:2:5
+  |
+2 | use aws_sdk_elasticloadbalancing::config::Region;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Config`
+ --> src\tests\aws_loadbalancer_operations.rs:4:44
+  |
+4 | use aws_sdk_elasticloadbalancing::{Client, Config};
+  |                                            ^^^^^^
+
+warning: unused import: `aws_config::meta::region::RegionProviderChain`
+ --> src\tests\aws_monitoring_operations.rs:2:5
+  |
+2 | use aws_config::meta::region::RegionProviderChain;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+ --> src\tests\aws_monitoring_operations.rs:8:5
+  |
+8 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+ --> src\tests\gcp_automl_operations.rs:2:5
+  |
+2 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `tokio::test`
+ --> src\tests\gcp_automl_operations.rs:3:5
+  |
+3 | use tokio::test;
+  |     ^^^^^^^^^^^
+
+warning: unused import: `serde_json::json`
+ --> src\tests\gcp_bigtable_operations.rs:3:5
+  |
+3 | use serde_json::json;
+  |     ^^^^^^^^^^^^^^^^
+
+warning: unused import: `tokio::test`
+ --> src\tests\gcp_bigtable_operations.rs:4:5
+  |
+4 | use tokio::test;
+  |     ^^^^^^^^^^^
+
+warning: unused import: `tokio::test`
+ --> src\tests\gcp_bigquery_operations.rs:3:5
+  |
+3 | use tokio::test;
+  |     ^^^^^^^^^^^
+
+warning: unused import: `tokio::test`
+ --> src\tests\gcp_compute_operations.rs:4:5
+  |
+4 | use tokio::test;
+  |     ^^^^^^^^^^^
+
+warning: unused import: `tokio::test`
+ --> src\tests\gcp_dns_operations.rs:3:5
+  |
+3 | use tokio::test;
+  |     ^^^^^^^^^^^
+
+warning: unused import: `tokio::test`
+ --> src\tests\gcp_loadbalancer_operations.rs:3:5
+  |
+3 | use tokio::test;
+  |     ^^^^^^^^^^^
+
+warning: unused import: `tokio::test`
+ --> src\tests\gcp_notification_operations.rs:3:5
+  |
+3 | use tokio::test;
+  |     ^^^^^^^^^^^
+
+warning: unused import: `tokio::test`
+ --> src\tests\gcp_storage_operations.rs:4:5
+  |
+4 | use tokio::test;
+  |     ^^^^^^^^^^^
+
+warning: unused import: `LlmStreamEvent`
+ --> src\aws\aws_apis\ai\bedrock.rs:8:79
+  |
+8 | use crate::types::llm::{EmbedResponse, FinishReason, LlmRequest, LlmResponse, LlmStreamEvent, ModelRef, ToolCallResponse, ToolDefinit...
+  |                                                                               ^^^^^^^^^^^^^^
+
+warning: unused import: `aws_sdk_eks::operation::create_cluster::CreateClusterError`
+ --> src\aws\aws_apis\compute\aws_eks.rs:3:5
+  |
+3 | use aws_sdk_eks::operation::create_cluster::CreateClusterError;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `aws_sdk_eks::operation::delete_cluster::DeleteClusterError`
+ --> src\aws\aws_apis\compute\aws_eks.rs:4:5
+  |
+4 | use aws_sdk_eks::operation::delete_cluster::DeleteClusterError;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: variant `STATE_UNSPECIFIED` should have an upper camel case name
+ --> src\gcp\types\app_services\gcp_notification_types.rs:7:5
+  |
+7 |     STATE_UNSPECIFIED,
+  |     ^^^^^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `StateUnspecified`
+  |
+  = note: `#[warn(non_camel_case_types)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: variant `INGESTION_RESOURCE_ERROR` should have an upper camel case name
+ --> src\gcp\types\app_services\gcp_notification_types.rs:9:5
+  |
+9 |     INGESTION_RESOURCE_ERROR,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `IngestionResourceError`
+
+warning: variant `RESOURCE_ERROR` should have an upper camel case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:10:5
+   |
+10 |     RESOURCE_ERROR,
+   |     ^^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `ResourceError`
+
+warning: use of deprecated function `aws_config::load_from_env`: Use the `aws_config::load_defaults` function. If you don't care about future default behavior changes, you can continue to use this function by enabling the `behavior-version-latest` feature. Doing so will make this deprecation notice go away.
+ --> src\tests\aws_archival_operations.rs:6:30
+  |
+6 |     let config = aws_config::load_from_env().await;
+  |                              ^^^^^^^^^^^^^
+  |
+  = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated function `aws_config::load_from_env`: Use the `aws_config::load_defaults` function. If you don't care about future default behavior changes, you can continue to use this function by enabling the `behavior-version-latest` feature. Doing so will make this deprecation notice go away.
+ --> src\tests\aws_block_operations.rs:7:30
+  |
+7 |     let config = aws_config::load_from_env().await;
+  |                              ^^^^^^^^^^^^^
+
+warning: use of deprecated function `aws_config::load_from_env`: Use the `aws_config::load_defaults` function. If you don't care about future default behavior changes, you can continue to use this function by enabling the `behavior-version-latest` feature. Doing so will make this deprecation notice go away.
+  --> src\tests\aws_bucket_operations.rs:12:30
+   |
+12 |     let config = aws_config::load_from_env().await;
+   |                              ^^^^^^^^^^^^^
+
+warning: use of deprecated function `aws_config::load_from_env`: Use the `aws_config::load_defaults` function. If you don't care about future default behavior changes, you can continue to use this function by enabling the `behavior-version-latest` feature. Doing so will make this deprecation notice go away.
+  --> src\tests\aws_dns_operations.rs:14:30
+   |
+14 |     let config = aws_config::load_from_env().await;
+   |                              ^^^^^^^^^^^^^
+
+warning: use of deprecated function `aws_config::load_from_env`: Use the `aws_config::load_defaults` function. If you don't care about future default behavior changes, you can continue to use this function by enabling the `behavior-version-latest` feature. Doing so will make this deprecation notice go away.
+  --> src\tests\aws_dynamodb_operations.rs:13:30
+   |
+13 |     let config = aws_config::load_from_env().await;
+   |                              ^^^^^^^^^^^^^
+
+warning: use of deprecated function `aws_config::load_from_env`: Use the `aws_config::load_defaults` function. If you don't care about future default behavior changes, you can continue to use this function by enabling the `behavior-version-latest` feature. Doing so will make this deprecation notice go away.
+ --> src\tests\aws_ec2_operations.rs:9:30
+  |
+9 |     let config = aws_config::load_from_env().await;
+  |                              ^^^^^^^^^^^^^
+
+warning: use of deprecated function `aws_config::load_from_env`: Use the `aws_config::load_defaults` function. If you don't care about future default behavior changes, you can continue to use this function by enabling the `behavior-version-latest` feature. Doing so will make this deprecation notice go away.
+ --> src\tests\aws_ecs_operations.rs:9:30
+  |
+9 |     let config = aws_config::load_from_env().await;
+  |                              ^^^^^^^^^^^^^
+
+warning: use of deprecated function `aws_config::load_from_env`: Use the `aws_config::load_defaults` function. If you don't care about future default behavior changes, you can continue to use this function by enabling the `behavior-version-latest` feature. Doing so will make this deprecation notice go away.
+  --> src\tests\aws_eks_operations.rs:12:30
+   |
+12 |     let config = aws_config::load_from_env().await;
+   |                              ^^^^^^^^^^^^^
+
+warning: use of deprecated function `aws_config::load_from_env`: Use the `aws_config::load_defaults` function. If you don't care about future default behavior changes, you can continue to use this function by enabling the `behavior-version-latest` feature. Doing so will make this deprecation notice go away.
+ --> src\tests\aws_iam_operations.rs:6:30
+  |
+6 |     let config = aws_config::load_from_env().await;
+  |                              ^^^^^^^^^^^^^
+
+warning: use of deprecated function `aws_config::load_from_env`: Use the `aws_config::load_defaults` function. If you don't care about future default behavior changes, you can continue to use this function by enabling the `behavior-version-latest` feature. Doing so will make this deprecation notice go away.
+ --> src\tests\aws_kms_operations.rs:7:30
+  |
+7 |     let config = aws_config::load_from_env().await;
+  |                              ^^^^^^^^^^^^^
+
+warning: use of deprecated function `aws_config::load_from_env`: Use the `aws_config::load_defaults` function. If you don't care about future default behavior changes, you can continue to use this function by enabling the `behavior-version-latest` feature. Doing so will make this deprecation notice go away.
+ --> src\tests\aws_loadbalancer_operations.rs:7:30
+  |
+7 |     let config = aws_config::load_from_env().await;
+  |                              ^^^^^^^^^^^^^
+
+warning: use of deprecated function `aws_config::load_from_env`: Use the `aws_config::load_defaults` function. If you don't care about future default behavior changes, you can continue to use this function by enabling the `behavior-version-latest` feature. Doing so will make this deprecation notice go away.
+  --> src\tests\aws_monitoring_operations.rs:11:30
+   |
+11 |     let config = aws_config::load_from_env().await;
+   |                              ^^^^^^^^^^^^^
+
+warning: use of deprecated function `aws_config::from_env`: Use the `aws_config::defaults` function. If you don't care about future default behavior changes, you can continue to use this function by enabling the `behavior-version-latest` feature. Doing so will make this deprecation notice go away.
+   --> src\aws\aws_apis\compute\aws_ec2.rs:105:42
+    |
+105 |                 let config = aws_config::from_env().region(region_provider).load().await;
+    |                                          ^^^^^^^^
+
+error[E0382]: borrow of moved value: `resp`
+   --> src\gcp\gcp_apis\storage\gcp_storage.rs:128:27
+    |
+115 |         let resp = self
+    |             ---- move occurs because `resp` has type `Response`, which does not implement the `Copy` trait
+...
+124 |         let body = resp.text().await.unwrap_or_default();
+    |                         ------ `resp` moved due to this method call
+...
+128 |             Value::Number(resp.status().as_u16().into()),
+    |                           ^^^^ value borrowed here after move
+    |
+note: `Response::text` takes ownership of the receiver `self`, which moves `resp`
+   --> C:\Users\HP\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\reqwest-0.12.28\src\async_impl\response.rs:163:23
+    |
+163 |     pub async fn text(self) -> crate::Result<String> {
+    |                       ^^^^
+
+error[E0382]: borrow of moved value: `resp`
+   --> src\gcp\gcp_apis\storage\gcp_storage.rs:157:27
+    |
+144 |         let resp = self
+    |             ---- move occurs because `resp` has type `Response`, which does not implement the `Copy` trait
+...
+152 |         let body = resp.text().await.unwrap_or_default();
+    |                         ------ `resp` moved due to this method call
+...
+157 |             Value::Number(resp.status().as_u16().into()),
+    |                           ^^^^ value borrowed here after move
+    |
+note: `Response::text` takes ownership of the receiver `self`, which moves `resp`
+   --> C:\Users\HP\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\reqwest-0.12.28\src\async_impl\response.rs:163:23
+    |
+163 |     pub async fn text(self) -> crate::Result<String> {
+    |                       ^^^^
+
+error[E0382]: borrow of moved value: `resp`
+   --> src\gcp\gcp_apis\storage\gcp_storage.rs:251:27
+    |
+237 |         let resp = self
+    |             ---- move occurs because `resp` has type `Response`, which does not implement the `Copy` trait
+...
+246 |         let body = resp.text().await.unwrap_or_default();
+    |                         ------ `resp` moved due to this method call
+...
+251 |             Value::Number(resp.status().as_u16().into()),
+    |                           ^^^^ value borrowed here after move
+    |
+note: `Response::text` takes ownership of the receiver `self`, which moves `resp`
+   --> C:\Users\HP\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\reqwest-0.12.28\src\async_impl\response.rs:163:23
+    |
+163 |     pub async fn text(self) -> crate::Result<String> {
+    |                       ^^^^
+
+error[E0063]: missing fields `granularity` and `name` in initializer of `gcp_bigtable_types::Table`
+  --> src\tests\gcp_bigtable_operations.rs:52:17
+   |
+52 |     let table = Table {
+   |                 ^^^^^ missing `granularity` and `name`
+
+error[E0063]: missing field `key` in initializer of `gcp_bigtable_types::InitialSplits`
+  --> src\tests\gcp_bigtable_operations.rs:55:31
+   |
+55 |     let initial_splits = vec![InitialSplits {
+   |                               ^^^^^^^^^^^^^ missing `key`
+
+error[E0063]: missing field `replication_state` in initializer of `gcp_bigtable_types::ClusterStates`
+  --> src\tests\gcp_bigtable_operations.rs:58:26
+   |
+58 |     let cluster_states = ClusterStates {
+   |                          ^^^^^^^^^^^^^ missing `replication_state`
+
+error[E0599]: no method named `unwrap` found for struct `Blob` in the current scope
+  --> src\aws\aws_apis\ai\bedrock.rs:71:42
+   |
+71 |         let output_bytes = response.body.unwrap().into_inner();
+   |                                          ^^^^^^ method not found in `Blob`
+
+warning: variable does not need to be mutable
+  --> src\azure\azure_apis\auth\azure_auth.rs:32:17
+   |
+32 |             let mut parts: Vec<&str> = query.split('=').collect();
+   |                 ----^^^^^
+   |                 |
+   |                 help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+Some errors have detailed explanations: E0063, E0382, E0599.
+For more information about an error, try `rustc --explain E0063`.
+warning: `rustcloud` (bin "rustcloud" test) generated 56 warnings
+error: could not compile `rustcloud` (bin "rustcloud" test) due to 7 previous errors; 56 warnings emitted

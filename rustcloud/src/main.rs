@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments, clippy::let_and_return, dead_code, unused, deprecated, non_camel_case_types, clippy::single_component_path_imports, clippy::needless_return, clippy::io_other_error, clippy::new_without_default, non_snake_case, clippy::assertions_on_constants)]
+
 mod tests;
 pub mod errors;
 pub mod types {
@@ -19,6 +21,9 @@ pub mod azure{
 }
 pub mod aws {
     pub mod aws_apis {
+        pub mod ai {
+            pub mod bedrock;
+        }
         pub mod compute {
             pub mod aws_ec2;
             pub mod aws_ecs;
