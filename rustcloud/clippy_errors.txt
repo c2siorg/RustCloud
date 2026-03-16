@@ -1,0 +1,393 @@
+warning: unused manifest key: language
+warning: rustcloud v0.1.0 (C:\Users\HP\OneDrive\Desktop\RustCloud\rustcloud) ignoring invalid dependency `rustcloud` which is missing a lib target
+    Checking rustcloud v0.1.0 (C:\Users\HP\OneDrive\Desktop\RustCloud\rustcloud)
+error: this import is redundant
+ --> src\tests\aws_ecs_operations.rs:3:1
+  |
+3 | use aws_config;
+  | ^^^^^^^^^^^^^^^ help: remove it entirely
+  |
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#single_component_path_imports
+  = note: `-D clippy::single-component-path-imports` implied by `-D warnings`
+  = help: to override `-D warnings` add `#[allow(clippy::single_component_path_imports)]`
+
+error: unneeded `return` statement
+ --> src\tests\aws_archival_operations.rs:8:5
+  |
+8 |     return client;
+  |     ^^^^^^^^^^^^^
+  |
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#needless_return
+  = note: `-D clippy::needless-return` implied by `-D warnings`
+  = help: to override `-D warnings` add `#[allow(clippy::needless_return)]`
+help: remove `return`
+  |
+8 -     return client;
+8 +     client
+  |
+
+error: unneeded `return` statement
+ --> src\tests\aws_block_operations.rs:9:5
+  |
+9 |     return client;
+  |     ^^^^^^^^^^^^^
+  |
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#needless_return
+help: remove `return`
+  |
+9 -     return client;
+9 +     client
+  |
+
+error: unneeded `return` statement
+  --> src\tests\aws_dns_operations.rs:16:5
+   |
+16 |     return client;
+   |     ^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#needless_return
+help: remove `return`
+   |
+16 -     return client;
+16 +     client
+   |
+
+error: unneeded `return` statement
+  --> src\tests\aws_dynamodb_operations.rs:15:5
+   |
+15 |     return client;
+   |     ^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#needless_return
+help: remove `return`
+   |
+15 -     return client;
+15 +     client
+   |
+
+error: unneeded `return` statement
+  --> src\tests\aws_ecs_operations.rs:11:5
+   |
+11 |     return client;
+   |     ^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#needless_return
+help: remove `return`
+   |
+11 -     return client;
+11 +     client
+   |
+
+error: unneeded `return` statement
+  --> src\tests\aws_eks_operations.rs:14:5
+   |
+14 |     return client;
+   |     ^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#needless_return
+help: remove `return`
+   |
+14 -     return client;
+14 +     client
+   |
+
+error: unneeded `return` statement
+ --> src\tests\aws_iam_operations.rs:8:5
+  |
+8 |     return client;
+  |     ^^^^^^^^^^^^^
+  |
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#needless_return
+help: remove `return`
+  |
+8 -     return client;
+8 +     client
+  |
+
+error: unneeded `return` statement
+ --> src\tests\aws_kms_operations.rs:9:5
+  |
+9 |     return client;
+  |     ^^^^^^^^^^^^^
+  |
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#needless_return
+help: remove `return`
+  |
+9 -     return client;
+9 +     client
+  |
+
+error: unneeded `return` statement
+ --> src\tests\aws_loadbalancer_operations.rs:9:5
+  |
+9 |     return client;
+  |     ^^^^^^^^^^^^^
+  |
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#needless_return
+help: remove `return`
+  |
+9 -     return client;
+9 +     client
+  |
+
+error: unneeded `return` statement
+  --> src\tests\aws_monitoring_operations.rs:13:5
+   |
+13 |     return client;
+   |     ^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#needless_return
+help: remove `return`
+   |
+13 -     return client;
+13 +     client
+   |
+
+error: this can be `std::io::Error::other(_)`
+  --> src\aws\aws_apis\compute\aws_ec2.rs:22:37
+   |
+22 |                   return Err(Box::new(std::io::Error::new(
+   |  _____________________________________^
+23 | |                     std::io::ErrorKind::Other,
+24 | |                     "No instances were created",
+25 | |                 )));
+   | |_________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#io_other_error
+   = note: `-D clippy::io-other-error` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(clippy::io_other_error)]`
+help: use `std::io::Error::other`
+   |
+22 ~                 return Err(Box::new(std::io::Error::other(
+23 ~                     "No instances were created",
+   |
+
+error: you should consider adding a `Default` implementation for `Googlenotification`
+  --> src\gcp\gcp_apis\app_services\gcp_notification_service.rs:13:5
+   |
+13 | /     pub fn new() -> Self {
+14 | |         Self {
+15 | |             client: Client::new(),
+16 | |             base_url: "https://pubsub.googleapis.com".to_string(),
+17 | |         }
+18 | |     }
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#new_without_default
+   = note: `-D clippy::new-without-default` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(clippy::new_without_default)]`
+help: try adding this
+   |
+12 + impl Default for Googlenotification {
+13 +     fn default() -> Self {
+14 +         Self::new()
+15 +     }
+16 + }
+   |
+
+error: you should consider adding a `Default` implementation for `GCE`
+  --> src\gcp\gcp_apis\compute\gcp_compute_engine.rs:13:5
+   |
+13 | /     pub fn new() -> Self {
+14 | |         Self {
+15 | |             client: Client::new(),
+16 | |             base_url: "https://compute.googleapis.com/compute/v1".to_string(),
+17 | |         }
+18 | |     }
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#new_without_default
+help: try adding this
+   |
+12 + impl Default for GCE {
+13 +     fn default() -> Self {
+14 +         Self::new()
+15 +     }
+16 + }
+   |
+
+error: you should consider adding a `Default` implementation for `GCPKubernetesClient`
+  --> src\gcp\gcp_apis\compute\gcp_kubernetes.rs:12:5
+   |
+12 | /     pub fn new() -> Self {
+13 | |         Self {
+14 | |             client: Client::new(),
+15 | |             base_url: "https://container.googleapis.com/v1beta1".to_string(),
+16 | |         }
+17 | |     }
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#new_without_default
+help: try adding this
+   |
+11 + impl Default for GCPKubernetesClient {
+12 +     fn default() -> Self {
+13 +         Self::new()
+14 +     }
+15 + }
+   |
+
+error: you should consider adding a `Default` implementation for `GoogleStorage`
+  --> src\gcp\gcp_apis\storage\gcp_storage.rs:12:5
+   |
+12 | /     pub fn new() -> Self {
+13 | |         GoogleStorage {
+14 | |             client: reqwest::Client::new(),
+15 | |             base_url: "https://www.googleapis.com/compute/v1".to_string(),
+16 | |         }
+17 | |     }
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#new_without_default
+help: try adding this
+   |
+11 + impl Default for GoogleStorage {
+12 +     fn default() -> Self {
+13 +         Self::new()
+14 +     }
+15 + }
+   |
+
+error: structure field `firstRevisionId` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:21:9
+   |
+21 |     pub firstRevisionId: Option<String>,
+   |         ^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `first_revision_id`
+   |
+   = note: `-D non-snake-case` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(non_snake_case)]`
+
+error: structure field `lastRevisionId` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:22:5
+   |
+22 |     lastRevisionId: Option<String>,
+   |     ^^^^^^^^^^^^^^ help: convert the identifier to snake case: `last_revision_id`
+
+error: structure field `awsKinesis` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:27:9
+   |
+27 |     pub awsKinesis: Option<HashMap<String, String>>,
+   |         ^^^^^^^^^^ help: convert the identifier to snake case: `aws_kinesis`
+
+error: structure field `kmsKeyName` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:36:9
+   |
+36 |     pub kmsKeyName: Option<String>,
+   |         ^^^^^^^^^^ help: convert the identifier to snake case: `kms_key_name`
+
+error: structure field `schemaSettings` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:37:9
+   |
+37 |     pub schemaSettings: Option<SchemaSettings>,
+   |         ^^^^^^^^^^^^^^ help: convert the identifier to snake case: `schema_settings`
+
+error: structure field `satisfiesPzs` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:38:9
+   |
+38 |     pub satisfiesPzs: Option<bool>,
+   |         ^^^^^^^^^^^^ help: convert the identifier to snake case: `satisfies_pzs`
+
+error: structure field `messageRetentionDuration` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:39:9
+   |
+39 |     pub messageRetentionDuration: Option<String>,
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `message_retention_duration`
+
+error: structure field `ingestionDataSourceSettings` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:40:9
+   |
+40 |     pub ingestionDataSourceSettings: Option<IngestionDataSourceSettings>,
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `ingestion_data_source_settings`
+
+error: structure field `pageSize` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:60:9
+   |
+60 |     pub pageSize: Option<i128>,
+   |         ^^^^^^^^ help: convert the identifier to snake case: `page_size`
+
+error: structure field `pageToken` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:61:9
+   |
+61 |     pub pageToken: Option<String>,
+   |         ^^^^^^^^^ help: convert the identifier to snake case: `page_token`
+
+error: structure field `pushConfig` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:69:9
+   |
+69 |     pub pushConfig: Option<HashMap<String, String>>,
+   |         ^^^^^^^^^^ help: convert the identifier to snake case: `push_config`
+
+error: structure field `bigqueryConfig` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:70:9
+   |
+70 |     pub bigqueryConfig: Option<HashMap<String, String>>,
+   |         ^^^^^^^^^^^^^^ help: convert the identifier to snake case: `bigquery_config`
+
+error: structure field `cloudStorageConfig` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:71:9
+   |
+71 |     pub cloudStorageConfig: Option<HashMap<String, String>>,
+   |         ^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `cloud_storage_config`
+
+error: structure field `ackDeadlineSeconds` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:72:9
+   |
+72 |     pub ackDeadlineSeconds: Option<i64>,
+   |         ^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `ack_deadline_seconds`
+
+error: structure field `retainAckedMessages` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:73:9
+   |
+73 |     pub retainAckedMessages: Option<bool>,
+   |         ^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `retain_acked_messages`
+
+error: structure field `messageRetentionDuration` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:74:9
+   |
+74 |     pub messageRetentionDuration: Option<String>,
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `message_retention_duration`
+
+error: structure field `enableMessageOrdering` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:76:9
+   |
+76 |     pub enableMessageOrdering: Option<bool>,
+   |         ^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `enable_message_ordering`
+
+error: structure field `expirationPolicy` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:77:9
+   |
+77 |     pub expirationPolicy: Option<HashMap<String, String>>,
+   |         ^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `expiration_policy`
+
+error: structure field `deadLetterPolicy` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:78:9
+   |
+78 |     pub deadLetterPolicy: Option<HashMap<String, String>>,
+   |         ^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `dead_letter_policy`
+
+error: structure field `pageSize` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:93:9
+   |
+93 |     pub pageSize: Option<i128>,
+   |         ^^^^^^^^ help: convert the identifier to snake case: `page_size`
+
+error: structure field `pageToken` should have a snake case name
+  --> src\gcp\types\app_services\gcp_notification_types.rs:94:9
+   |
+94 |     pub pageToken: Option<String>,
+   |         ^^^^^^^^^ help: convert the identifier to snake case: `page_token`
+
+error: could not compile `rustcloud` (bin "rustcloud") due to 37 previous errors
+warning: build failed, waiting for other jobs to finish...
+error: this assertion is always `true`
+  --> src\tests\azure_blob_operations.rs:20:13
+   |
+20 |             assert!(true);
+   |             ^^^^^^^^^^^^^
+   |
+   = help: remove the assertion
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#assertions_on_constants
+   = note: `-D clippy::assertions-on-constants` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(clippy::assertions_on_constants)]`
+
+error: could not compile `rustcloud` (bin "rustcloud" test) due to 38 previous errors
