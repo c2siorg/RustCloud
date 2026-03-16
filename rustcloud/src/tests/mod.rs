@@ -16,7 +16,7 @@ mod gcp_bigtable_operations;
 mod gcp_bigquery_operations;
 mod gcp_compute_operations;
 mod gcp_dns_operations;
-mod gcp_kubernetes_operations;
 mod gcp_loadbalancer_operations;
 mod gcp_notification_operations;
 mod gcp_storage_operations;
+mod gcp_vertex_operations;

@@ -1,0 +1,122 @@
+warning: unused manifest key: language
+warning: rustcloud v0.1.0 (C:\Users\HP\OneDrive\Desktop\RustCloud\rustcloud) ignoring invalid dependency `rustcloud` which is missing a lib target
+    Checking rustcloud v0.1.0 (C:\Users\HP\OneDrive\Desktop\RustCloud\rustcloud)
+error[E0599]: no method named `json` found for struct `RequestBuilder` in the current scope
+  --> src\gcp\gcp_apis\artificial_intelligence\vertex.rs:69:14
+   |
+67 |           let response = self.client.post(&url)
+   |  ________________________-
+68 | |             .header(AUTHORIZATION, format!("Bearer {}", token))
+69 | |             .json(&body)
+   | |             -^^^^ method not found in `RequestBuilder`
+   | |_____________|
+   |
+
+error[E0282]: type annotations needed
+  --> src\gcp\gcp_apis\artificial_intelligence\vertex.rs:67:24
+   |
+67 |           let response = self.client.post(&url)
+   |  ________________________^
+68 | |             .header(AUTHORIZATION, format!("Bearer {}", token))
+69 | |             .json(&body)
+70 | |             .send()
+71 | |             .await
+   | |__________________^ cannot infer type
+
+error[E0282]: type annotations needed
+  --> src\gcp\gcp_apis\artificial_intelligence\vertex.rs:79:32
+   |
+79 |         let resp_json: Value = response.json().await.map_err(|e| CloudError::Provider {
+   |                                ^^^^^^^^^^^^^^^^^^^^^ cannot infer type
+
+error[E0282]: type annotations needed
+  --> src\gcp\gcp_apis\artificial_intelligence\vertex.rs:87:24
+   |
+87 |             .and_then(|c| c.as_array())
+   |                        ^  - type must be known at this point
+   |
+help: consider giving this closure parameter an explicit type
+   |
+87 |             .and_then(|c: /* Type */| c.as_array())
+   |                         ++++++++++++
+
+error[E0282]: type annotations needed
+  --> src\gcp\gcp_apis\artificial_intelligence\vertex.rs:88:24
+   |
+88 |             .and_then(|a| a.first())
+   |                        ^  - type must be known at this point
+   |
+help: consider giving this closure parameter an explicit type
+   |
+88 |             .and_then(|a: /* Type */| a.first())
+   |                         ++++++++++++
+
+error[E0282]: type annotations needed
+  --> src\gcp\gcp_apis\artificial_intelligence\vertex.rs:89:24
+   |
+89 |             .and_then(|f| f.get("content"))
+   |                        ^  - type must be known at this point
+   |
+help: consider giving this closure parameter an explicit type
+   |
+89 |             .and_then(|f: /* Type */| f.get("content"))
+   |                         ++++++++++++
+
+error[E0282]: type annotations needed
+  --> src\gcp\gcp_apis\artificial_intelligence\vertex.rs:90:24
+   |
+90 |             .and_then(|c| c.get("parts"))
+   |                        ^  - type must be known at this point
+   |
+help: consider giving this closure parameter an explicit type
+   |
+90 |             .and_then(|c: /* Type */| c.get("parts"))
+   |                         ++++++++++++
+
+error[E0282]: type annotations needed
+  --> src\gcp\gcp_apis\artificial_intelligence\vertex.rs:91:24
+   |
+91 |             .and_then(|p| p.as_array())
+   |                        ^  - type must be known at this point
+   |
+help: consider giving this closure parameter an explicit type
+   |
+91 |             .and_then(|p: /* Type */| p.as_array())
+   |                         ++++++++++++
+
+error[E0282]: type annotations needed
+  --> src\gcp\gcp_apis\artificial_intelligence\vertex.rs:92:24
+   |
+92 |             .and_then(|a| a.first())
+   |                        ^  - type must be known at this point
+   |
+help: consider giving this closure parameter an explicit type
+   |
+92 |             .and_then(|a: /* Type */| a.first())
+   |                         ++++++++++++
+
+error[E0282]: type annotations needed
+  --> src\gcp\gcp_apis\artificial_intelligence\vertex.rs:93:24
+   |
+93 |             .and_then(|f| f.get("text"))
+   |                        ^  - type must be known at this point
+   |
+help: consider giving this closure parameter an explicit type
+   |
+93 |             .and_then(|f: /* Type */| f.get("text"))
+   |                         ++++++++++++
+
+error[E0282]: type annotations needed
+  --> src\gcp\gcp_apis\artificial_intelligence\vertex.rs:94:24
+   |
+94 |             .and_then(|t| t.as_str())
+   |                        ^  - type must be known at this point
+   |
+help: consider giving this closure parameter an explicit type
+   |
+94 |             .and_then(|t: /* Type */| t.as_str())
+   |                         ++++++++++++
+
+Some errors have detailed explanations: E0282, E0599.
+For more information about an error, try `rustc --explain E0282`.
+error: could not compile `rustcloud` (bin "rustcloud" test) due to 11 previous errors

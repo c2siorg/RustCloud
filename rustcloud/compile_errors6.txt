@@ -1,0 +1,11 @@
+warning: unused manifest key: language
+warning: rustcloud v0.1.0 (C:\Users\HP\OneDrive\Desktop\RustCloud\rustcloud) ignoring invalid dependency `rustcloud` which is missing a lib target
+    Checking rustcloud v0.1.0 (C:\Users\HP\OneDrive\Desktop\RustCloud\rustcloud)
+error[E0432]: unresolved import `crate::gcp::gcp_apis::artificial_intelligence::vertex`
+ --> src\tests\gcp_vertex_operations.rs:1:52
+  |
+1 | use crate::gcp::gcp_apis::artificial_intelligence::vertex::GoogleVertexAI;
+  |                                                    ^^^^^^ could not find `vertex` in `artificial_intelligence`
+
+For more information about this error, try `rustc --explain E0432`.
+error: could not compile `rustcloud` (bin "rustcloud" test) due to 1 previous error
