@@ -79,6 +79,7 @@ Examples: [`examples/aws/`](examples/aws/)
 
 | Category | Service |
 |---|---|
+<<<<<<< HEAD
 | AI / ML | AutoML |
 | App Services | Cloud Pub/Sub |
 | Compute | Compute Engine, GKE |
@@ -87,6 +88,14 @@ Examples: [`examples/aws/`](examples/aws/)
 | Storage | Cloud Storage |
 
 Examples: [`examples/gcp/`](examples/gcp/)
+=======
+| AI / ML | [AutoML](examples/gcp/artificial_intelligence/automl.md), [Vertex AI](examples/gcp/artificial_intelligence/vertex_ai.md) |
+| App Services | [Cloud Pub/Sub](examples/gcp/app_services/notifications.md) |
+| Compute | [Compute Engine](examples/gcp/compute/compute_engine.md), [GKE](examples/gcp/compute/kubernetes.md) |
+| Database | [Bigtable](examples/gcp/database/bigtable.md), BigQuery |
+| Network | [Cloud DNS](examples/gcp/network/dns.md), [Load Balancing](examples/gcp/network/loadbalancer.md) |
+| Storage | [Cloud Storage](examples/gcp/storage/storage.md) |
+>>>>>>> 50a8276 (feat: unified GenAI routing client + fix Bedrock & Vertex AI compilation bugs (#81))
 
 ### Azure *(in progress)*
 
@@ -94,6 +103,12 @@ Examples: [`examples/gcp/`](examples/gcp/)
 |---|---|
 | Auth | Azure authentication |
 | Storage | Blob Storage |
+
+### Multi-Cloud
+
+| API | Description |
+|---|---|
+| [Unified GenAI Client](examples/unified_genai.md) | Route LLM requests across AWS, GCP, and Azure with a single interface |
 
 ### DigitalOcean *(in progress)*
 
