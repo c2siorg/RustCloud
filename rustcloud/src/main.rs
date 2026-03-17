@@ -21,6 +21,12 @@ pub mod azure{
         pub mod security {
             pub mod azure_key_vault;
         }
+        pub mod database {
+            pub mod azure_cosmos_db;
+        }
+        pub mod app_services {
+            pub mod azure_service_bus;
+        }
     }
 }
 pub mod aws {
@@ -29,6 +35,7 @@ pub mod aws {
             pub mod aws_ec2;
             pub mod aws_ecs;
             pub mod aws_eks;
+            pub mod aws_lambda;
         }
         pub mod database {
             pub mod aws_dynamodb;
@@ -64,6 +71,7 @@ pub mod gcp {
     pub mod gcp_apis {
         pub mod app_services {
             pub mod gcp_notification_service;
+            pub mod gcp_pubsub_subscription;
         }
         pub mod artificial_intelligence {
             pub mod gcp_automl;
@@ -111,6 +119,9 @@ pub mod digiocean {
         }
         pub mod storage {
             pub mod digiocean_storage;
+        }
+        pub mod kubernetes {
+            pub mod digiocean_kubernetes;
         }
     }
 }
