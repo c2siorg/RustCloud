@@ -56,6 +56,7 @@ All I/O is async (backed by Tokio), and errors are returned as the `CloudError` 
 | **Storage** | Object storage, block storage, and archival |
 | **Network** | Load balancers and DNS management |
 | **Security** | Identity, access management, and key management |
+| **App Services** | Messaging and notification services |
 | **AI/ML** | Machine learning and LLM provider abstractions |
 
 ---
@@ -66,34 +67,40 @@ All I/O is async (backed by Tokio), and errors are returned as the `CloudError` 
 
 | Category | Service |
 |---|---|
-| Compute | EC2, ECS, EKS |
-| Database | DynamoDB |
-| Management | CloudWatch |
-| Network | Route53, Elastic Load Balancing |
-| Security | IAM, KMS |
-| Storage | S3, Glacier, Block Storage |
-
-Examples: [`examples/aws/`](examples/aws/)
+| Compute | [EC2](examples/aws/compute/ec2.md), [ECS](examples/aws/compute/ecs.md), [EKS](examples/aws/compute/eks.md) |
+| Database | [DynamoDB](examples/aws/database/dynamodb.md) |
+| Management | [CloudWatch](examples/aws/management/monitoring.md) |
+| Network | [Route53](examples/aws/network/dns.md), [Elastic Load Balancing](examples/aws/network/loadbalancer.md) |
+| Security | [IAM](examples/aws/security/iam.md), [KMS](examples/aws/security/kms.md), [Secrets Manager](examples/aws/security/secrets_manager.md) |
+| Storage | [S3](examples/aws/storage/bucket.md), [Glacier](examples/aws/storage/archival.md), [Block Storage](examples/aws/storage/block.md) |
+| App Services | [SNS](examples/aws/app_services/sns.md), [SQS](examples/aws/app_services/sqs.md) |
+| AI / ML | [Bedrock](examples/aws/artificial_intelligence/bedrock.md) |
 
 ### Google Cloud Platform
 
 | Category | Service |
 |---|---|
-| AI / ML | AutoML |
-| App Services | Cloud Pub/Sub |
-| Compute | Compute Engine, GKE |
-| Database | Bigtable, BigQuery |
-| Network | Cloud DNS, Load Balancing |
-| Storage | Cloud Storage |
-
-Examples: [`examples/gcp/`](examples/gcp/)
+| AI / ML | [AutoML](examples/gcp/artificial_intelligence/automl.md), [Vertex AI](examples/gcp/artificial_intelligence/vertex_ai.md) |
+| App Services | [Cloud Pub/Sub](examples/gcp/app_services/notifications.md) |
+| Compute | [Compute Engine](examples/gcp/compute/compute_engine.md), [GKE](examples/gcp/compute/kubernetes.md) |
+| Database | [Bigtable](examples/gcp/database/bigtable.md), BigQuery |
+| Network | [Cloud DNS](examples/gcp/network/dns.md), [Load Balancing](examples/gcp/network/loadbalancer.md) |
+| Storage | [Cloud Storage (disks)](examples/gcp/storage/storage.md), [Cloud Storage (GCS)](examples/gcp/storage/cloud_storage.md) |
 
 ### Azure *(in progress)*
 
 | Category | Service |
 |---|---|
 | Auth | Azure authentication |
+| Security | [Key Vault](examples/azure/security/key_vault.md) |
 | Storage | Blob Storage |
+| AI / ML | [Azure OpenAI](examples/azure/artificial_intelligence/azure_openai.md) |
+
+### Multi-Cloud
+
+| API | Description |
+|---|---|
+| [Unified GenAI Client](examples/unified_genai.md) | Route LLM requests across AWS, GCP, and Azure with a single interface |
 
 ### DigitalOcean *(in progress)*
 
