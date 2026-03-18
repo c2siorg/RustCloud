@@ -87,6 +87,9 @@ pub mod digiocean {
         pub mod dns {
             pub mod digiocean_dns;
         }
+        pub mod kubernetes {
+            pub mod digiocean_kubernetes;
+        }
         pub mod network {
             pub mod digiocean_loadbalancer;
         }

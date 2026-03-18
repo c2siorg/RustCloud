@@ -1,0 +1,22 @@
+# Rust formatting configuration for RustCloud
+edition = "2021"
+
+# Code layout
+max_width = 100
+hard_tabs = false
+tab_spaces = 4
+
+# Imports
+# Keep imports organized consistently across modules.
+# Note: these import options currently require nightly rustfmt; stable will ignore them with warnings.
+imports_granularity = "Crate"
+group_imports = "StdExternalCrate"
+
+# Comments
+# Note: comment wrapping settings are nightly-only in rustfmt at the moment.
+wrap_comments = true
+comment_width = 100
+
+# Consistency
+# Normalize line endings regardless of contributor platform.
+newline_style = "Unix"
