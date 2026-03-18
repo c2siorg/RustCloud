@@ -64,45 +64,50 @@ All I/O is async (backed by Tokio), and errors are returned as the `CloudError` 
 
 ### AWS
 
-| Category | Service |
-|---|---|
-| Compute | EC2, ECS, EKS |
-| Database | DynamoDB |
-| Management | CloudWatch |
-| Network | Route53, Elastic Load Balancing |
-| Security | IAM, KMS |
-| Storage | S3, Glacier, Block Storage |
-
-Examples: [`examples/aws/`](examples/aws/)
+| Category | Service | Examples |
+|---|---|---|
+| Compute | EC2 | [EC2 Example](examples/aws/compute/ec2.md) |
+| Compute | ECS | [ECS Example](examples/aws/compute/ecs.md) |
+| Compute | EKS | [EKS Example](examples/aws/compute/eks.md) |
+| Database | DynamoDB | [DynamoDB Example](examples/aws/database/dynamodb.md) |
+| Management | CloudWatch | [Monitoring Example](examples/aws/management/monitoring.md) |
+| Network | Route53 | [DNS Example](examples/aws/network/dns.md) |
+| Network | Elastic Load Balancing | [Load Balancer Example](examples/aws/network/loadbalancer.md) |
+| Security | IAM | [IAM Example](examples/aws/security/iam.md) |
+| Security | KMS | [KMS Example](examples/aws/security/kms.md) |
+| Storage | S3 | [Bucket Example](examples/aws/storage/bucket.md) |
+| Storage | Glacier | [Archival Example](examples/aws/storage/archival.md) |
+| Storage | Block Storage | [Block Storage Example](examples/aws/storage/block.md) |
 
 ### Google Cloud Platform
 
-| Category | Service |
-|---|---|
-| AI / ML | AutoML |
-| App Services | Cloud Pub/Sub |
-| Compute | Compute Engine, GKE |
-| Database | Bigtable, BigQuery |
-| Network | Cloud DNS, Load Balancing |
-| Storage | Cloud Storage |
-
-Examples: [`examples/gcp/`](examples/gcp/)
+| Category | Service | Examples |
+|---|---|---|
+| AI / ML | AutoML | [AutoML Example](examples/gcp/artificial_intelligence/automl.md) |
+| App Services | Cloud Pub/Sub | [Notifications Example](examples/gcp/app_services/notifications.md) |
+| Compute | Compute Engine | [Compute Engine Example](examples/gcp/compute/compute_engine.md) |
+| Compute | GKE | [Kubernetes Example](examples/gcp/compute/kubenetes.md) |
+| Database | Bigtable | [Bigtable Example](examples/gcp/database/bigtable.md) |
+| Database | BigQuery | *Coming Soon* |
+| Network | Cloud DNS | [DNS Example](examples/gcp/network/dns.md) |
+| Network | Load Balancing | [Load Balancer Example](examples/gcp/network/loadbalancer.md) |
+| Storage | Cloud Storage | [Storage Example](examples/gcp/storage/storage.md) |
 
 ### Azure *(in progress)*
 
-| Category | Service |
-|---|---|
-| Auth | Azure authentication |
-| Storage | Blob Storage |
+| Category | Service | Examples |
+|---|---|---|
+| Auth | Azure authentication | *In Progress* |
+| Storage | Blob Storage | *In Progress* |
 
 ### DigitalOcean *(in progress)*
 
-| Category | Service |
-|---|---|
-| Compute | Droplets |
-| Network | Load Balancer |
-| DNS | DigitalOcean DNS |
-| Storage | Block Storage |
+| Category | Service | Examples |
+|---|---|---|
+| Compute | Droplets | *In Progress* |
+| Network | Load Balancer | *In Progress* |
+| DNS | DigitalOcean DNS | *In Progress* |
+| Storage | Block Storage | *In Progress* |
 
 ---
 
