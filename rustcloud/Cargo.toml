@@ -41,10 +41,3 @@ tokio = { version = "1.37.0", features = ["full", "test-util"] }
 
 [dev-dependencies]
 rustcloud = { path = '.' }
-
-[[language]]
-name = "rust"
-file-types = ["rs"]
-comment-tokens = ["//", "///", "//!"]
-indent = { tab-width = 2, unit = " " }
-language-servers = [ "rust-analyzer"]
