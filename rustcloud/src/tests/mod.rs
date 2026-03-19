@@ -11,6 +11,7 @@ mod aws_iam_operations;
 mod aws_kms_operations;
 mod aws_loadbalancer_operations;
 mod aws_monitoring_operations;
+mod aws_sns_operations;
 mod gcp_automl_operations;
 mod gcp_bigtable_operations;
 mod gcp_bigquery_operations;
