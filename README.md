@@ -94,6 +94,7 @@ Examples: [`examples/gcp/`](examples/gcp/)
 |---|---|
 | Auth | Azure authentication |
 | Storage | Blob Storage |
+| AI / ML | [Azure OpenAI](examples/azure/artificial_intelligence/azure_openai.md) |
 
 ### DigitalOcean *(in progress)*
 
