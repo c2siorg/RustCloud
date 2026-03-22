@@ -1,4 +1,4 @@
-use crate::aws::aws_apis::network::aws_dns::*;
+use crate::aws::aws_apis::network::aws_dns::{change_record_sets, create_zone, delete_zone, list_zones};
 use aws_sdk_route53::types::{ChangeBatch, HostedZoneConfig, HostedZoneType};
 use aws_sdk_route53::{
     types::{builders::ResourceRecordSetBuilder, Change, ChangeAction, ResourceRecord, RrType, Vpc, VpcRegion},
@@ -14,13 +14,12 @@ async fn create_client() -> Client {
 async fn test_change_record_sets() {
     let client = create_client().await;
 
-    let hosted_zone_id = "your_hosted_zone_id".to_string(); // Replace with your hosted zone ID
+    let hosted_zone_id = "your_hosted_zone_id".to_string();
 
     let resource_record = ResourceRecord::builder()
         .value("192.0.2.44".to_string())
         .build()
         .unwrap();
-    // Build ResourceRecordSet
     let resource_record_set = ResourceRecordSetBuilder::default()
         .name("test.example.com.".to_string())
         .r#type(RrType::A)
@@ -29,17 +28,15 @@ async fn test_change_record_sets() {
         .build()
         .expect("Failed to build ResourceRecordSet");
 
-    // Build Change
     let change = Change::builder()
         .action(ChangeAction::Upsert)
-        .resource_record_set(resource_record_set.clone()) // Use clone() if needed
+        .resource_record_set(resource_record_set.clone())
         .build()
         .unwrap();
 
-    // Build ChangeBatch
     let change_batch = ChangeBatch::builder().changes(change).build().unwrap();
 
-    let result = change_record_sets(&client, hosted_zone_id, change_batch).await;
+    let result: Result<(), _> = change_record_sets(&client, hosted_zone_id, change_batch).await;
     assert!(result.is_ok());
 }
 
@@ -60,7 +57,7 @@ async fn test_create_zone() {
     );
     let delegation_set_id = None;
 
-    let result = create_zone(
+    let result: Result<(), _> = create_zone(
         &client,
         name,
         vpc,
@@ -77,7 +74,7 @@ async fn test_delete_zone() {
     let client = create_client().await;
 
     let hosted_zone_id = "Z3AADJGX6KTTL2".to_string();
-    let result = delete_zone(&client, hosted_zone_id).await;
+    let result: Result<(), _> = delete_zone(&client, hosted_zone_id).await;
     assert!(result.is_ok());
 }
 
@@ -90,7 +87,7 @@ async fn test_list_zones() {
     let delegation_set_id = None;
     let hosted_zone_type = Some(HostedZoneType::PrivateHostedZone);
 
-    let result = list_zones(
+    let result: Result<(), _> = list_zones(
         &client,
         marker,
         max_items,
