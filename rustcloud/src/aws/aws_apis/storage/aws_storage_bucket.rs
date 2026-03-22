@@ -10,6 +10,10 @@ use aws_sdk_s3::{
 };
 use std::collections::HashMap;
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "thin wrapper over the AWS S3 create bucket API"
+)]
 pub async fn create_bucket(
     client: &Client,
     acl: BucketCannedAcl,
@@ -117,6 +121,10 @@ pub async fn list(client: &Client) -> Result<(), Error> {
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "thin wrapper over the AWS S3 put object API"
+)]
 pub async fn put_object(
     client: &Client,
     bucket: String,
@@ -183,6 +191,10 @@ pub async fn get_object(
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "thin wrapper over the AWS S3 list objects API"
+)]
 pub async fn list_objects_v2(
     client: &Client,
     bucket: String,
@@ -218,6 +230,10 @@ pub async fn list_objects_v2(
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "thin wrapper over the AWS S3 head object API"
+)]
 pub async fn head_object(
     client: &Client,
     bucket: String,
@@ -251,6 +267,10 @@ pub async fn head_object(
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "thin wrapper over the AWS S3 copy object API"
+)]
 pub async fn copy_object(
     client: &Client,
     bucket: String,

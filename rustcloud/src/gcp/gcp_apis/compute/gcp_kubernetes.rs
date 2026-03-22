@@ -192,3 +192,9 @@ impl GCPKubernetesClient {
         Ok(response)
     }
 }
+
+impl Default for GCPKubernetesClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}

@@ -1,6 +1,5 @@
 use crate::gcp::gcp_apis::database::gcp_bigquery::*;
 use crate::gcp::types::database::gcp_bigquery_types::*;
-use tokio::test;
 
 fn project_id() -> String {
     std::env::var("GCP_PROJECT_ID").unwrap_or_else(|_| "your_project_id".to_string())

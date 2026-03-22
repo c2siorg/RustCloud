@@ -1,13 +1,10 @@
 use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
 use crate::gcp::types::network::gcp_dns_types::*;
-use chrono;
+use chrono::Utc;
 use reqwest::{header::AUTHORIZATION, Client};
 use serde_json::to_string;
 use std::collections::HashMap;
 use std::error::Error;
-
-const UNIX_DATE: &str = "%a %b %e %H:%M:%S %Z %Y";
-const RFC3339: &str = "%Y-%m-%dT%H:%M:%S%.f%:z";
 
 pub struct GoogleDns {
     client: Client,
@@ -66,7 +63,7 @@ impl GoogleDns {
     ) -> Result<reqwest::Response, Box<dyn Error>> {
         let project = param["Project"];
         let option = CreateDns {
-            creation_time: chrono::Utc::now().to_rfc3339(),
+            creation_time: Utc::now().to_rfc3339(),
             description: param["Description"].to_string(),
             dns_name: param["DnsName"].to_string(),
             name_servers: param["nameServers"]

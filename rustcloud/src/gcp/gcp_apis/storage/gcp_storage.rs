@@ -258,3 +258,9 @@ impl GoogleStorage {
         Ok(response)
     }
 }
+
+impl Default for GoogleStorage {
+    fn default() -> Self {
+        Self::new()
+    }
+}

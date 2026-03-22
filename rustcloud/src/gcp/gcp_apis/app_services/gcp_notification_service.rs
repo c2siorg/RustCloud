@@ -135,3 +135,9 @@ impl Googlenotification {
         Ok(create_topic_response)
     }
 }
+
+impl Default for Googlenotification {
+    fn default() -> Self {
+        Self::new()
+    }
+}

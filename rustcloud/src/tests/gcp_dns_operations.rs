@@ -1,6 +1,5 @@
 use crate::gcp::gcp_apis::network::gcp_dns::*;
 use std::collections::HashMap;
-use tokio::test;
 
 async fn create_client() -> GoogleDns {
     GoogleDns::new("your_project_id")

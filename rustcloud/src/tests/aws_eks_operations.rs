@@ -1,17 +1,13 @@
 use crate::aws::aws_apis::compute::aws_eks::*;
-use aws_sdk_eks::config::Region;
-use aws_sdk_eks::error::SdkError;
 use aws_sdk_eks::types::{
-    AmiTypes, KubernetesNetworkConfigRequest, Logging, NodegroupScalingConfig,
-    UpdateAccessConfigRequest, VpcConfigRequest,
+    AmiTypes, Logging, NodegroupScalingConfig, UpdateAccessConfigRequest, VpcConfigRequest,
 };
-use aws_sdk_eks::{Client, Config};
+use aws_sdk_eks::Client;
 use std::collections::HashMap;
 
 async fn create_client() -> Client {
-    let config = aws_config::load_from_env().await;
-    let client = Client::new(&config);
-    return client;
+    let config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
+    Client::new(&config)
 }
 #[tokio::test]
 async fn test_create_eks_cluster() {

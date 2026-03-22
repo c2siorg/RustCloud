@@ -7,15 +7,13 @@ use serde_json::to_string;
 pub struct Bigtable {
     client: Client,
     base_url: String,
-    project_id: String,
 }
 
 impl Bigtable {
-    pub fn new(project_id: &str) -> Self {
+    pub fn new(_project_id: &str) -> Self {
         Self {
             client: Client::new(),
             base_url: "https://bigtableadmin.googleapis.com".to_string(),
-            project_id: project_id.to_string(),
         }
     }
 

@@ -1,19 +1,13 @@
 use crate::aws::aws_apis::network::aws_dns::*;
-use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_route53::types::{ChangeBatch, HostedZoneConfig, HostedZoneType};
 use aws_sdk_route53::{
-    config::Config,
-    types::{
-        builders::ResourceRecordSetBuilder, Change, ChangeAction, ResourceRecord,
-        ResourceRecordSet, RrType, Vpc, VpcRegion,
-    },
+    types::{builders::ResourceRecordSetBuilder, Change, ChangeAction, ResourceRecord, RrType, Vpc, VpcRegion},
     Client,
 };
 
 async fn create_client() -> Client {
-    let config = aws_config::load_from_env().await;
-    let client = Client::new(&config);
-    return client;
+    let config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
+    Client::new(&config)
 }
 
 #[tokio::test]
