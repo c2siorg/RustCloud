@@ -5,7 +5,7 @@ use serde_json::{json, Value};
 use crate::errors::CloudError;
 use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
 use crate::traits::llm_provider::{LlmProvider, LlmStream};
-use crate::types::llm::{EmbedResponse, FinishReason, LlmRequest, LlmResponse, LlmStreamEvent, ModelRef, ToolCallResponse, ToolDefinition, UsageStats};
+use crate::types::llm::{EmbedResponse, FinishReason, LlmRequest, LlmResponse, ModelRef, ToolCallResponse, ToolDefinition, UsageStats};
 
 pub struct GoogleVertexAI {
     client: reqwest::Client,

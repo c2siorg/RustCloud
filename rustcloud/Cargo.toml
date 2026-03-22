@@ -33,6 +33,7 @@ mockall = "=0.9.1"
 reqwest = { version = "0.12.5", features = ["json"] }
 rustls = { version = "0.23", features = ["ring"] }
 serde = "1.0.203"
+thiserror = "1.0"
 serde_json = "1.0.118"
 sha2 = "0.10.9"
 
@@ -40,11 +41,3 @@ tokio = { version = "1.37.0", features = ["full", "test-util"] }
 
 
 [dev-dependencies]
-rustcloud = { path = '.' }
-
-[[language]]
-name = "rust"
-file-types = ["rs"]
-comment-tokens = ["//", "///", "//!"]
-indent = { tab-width = 2, unit = " " }
-language-servers = [ "rust-analyzer"]

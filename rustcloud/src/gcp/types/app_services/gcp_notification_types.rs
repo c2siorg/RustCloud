@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// Structs for request payloads
-
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum State {
-    STATE_UNSPECIFIED,
-    ACTIVE,
-    INGESTION_RESOURCE_ERROR,
-    RESOURCE_ERROR,
+    StateUnspecified,
+    Active,
+    IngestionResourceError,
+    ResourceError,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -16,28 +16,30 @@ pub struct MessageStoragePolicy {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SchemaSettings {
     pub encoding: Option<String>,
-    pub firstRevisionId: Option<String>,
-    lastRevisionId: Option<String>,
+    pub first_revision_id: Option<String>,
+    pub last_revision_id: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct IngestionDataSourceSettings {
-    pub awsKinesis: Option<HashMap<String, String>>,
+    pub aws_kinesis: Option<HashMap<String, String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateTopicRequest {
-    // Define fields as per GCP Pub/Sub API
     pub name: String,
     pub labels: Option<HashMap<String, String>>,
     pub message_storage_policy: Option<MessageStoragePolicy>,
-    pub kmsKeyName: Option<String>,
-    pub schemaSettings: Option<SchemaSettings>,
-    pub satisfiesPzs: Option<bool>,
-    pub messageRetentionDuration: Option<String>,
-    pub ingestionDataSourceSettings: Option<IngestionDataSourceSettings>,
+    pub kms_key_name: Option<String>,
+    pub schema_settings: Option<SchemaSettings>,
+    pub satisfies_pzs: Option<bool>,
+    pub message_retention_duration: Option<String>,
+    pub ingestion_data_source_settings: Option<IngestionDataSourceSettings>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -54,28 +56,28 @@ pub struct GetTopicAttributesRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ListSubscriptionsRequest {
-    // Define fields as per GCP Pub/Sub API
     pub project: String,
-    pub pageSize: Option<i128>,
-    pub pageToken: Option<String>,
+    pub page_size: Option<i128>,
+    pub page_token: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateSubscriptionRequest {
-    // Define fields as per GCP Pub/Sub API
     pub name: String,
     pub topic: String,
-    pub pushConfig: Option<HashMap<String, String>>,
-    pub bigqueryConfig: Option<HashMap<String, String>>,
-    pub cloudStorageConfig: Option<HashMap<String, String>>,
-    pub ackDeadlineSeconds: Option<i64>,
-    pub retainAckedMessages: Option<bool>,
-    pub messageRetentionDuration: Option<String>,
+    pub push_config: Option<HashMap<String, String>>,
+    pub bigquery_config: Option<HashMap<String, String>>,
+    pub cloud_storage_config: Option<HashMap<String, String>>,
+    pub ack_deadline_seconds: Option<i64>,
+    pub retain_acked_messages: Option<bool>,
+    pub message_retention_duration: Option<String>,
     pub labels: Option<HashMap<String, String>>,
-    pub enableMessageOrdering: Option<bool>,
-    pub expirationPolicy: Option<HashMap<String, String>>,
-    pub deadLetterPolicy: Option<HashMap<String, String>>,
+    pub enable_message_ordering: Option<bool>,
+    pub expiration_policy: Option<HashMap<String, String>>,
+    pub dead_letter_policy: Option<HashMap<String, String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -87,11 +89,11 @@ pub struct PublishRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ListTopicsRequest {
-    // Define fields as per GCP Pub/Sub API
     pub project: String,
-    pub pageSize: Option<i128>,
-    pub pageToken: Option<String>,
+    pub page_size: Option<i128>,
+    pub page_token: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

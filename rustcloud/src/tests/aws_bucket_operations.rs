@@ -1,15 +1,12 @@
 use crate::aws::aws_apis::storage::aws_storage_bucket::*;
 use aws_sdk_s3::{
     primitives::ByteStream,
-    types::{
-        BucketCannedAcl, CreateBucketConfiguration, MetadataDirective, ObjectCannedAcl,
-        ObjectOwnership, RequestPayer,
-    },
-    Client, Error,
+    types::{BucketCannedAcl, CreateBucketConfiguration, MetadataDirective, ObjectCannedAcl},
+    Client,
 };
 
 async fn create_client() -> Client {
-    let config = aws_config::load_from_env().await;
+    let config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
     let mut builder = aws_sdk_s3::config::Builder::from(&config);
     if std::env::var("AWS_ENDPOINT_URL").is_ok() {
         builder = builder.force_path_style(true);

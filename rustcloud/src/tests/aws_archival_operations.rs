@@ -1,11 +1,9 @@
 use crate::aws::aws_apis::storage::aws_archival_storage::*;
-use aws_sdk_glacier::config::Region;
-use aws_sdk_glacier::{Client, Config};
+use aws_sdk_glacier::Client;
 
 async fn create_client() -> Client {
-    let config = aws_config::load_from_env().await;
-    let client = Client::new(&config);
-    return client;
+    let config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
+    Client::new(&config)
 }
 
 #[tokio::test]

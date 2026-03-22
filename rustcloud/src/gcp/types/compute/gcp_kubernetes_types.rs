@@ -20,7 +20,7 @@ pub struct DeleteClusterRequest {
 }
 
 #[derive(Debug, Deserialize)]
-struct ListClustersResponse {
+pub struct ListClustersResponse {
     // Define fields based on response structure
 }
 
@@ -40,7 +40,7 @@ pub struct GetClusterRequest {
 }
 
 #[derive(Debug, Deserialize)]
-struct GetClusterResponse {
+pub struct GetClusterResponse {
     // Define fields based on response structure
 }
 
@@ -54,7 +54,7 @@ pub struct CreateNodePoolRequest {
 }
 
 #[derive(Debug, Deserialize)]
-struct CreateNodePoolResponse {
+pub struct CreateNodePoolResponse {
     // Define fields based on response structure
 }
 
@@ -68,7 +68,7 @@ pub struct DeleteNodePoolRequest {
 }
 
 #[derive(Debug, Deserialize)]
-struct GetNodePoolResponse {
+pub struct GetNodePoolResponse {
     // Define fields based on response structure
 }
 
@@ -90,7 +90,7 @@ pub struct ListNodePoolsRequest {
 }
 
 #[derive(Debug, Deserialize)]
-struct ListNodePoolsResponse {
+pub struct ListNodePoolsResponse {
     // Define fields based on response structure
 }
 
@@ -104,6 +104,6 @@ pub struct SetAddonsConfigRequest {
 }
 
 #[derive(Debug, Deserialize)]
-struct SetAddonsConfigResponse {
+pub struct SetAddonsConfigResponse {
     // Define fields based on response structure
 }

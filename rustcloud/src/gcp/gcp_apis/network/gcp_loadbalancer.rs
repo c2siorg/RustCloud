@@ -6,9 +6,6 @@ use serde_json::to_string;
 use std::collections::HashMap;
 use std::error::Error;
 
-const UNIX_DATE: &str = "%a %b %e %H:%M:%S %Z %Y";
-const RFC3339: &str = "%Y-%m-%dT%H:%M:%S%.f%:z";
-
 pub struct GoogleLoadBalancer {
     client: Client,
     base_url: String,
@@ -48,7 +45,7 @@ impl GoogleLoadBalancer {
             creation_timestamp: Utc::now().to_rfc3339(),
         };
 
-        let project = param.get("Project").unwrap().to_string();
+        let project = self.project.clone();
         let region = param.get("Region").unwrap().to_string();
 
         for (key, value) in param {
@@ -100,7 +97,7 @@ impl GoogleLoadBalancer {
     ) -> Result<reqwest::Response, Box<dyn Error>> {
         let url = format!(
             "{}/compute/beta/projects/{}/regions/{}/targetPools/{}",
-            self.base_url, options["Project"], options["Region"], options["TargetPool"]
+            self.base_url, self.project, options["Region"], options["TargetPool"]
         );
 
         let auth_header = self.get_authorization_header().await?;
@@ -121,7 +118,7 @@ impl GoogleLoadBalancer {
     ) -> Result<reqwest::Response, Box<dyn Error>> {
         let url = format!(
             "{}/compute/beta/projects/{}/regions/{}/targetPools",
-            self.base_url, options["Project"], options["Region"]
+            self.base_url, self.project, options["Region"]
         );
 
         let auth_header = self.get_authorization_header().await?;
@@ -140,7 +137,7 @@ impl GoogleLoadBalancer {
         &self,
         param: &HashMap<&str, &str>,
     ) -> Result<reqwest::Response, Box<dyn Error>> {
-        let project = param["Project"];
+        let project = &self.project;
         let target_pool = param["TargetPool"];
         let region = param["Region"];
         let instances: Vec<&str> = param["Instances"].split(',').collect();
@@ -180,7 +177,7 @@ impl GoogleLoadBalancer {
         &self,
         param: &HashMap<&str, &str>,
     ) -> Result<reqwest::Response, Box<dyn Error>> {
-        let project = param["Project"];
+        let project = &self.project;
         let target_pool = param["TargetPool"];
         let region = param["Region"];
         let instances: Vec<&str> = param["Instances"].split(',').collect();

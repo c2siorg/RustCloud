@@ -4,7 +4,7 @@ use crate::types::llm::{LlmRequest, Message, ModelRef};
 #[tokio::test]
 async fn test_vertex_compilation() {
     let _client = GoogleVertexAI::new("test-project".to_string(), None);
-    let _req = LlmRequest {
+    let req = LlmRequest {
         model: ModelRef::Provider("gemini-1.5-flash".to_string()),
         messages: vec![Message {
             role: "user".to_string(),
@@ -15,5 +15,5 @@ async fn test_vertex_compilation() {
         system_prompt: None,
     };
     
-    assert!(true);
+    assert_eq!(req.model, ModelRef::Provider("gemini-1.5-flash".to_string()));
 }

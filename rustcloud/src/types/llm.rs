@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::errors::CloudError;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ModelRef {
     Provider(String),
     Logical {

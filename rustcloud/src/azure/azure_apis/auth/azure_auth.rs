@@ -29,7 +29,7 @@ impl AzureAuth {
         let canonicalized_resource = if query.is_empty() {
             format!("/{}{}", account, path)
         } else {
-            let mut parts: Vec<&str> = query.split('=').collect();
+            let parts: Vec<&str> = query.split('=').collect();
             format!(
                 "/{}{}\n{}:{}",
                 account,
