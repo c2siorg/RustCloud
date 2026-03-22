@@ -1,51 +1,33 @@
-use std::fmt;
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum CloudError {
-    Auth {
-        message: String,
-    },
-    RateLimit {
-        retry_after: Option<u64>,
-    },
+    #[error("authentication error: {message}")]
+    Auth { message: String },
+    #[error("rate limit exceeded")]
+    RateLimit,
+    #[error("provider error {http_status}: {message}")]
     Provider {
         http_status: u16,
         message: String,
+        #[allow(unused)]
         retryable: bool,
     },
-    Network {
-        source: reqwest::Error,
-    },
-    Serialization {
-        source: serde_json::Error,
-    },
-    Unsupported {
-        feature: &'static str,
-    },
+    #[error("network error: {source}")]
+    Network { source: reqwest::Error },
+    #[error("serialization error: {source}")]
+    Serialization { source: serde_json::Error },
+    #[error("unsupported: {feature}")]
+    Unsupported { feature: &'static str },
 }
 
-impl fmt::Display for CloudError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            CloudError::Auth { message } => write!(f, "authentication error: {}", message),
-            CloudError::RateLimit {
-                retry_after: Some(s),
-            } => {
-                write!(f, "rate limit exceeded, retry after {}s", s)
-            }
-            CloudError::RateLimit { retry_after: None } => write!(f, "rate limit exceeded"),
-            CloudError::Provider {
-                http_status,
-                message,
-                ..
-            } => {
-                write!(f, "provider error {}: {}", http_status, message)
-            }
-            CloudError::Network { source } => write!(f, "network error: {}", source),
-            CloudError::Serialization { source } => write!(f, "serialization error: {}", source),
-            CloudError::Unsupported { feature } => write!(f, "unsupported: {}", feature),
-        }
+impl CloudError {
+    #[allow(clippy::unused_self)]
+    pub fn rate_limit_after(_seconds: u64) -> Self {
+        Self::RateLimit
+    }
+
+    pub fn rate_limit() -> Self {
+        Self::RateLimit
     }
 }
-
-impl std::error::Error for CloudError {}
