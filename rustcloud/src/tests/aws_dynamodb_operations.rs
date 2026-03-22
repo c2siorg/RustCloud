@@ -1,18 +1,15 @@
 use crate::aws::aws_apis::database::aws_dynamodb::*;
-use aws_sdk_dynamodb::config::Region;
 use aws_sdk_dynamodb::types::{
-    AttributeDefinition, AttributeValue, AttributeValueUpdate, BillingMode, ComparisonOperator,
-    Condition, GlobalSecondaryIndex, KeySchemaElement, KeyType, LocalSecondaryIndex,
-    ProvisionedThroughput, PutRequest, ReturnConsumedCapacity, ReturnValue, ScalarAttributeType,
-    Select, SseSpecification, StreamSpecification, TableClass, WriteRequest,
+    AttributeDefinition, AttributeValue, BillingMode, ComparisonOperator, Condition,
+    KeySchemaElement, KeyType, ProvisionedThroughput, PutRequest, ReturnConsumedCapacity,
+    ReturnValue, ScalarAttributeType, Select, TableClass, WriteRequest,
 };
-use aws_sdk_dynamodb::{Client, Config};
+use aws_sdk_dynamodb::Client;
 use std::collections::HashMap;
 
 async fn create_client() -> Client {
-    let config = aws_config::load_from_env().await;
-    let client = Client::new(&config);
-    return client;
+    let config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
+    Client::new(&config)
 }
 
 #[tokio::test]

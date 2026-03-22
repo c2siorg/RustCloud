@@ -24,6 +24,10 @@ pub async fn add_tags(client: &Client, load_balancer_name: String, tags: Tag) ->
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "thin wrapper over the AWS ELB create load balancer API"
+)]
 pub async fn create(
     client: &Client,
     load_balancer_name: String,

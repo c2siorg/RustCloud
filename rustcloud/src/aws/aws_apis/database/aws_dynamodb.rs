@@ -12,6 +12,10 @@ use aws_sdk_dynamodb::{
 };
 use std::collections::HashMap;
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "thin wrapper over the AWS DynamoDB create table API"
+)]
 pub async fn create_table(
     client: &Client,
     attribute_definitions: AttributeDefinition,
@@ -61,6 +65,10 @@ pub async fn create_table(
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "thin wrapper over the AWS DynamoDB delete item API"
+)]
 pub async fn delete_item(
     client: &Client,
     table_name: String,
@@ -120,6 +128,10 @@ pub async fn delete_table(client: &Client, table_name: String) -> Result<(), Err
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "thin wrapper over the AWS DynamoDB get item API"
+)]
 pub async fn get_item(
     client: &Client,
     table_name: String,
@@ -154,6 +166,10 @@ pub async fn get_item(
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "thin wrapper over the AWS DynamoDB put item API"
+)]
 pub async fn put_item(
     client: &Client,
     table_name: String,
@@ -196,6 +212,10 @@ pub async fn put_item(
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "thin wrapper over the AWS DynamoDB update item API"
+)]
 pub async fn update_item(
     client: &Client,
     table_name: String,
@@ -242,6 +262,10 @@ pub async fn update_item(
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "thin wrapper over the AWS DynamoDB scan API"
+)]
 pub async fn scan(
     client: &Client,
     table_name: String,
@@ -320,6 +344,10 @@ pub async fn batch_write_item(
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "thin wrapper over the AWS DynamoDB query API"
+)]
 pub async fn query(
     client: &Client,
     table_name: String,

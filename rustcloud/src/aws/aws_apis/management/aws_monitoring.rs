@@ -20,6 +20,10 @@ pub async fn delete_alarm(client: &Client, alarm_name: &String) -> Result<(), Er
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "thin wrapper over the AWS CloudWatch get metric data API"
+)]
 pub async fn get_metric_data(
     client: &Client,
     metric_data_queries: Option<Vec<MetricDataQuery>>,
@@ -27,7 +31,7 @@ pub async fn get_metric_data(
     end_time: Option<DateTime>,
     next_token: Option<String>,
     scan_by: Option<ScanBy>,
-    _max_datapoints: Option<i32>,
+    max_datapoints: Option<i32>,
     label_options: Option<LabelOptions>,
 ) -> Result<(), Error> {
     let resp = client
@@ -37,6 +41,7 @@ pub async fn get_metric_data(
         .set_end_time(end_time)
         .set_next_token(next_token)
         .set_scan_by(scan_by)
+        .set_max_datapoints(max_datapoints)
         .set_label_options(label_options)
         .send()
         .await;
@@ -67,6 +72,10 @@ pub async fn list_alarms(client: &Client) -> Result<(), Error> {
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "thin wrapper over the AWS CloudWatch put metric alarm API"
+)]
 pub async fn put_metric_alarm(
     client: &Client,
     alarm_name: &String,

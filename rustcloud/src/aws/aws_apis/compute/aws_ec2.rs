@@ -19,10 +19,7 @@ pub async fn create_instance(
     match run_instances {
         Ok(run_instances) => {
             if run_instances.instances().is_empty() {
-                return Err(Box::new(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "No instances were created",
-                )));
+                return Err(Box::new(std::io::Error::other("No instances were created")));
             }
             let instance_id =
                 run_instances.instances()[0].instance_id().unwrap().to_string();
@@ -102,7 +99,10 @@ pub async fn show_all_events(client: &Client) -> Result<(), Error> {
             for region in result.regions.unwrap_or_default() {
                 let reg: &'static str = Box::leak(Box::from(region.region_name().unwrap()));
                 let region_provider = RegionProviderChain::default_provider().or_else(reg);
-                let config = aws_config::from_env().region(region_provider).load().await;
+                let config = aws_config::defaults(aws_config::BehaviorVersion::latest())
+                    .region(region_provider)
+                    .load()
+                    .await;
                 let new_client = Client::new(&config);
 
                 let resp = new_client.describe_instance_status().send().await;

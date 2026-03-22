@@ -5,6 +5,10 @@ use aws_sdk_kms::{
     Client, Error,
 };
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "thin wrapper over the AWS KMS create key API"
+)]
 pub async fn create_key(
     client: &Client,
     policy: String,

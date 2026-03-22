@@ -337,3 +337,9 @@ impl GCE {
         Ok(list_node_response)
     }
 }
+
+impl Default for GCE {
+    fn default() -> Self {
+        Self::new()
+    }
+}
