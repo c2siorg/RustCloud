@@ -4,3 +4,4 @@ pub mod management;
 pub mod network;
 pub mod security;
 pub mod storage;
+pub mod artificial_intelligence;
