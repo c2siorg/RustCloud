@@ -1,3 +1,4 @@
+mod aws_bedrock_operations;
 mod azure_blob_operations;
 mod aws_archival_operations;
 mod aws_block_operations;
