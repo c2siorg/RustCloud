@@ -21,6 +21,9 @@ pub mod azure{
 }
 pub mod aws {
     pub mod aws_apis {
+        pub mod artificial_intelligence {
+            pub mod aws_bedrock;
+        }
         pub mod compute {
             pub mod aws_ec2;
             pub mod aws_ecs;
