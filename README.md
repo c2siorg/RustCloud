@@ -6,7 +6,7 @@ RustCloud is a Rust library that hides the differences between APIs provided by 
 [![Rust](https://img.shields.io/badge/rust-2021%20edition-orange.svg)](https://www.rust-lang.org)
 [![Slack](https://img.shields.io/badge/chat-slack-purple.svg)](https://c2si.slack.com/archives/rust-cloud)
 
-> **Note:** This is the Rust port of the original [gocloud](https://github.com/cloudlibz/gocloud) library. The install instructions below are for Rust/Cargo — ignore any Go references you may see in older branches.
+> **Note:** This is the Rust port of the original [gocloud](https://github.com/cloudlibz/gocloud) library. The install instructions below are for Rust/Cargo; ignore any Go references you may see in older branches.
 
 ---
 
@@ -31,14 +31,14 @@ The core idea is straightforward: you should be able to switch between AWS and G
 
 ```
 Your application code
-        │
-        ▼
-┌──────────────────────┐
-│   RustCloud Traits   │  ← unified API surface
-└──────────┬───────────┘
-           │
-    ┌──────┼──────┐
-    ▼      ▼      ▼
+        |
+        v
++----------------------+    <- unified API surface
+|   RustCloud Traits   |
++----------+-----------+
+           |
+    +------+------+-----+
+    v      v      v
   AWS     GCP   Azure   ...
 ```
 
@@ -130,8 +130,18 @@ tokio = { version = "1", features = ["full"] }
 
 ### Clone and build
 
+From repo root (workspace):
+
 ```sh
 git clone https://github.com/c2siorg/RustCloud
+cd RustCloud
+cargo check
+cargo build -p rustcloud
+```
+
+Or, from the crate directory:
+
+```sh
 cd RustCloud/rustcloud
 cargo build
 ```
@@ -208,7 +218,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-For more complete examples, see the [`examples/`](examples/) directory — each service has its own markdown file with copy-pasteable snippets.
+For more complete examples, see the [`examples/`](examples/) directory; each service has its own markdown file with copy-pasteable snippets.
 
 ---
 
@@ -252,7 +262,7 @@ async fn ask(provider: &dyn LlmProvider, question: &str) {
 | `embed` | Get embeddings for a list of texts |
 | `generate_with_tools` | Text generation with tool/function calling |
 
-### `ModelRef` — flexible model targeting
+### `ModelRef` - flexible model targeting
 
 Instead of embedding provider-specific model IDs everywhere, `ModelRef` gives you three options:
 
@@ -260,7 +270,7 @@ Instead of embedding provider-specific model IDs everywhere, `ModelRef` gives yo
 // Reference a specific provider model ID (e.g., for Bedrock, Vertex AI)
 ModelRef::Provider("anthropic.claude-3-sonnet-20240229-v1:0".to_string())
 
-// Reference a model logically — the provider implementation resolves this
+// Reference a model logically; the provider implementation resolves this
 ModelRef::Logical { family: "claude".to_string(), tier: Some("sonnet".to_string()) }
 
 // Reference a named deployment (e.g., Azure OpenAI deployments)
@@ -275,8 +285,17 @@ This abstraction is what makes it practical to target Vertex AI, AWS Bedrock, an
 
 ## Development
 
+From repo root (workspace):
+
 ```sh
 git clone https://github.com/c2siorg/RustCloud
+cd RustCloud
+cargo build -p rustcloud
+```
+
+From the crate directory:
+
+```sh
 cd RustCloud/rustcloud
 cargo build
 ```
@@ -284,8 +303,8 @@ cargo build
 Before submitting a PR, run the formatter and linter:
 
 ```sh
-cargo fmt
-cargo clippy -- -D warnings
+cargo fmt --all
+cargo clippy --workspace --all-targets -- -D warnings
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contribution guide.
@@ -293,6 +312,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contribution guide.
 ---
 
 ## Running Tests
+
+From repo root (workspace):
+
+```sh
+cd RustCloud
+cargo test -p rustcloud
+```
+
+From the crate directory:
 
 ```sh
 cd RustCloud/rustcloud
@@ -306,7 +334,7 @@ cargo test aws      # all AWS tests
 cargo test gcp      # all GCP tests
 ```
 
-**Important:** Tests that create real cloud resources will create live infrastructure. Make sure you clean up any instances, storage buckets, load balancers, and DNS records after running integration tests — check each provider's console.
+**Important:** Tests that create real cloud resources will create live infrastructure. Make sure you clean up any instances, storage buckets, load balancers, and DNS records after running integration tests; check each provider's console.
 
 > **GCP note:** Some GCP tests currently have a known compilation issue with struct initialization (see [#14](https://github.com/c2siorg/RustCloud/issues/14)). Unit tests and AWS tests compile and run correctly.
 
@@ -316,7 +344,7 @@ cargo test gcp      # all GCP tests
 
 Contributions are welcome. A few things to keep in mind:
 
-- Comment on an issue before starting work — it avoids duplicate effort
+- Comment on an issue before starting work; it avoids duplicate effort
 - Keep PRs focused; one logical change per PR is easier to review
 - Run `cargo fmt` and `cargo clippy` before pushing
 - Add tests for new functionality
@@ -327,4 +355,4 @@ For details, see [CONTRIBUTING.md](CONTRIBUTING.md). To discuss ideas or ask que
 
 ## License
 
-Apache 2.0 — see [LICENSE](LICENSE).
+Apache 2.0; see [LICENSE](LICENSE).
