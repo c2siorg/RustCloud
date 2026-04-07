@@ -79,6 +79,12 @@ pub mod gcp {
     pub mod types;
 }
 
+pub mod openai {
+    pub mod openai_apis {
+        pub mod openai_compatible;
+    }
+}
+
 pub mod digiocean {
     pub mod digiocean_apis {
         pub mod compute {
@@ -95,6 +101,7 @@ pub mod digiocean {
         }
     }
 }
+
 fn main() {
     println!("Hello, world!");
 }
