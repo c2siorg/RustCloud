@@ -79,6 +79,10 @@ pub mod gcp {
     pub mod types;
 }
 
+pub mod utils {
+    pub mod rate_limiter;
+}
+
 pub mod digiocean {
     pub mod digiocean_apis {
         pub mod compute {
