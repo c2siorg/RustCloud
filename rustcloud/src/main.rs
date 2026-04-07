@@ -79,6 +79,10 @@ pub mod gcp {
     pub mod types;
 }
 
+pub mod utils {
+    pub mod health;
+}
+
 pub mod digiocean {
     pub mod digiocean_apis {
         pub mod compute {
