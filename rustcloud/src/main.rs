@@ -8,6 +8,7 @@ pub mod types {
 pub mod traits {
     pub mod llm_provider;
     pub mod token_provider;
+    pub mod providers;
 }
 pub mod azure{
     pub mod azure_apis{
