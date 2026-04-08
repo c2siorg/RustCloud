@@ -49,6 +49,7 @@ pub mod aws {
 }
 
 pub mod gcp {
+    pub mod errors;
     pub mod gcp_apis {
         pub mod app_services {
             pub mod gcp_notification_service;
@@ -76,6 +77,7 @@ pub mod gcp {
             pub mod gcp_auth;
         }
     }
+    pub mod middleware;
     pub mod types;
 }
 
