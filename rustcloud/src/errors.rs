@@ -49,3 +49,15 @@ impl fmt::Display for CloudError {
 }
 
 impl std::error::Error for CloudError {}
+
+impl From<reqwest::Error> for CloudError {
+    fn from(err: reqwest::Error) -> Self {
+        CloudError::Network { source: err }
+    }
+}
+
+impl From<serde_json::Error> for CloudError {
+    fn from(err: serde_json::Error) -> Self {
+        CloudError::Serialization { source: err }
+    }
+}

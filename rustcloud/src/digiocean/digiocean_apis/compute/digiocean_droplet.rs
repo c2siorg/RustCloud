@@ -1,3 +1,4 @@
+use crate::errors::CloudError;
 use reqwest::header::AUTHORIZATION;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -20,9 +21,9 @@ impl Droplet {
     pub async fn create_droplet(
         &self,
         request: HashMap<String, Value>,
-    ) -> Result<HashMap<String, Value>, reqwest::Error> {
+    ) -> Result<HashMap<String, Value>, CloudError> {
         let url = format!("{}/droplets", self.base_url);
-        let body = serde_json::to_string(&request).unwrap();
+        let body = serde_json::to_string(&request)?;
 
         let resp = self
             .client
@@ -46,7 +47,7 @@ impl Droplet {
     pub async fn delete_droplet(
         &self,
         droplet_id: &str,
-    ) -> Result<HashMap<String, Value>, reqwest::Error> {
+    ) -> Result<HashMap<String, Value>, CloudError> {
         let url = format!("{}/droplets/{}", self.base_url, droplet_id);
 
         let resp = self
@@ -66,7 +67,7 @@ impl Droplet {
         Ok(response)
     }
 
-    pub async fn list_droplets(&self) -> Result<HashMap<String, Value>, reqwest::Error> {
+    pub async fn list_droplets(&self) -> Result<HashMap<String, Value>, CloudError> {
         let url = format!("{}/droplets", self.base_url);
 
         let resp = self

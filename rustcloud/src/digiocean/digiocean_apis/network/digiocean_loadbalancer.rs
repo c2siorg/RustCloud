@@ -1,3 +1,4 @@
+use crate::errors::CloudError;
 use reqwest::header::AUTHORIZATION;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -20,9 +21,9 @@ impl DigiOceanLoadBalancer {
     pub async fn create_load_balancer(
         &self,
         request: HashMap<String, Value>,
-    ) -> Result<HashMap<String, Value>, reqwest::Error> {
+    ) -> Result<HashMap<String, Value>, CloudError> {
         let url = format!("{}/load_balancers", self.base_url);
-        let body = serde_json::to_string(&request).unwrap();
+        let body = serde_json::to_string(&request)?;
 
         let resp = self
             .client
@@ -46,7 +47,7 @@ impl DigiOceanLoadBalancer {
     pub async fn delete_load_balancer(
         &self,
         lb_id: &str,
-    ) -> Result<HashMap<String, Value>, reqwest::Error> {
+    ) -> Result<HashMap<String, Value>, CloudError> {
         let url = format!("{}/load_balancers/{}", self.base_url, lb_id);
 
         let resp = self
