@@ -1,5 +1,6 @@
 mod azure_blob_operations;
 mod aws_archival_operations;
+mod llm_provider_tests;
 mod aws_block_operations;
 mod aws_bucket_operations;
 mod aws_dns_operations;

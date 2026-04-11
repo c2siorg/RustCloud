@@ -13,8 +13,23 @@ pub enum ModelRef {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum MessageRole {
+    User,
+    Model,
+    System,
+    Tool,
+}
+
+impl Default for MessageRole {
+    fn default() -> Self {
+        MessageRole::User
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Message {
-    pub role: String,
+    pub role: MessageRole,
     pub content: String,
 }
 
