@@ -5,7 +5,7 @@ use serde_json::{json, Value};
 use crate::errors::CloudError;
 use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
 use crate::traits::llm_provider::{LlmProvider, LlmStream};
-use crate::types::llm::{EmbedResponse, FinishReason, LlmRequest, LlmResponse, LlmStreamEvent, ModelRef, ToolCallResponse, ToolDefinition, UsageStats};
+use crate::types::llm::{EmbedResponse, FinishReason, LlmRequest, LlmResponse, LlmStreamEvent, MessageRole, ModelRef, ToolCallResponse, ToolDefinition, UsageStats};
 
 pub struct GoogleVertexAI {
     client: reqwest::Client,
@@ -50,8 +50,14 @@ impl LlmProvider for GoogleVertexAI {
         );
 
         let contents = req.messages.iter().map(|m| {
+            let role_str = match m.role {
+                MessageRole::User => "user",
+                MessageRole::Model => "model",
+                MessageRole::System => "system",
+                MessageRole::Tool => "tool",
+            };
             json!({
-                "role": if m.role == "user" { "user" } else { "model" },
+                "role": role_str,
                 "parts": [{ "text": m.content }]
             })
         }).collect::<Vec<_>>();

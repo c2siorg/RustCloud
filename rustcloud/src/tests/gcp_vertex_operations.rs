@@ -1,5 +1,5 @@
 use crate::gcp::gcp_apis::artificial_intelligence::vertex::GoogleVertexAI;
-use crate::types::llm::{LlmRequest, Message, ModelRef};
+use crate::types::llm::{LlmRequest, Message, MessageRole, ModelRef};
 
 #[tokio::test]
 async fn test_vertex_compilation() {
@@ -7,7 +7,7 @@ async fn test_vertex_compilation() {
     let _req = LlmRequest {
         model: ModelRef::Provider("gemini-1.5-flash".to_string()),
         messages: vec![Message {
-            role: "user".to_string(),
+            role: MessageRole::User,
             content: "Hello from Vertex AI".to_string(),
         }],
         max_tokens: Some(50),
