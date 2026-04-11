@@ -1,3 +1,4 @@
+use crate::errors::CloudError;
 use reqwest::header::AUTHORIZATION;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -20,9 +21,9 @@ impl DigiOceanDns {
     pub async fn create_domain(
         &self,
         request: HashMap<String, Value>,
-    ) -> Result<HashMap<String, Value>, reqwest::Error> {
+    ) -> Result<HashMap<String, Value>, CloudError> {
         let url = format!("{}/domains", self.base_url);
-        let body = serde_json::to_string(&request).unwrap();
+        let body = serde_json::to_string(&request)?;
 
         let resp = self
             .client
@@ -46,7 +47,7 @@ impl DigiOceanDns {
     pub async fn delete_domain(
         &self,
         domain_name: &str,
-    ) -> Result<HashMap<String, Value>, reqwest::Error> {
+    ) -> Result<HashMap<String, Value>, CloudError> {
         let url = format!("{}/domains/{}", self.base_url, domain_name);
 
         let resp = self

@@ -1,3 +1,4 @@
+use crate::errors::CloudError;
 use reqwest::header::AUTHORIZATION;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -20,7 +21,7 @@ impl DigiOceanStorage {
     pub async fn create_volume(
         &self,
         request: HashMap<String, Value>,
-    ) -> Result<HashMap<String, Value>, reqwest::Error> {
+    ) -> Result<HashMap<String, Value>, CloudError> {
         let url = format!("{}/volumes", self.base_url);
         let body = serde_json::to_string(&request).unwrap();
 
@@ -46,7 +47,7 @@ impl DigiOceanStorage {
     pub async fn delete_volume(
         &self,
         volume_id: &str,
-    ) -> Result<HashMap<String, Value>, reqwest::Error> {
+    ) -> Result<HashMap<String, Value>, CloudError> {
         let url = format!("{}/volumes/{}", self.base_url, volume_id);
 
         let resp = self
