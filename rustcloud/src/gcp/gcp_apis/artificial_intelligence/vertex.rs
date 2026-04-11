@@ -56,13 +56,19 @@ impl LlmProvider for GoogleVertexAI {
             })
         }).collect::<Vec<_>>();
 
-        let body = json!({
+        let mut body = json!({
             "contents": contents,
             "generationConfig": {
                 "maxOutputTokens": req.max_tokens.unwrap_or(256),
                 "temperature": req.temperature.unwrap_or(0.7),
             }
         });
+
+        if let Some(ref system_prompt) = req.system_prompt {
+            body["systemInstruction"] = json!({
+                "parts": [{ "text": system_prompt }]
+            });
+        }
 
         let response = self.client.post(&url)
             .header(AUTHORIZATION, format!("Bearer {}", token))
