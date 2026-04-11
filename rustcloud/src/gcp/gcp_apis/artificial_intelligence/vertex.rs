@@ -82,12 +82,27 @@ impl LlmProvider for GoogleVertexAI {
             retryable: false,
         })?;
 
-        let completion_text = resp_json["candidates"][0]["content"]["parts"][0]["text"].as_str().unwrap_or("");
+        let completion_text = resp_json["candidates"][0]["content"]["parts"][0]["text"].as_str().unwrap_or("").to_string();
+
+        let finish_reason = resp_json["candidates"][0]["finishReason"]
+            .as_str()
+            .map(|r| match r {
+                "STOP" => FinishReason::Stop,
+                "MAX_TOKENS" => FinishReason::Length,
+                "SAFETY" | "OTHER" => FinishReason::Other(r.to_string()),
+                _ => FinishReason::Other(r.to_string()),
+            })
+            .unwrap_or(FinishReason::Stop);
+
+        let usage = resp_json["usageMetadata"].as_object().map(|u| UsageStats {
+            prompt_tokens: u.get("promptTokenCount").and_then(|v| v.as_u64()).map(|n| n as u32).unwrap_or(0),
+            completion_tokens: u.get("candidatesTokenCount").and_then(|v| v.as_u64()).map(|n| n as u32).unwrap_or(0),
+        });
 
         Ok(LlmResponse {
-            text: completion_text.to_string(),
-            finish_reason: FinishReason::Stop,
-            usage: Some(UsageStats { prompt_tokens: 0, completion_tokens: 0 }),
+            text: completion_text,
+            finish_reason,
+            usage,
         })
     }
 
