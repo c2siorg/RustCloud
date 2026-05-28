@@ -1,10 +1,15 @@
 use async_trait::async_trait;
 use aws_sdk_bedrockruntime::Client;
+use aws_sdk_bedrockruntime::types::{
+    ContentBlock, ConversationRole, ConverseOutput as ConverseOutputKind,
+    InferenceConfiguration, Message as BedrockMessage, StopReason, SystemContentBlock,
+};
 
 use crate::errors::CloudError;
 use crate::traits::llm_provider::{LlmProvider, LlmStream};
 use crate::types::llm::{
-    EmbedResponse, LlmRequest, LlmResponse, ToolCallResponse, ToolDefinition,
+    EmbedResponse, FinishReason, LlmRequest, LlmResponse, ModelRef,
+    ToolCallResponse, ToolDefinition, UsageStats,
 };
 
 pub struct BedrockProvider {
@@ -24,11 +29,112 @@ impl BedrockProvider {
     }
 }
 
+pub(crate) fn extract_model_id(model: &ModelRef) -> Result<String, CloudError> {
+    match model {
+        ModelRef::Provider(id) => Ok(id.clone()),
+        ModelRef::Logical { family, tier } => Ok(match tier.as_deref() {
+            Some(t) => format!("{}.{}", family, t),
+            None => family.clone(),
+        }),
+        ModelRef::Deployment(_) => Err(CloudError::Unsupported {
+            feature: "Bedrock does not use deployment names; use ModelRef::Provider",
+        }),
+    }
+}
+
+pub(crate) fn build_messages(req: &LlmRequest) -> Result<Vec<BedrockMessage>, CloudError> {
+    req.messages
+        .iter()
+        .map(|msg| {
+            let role = if msg.role == "assistant" {
+                ConversationRole::Assistant
+            } else {
+                ConversationRole::User
+            };
+            BedrockMessage::builder()
+                .role(role)
+                .content(ContentBlock::Text(msg.content.clone()))
+                .build()
+                .map_err(|e| CloudError::Provider {
+                    http_status: 0,
+                    message: e.to_string(),
+                    retryable: false,
+                })
+        })
+        .collect()
+}
+
+pub(crate) fn build_inference_config(req: &LlmRequest) -> InferenceConfiguration {
+    let mut builder = InferenceConfiguration::builder();
+    if let Some(max_tokens) = req.max_tokens {
+        builder = builder.max_tokens(max_tokens as i32);
+    }
+    if let Some(temp) = req.temperature {
+        builder = builder.temperature(temp);
+    }
+    builder.build()
+}
+
+pub(crate) fn map_stop_reason(reason: &StopReason) -> FinishReason {
+    match reason {
+        StopReason::EndTurn => FinishReason::Stop,
+        StopReason::MaxTokens => FinishReason::Length,
+        StopReason::ToolUse => FinishReason::ToolCall,
+        other => FinishReason::Other(other.as_str().to_string()),
+    }
+}
+
 #[async_trait]
 impl LlmProvider for BedrockProvider {
-    async fn generate(&self, _req: LlmRequest) -> Result<LlmResponse, CloudError> {
-        Err(CloudError::Unsupported {
-            feature: "Bedrock generate",
+    async fn generate(&self, req: LlmRequest) -> Result<LlmResponse, CloudError> {
+        let model_id = extract_model_id(&req.model)?;
+        let messages = build_messages(&req)?;
+        let inference_config = build_inference_config(&req);
+
+        let mut builder = self.client.converse().model_id(&model_id);
+
+        for msg in messages {
+            builder = builder.messages(msg);
+        }
+
+        if let Some(system) = &req.system_prompt {
+            builder = builder.system(SystemContentBlock::Text(system.clone()));
+        }
+
+        builder = builder.inference_config(inference_config);
+
+        let response = builder.send().await.map_err(|e| CloudError::Provider {
+            http_status: 500,
+            message: e.to_string(),
+            retryable: false,
+        })?;
+
+        let finish_reason = map_stop_reason(response.stop_reason());
+
+        let text = match response.output() {
+            Some(ConverseOutputKind::Message(msg)) => msg
+                .content()
+                .iter()
+                .find_map(|block| {
+                    if let ContentBlock::Text(t) = block {
+                        Some(t.clone())
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or_default(),
+            _ => String::new(),
+        };
+
+        let usage = response.usage().map(|u| UsageStats {
+            prompt_tokens: u.input_tokens() as u32,
+            completion_tokens: u.output_tokens() as u32,
+        });
+
+        Ok(LlmResponse {
+            text,
+            finish_reason,
+            usage,
         })
     }
 
