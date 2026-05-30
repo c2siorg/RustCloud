@@ -1,5 +1,5 @@
 use crate::aws::aws_apis::artificial_intelligence::aws_bedrock::{
-    build_inference_config, build_messages, extract_model_id, map_stop_reason,
+    build_inference_config, build_messages, extract_model_id, map_stop_reason, parse_embed_response,
 };
 use crate::errors::CloudError;
 use crate::types::llm::{LlmRequest, Message, ModelRef};
@@ -152,6 +152,40 @@ fn test_build_inference_config_does_not_panic_with_no_fields() {
     let _ = build_inference_config(&req);
 }
 
+// ----- parse_embed_response -----
+
+#[test]
+fn test_embed_single_text_returns_one_vector() {
+    let json = serde_json::json!({"embedding": [0.1f32, 0.2f32, 0.3f32], "inputTextTokenCount": 3});
+    let vector = parse_embed_response(&json).unwrap();
+    assert_eq!(vector.len(), 3);
+}
+
+#[test]
+fn test_embed_multiple_texts_returns_multiple_vectors() {
+    let responses = vec![
+        serde_json::json!({"embedding": [0.1f32, 0.2f32]}),
+        serde_json::json!({"embedding": [0.3f32, 0.4f32]}),
+    ];
+    let vectors: Vec<Vec<f32>> = responses
+        .iter()
+        .map(|j| parse_embed_response(j).unwrap())
+        .collect();
+    assert_eq!(vectors.len(), 2);
+    assert_eq!(vectors[0].len(), 2);
+    assert_eq!(vectors[1].len(), 2);
+}
+
+#[tokio::test]
+async fn test_embed_empty_input_returns_empty_vec() {
+    use crate::aws::aws_apis::artificial_intelligence::aws_bedrock::BedrockProvider;
+    use crate::traits::llm_provider::LlmProvider;
+
+    let provider = BedrockProvider::new().await;
+    let result = provider.embed(vec![]).await.unwrap();
+    assert!(result.embeddings.is_empty());
+}
+
 // ----- integration -----
 
 #[tokio::test]
@@ -172,4 +206,19 @@ async fn test_generate_live_api() {
     };
     let result = provider.generate(req).await.unwrap();
     assert!(!result.text.is_empty());
+}
+
+#[tokio::test]
+#[ignore]
+async fn test_embed_live_api() {
+    use crate::aws::aws_apis::artificial_intelligence::aws_bedrock::BedrockProvider;
+    use crate::traits::llm_provider::LlmProvider;
+
+    let provider = BedrockProvider::new().await;
+    let result = provider
+        .embed(vec!["Rust programming language".to_string()])
+        .await
+        .unwrap();
+    assert_eq!(result.embeddings.len(), 1);
+    assert!(!result.embeddings[0].is_empty());
 }

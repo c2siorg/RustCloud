@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use aws_sdk_bedrockruntime::Client;
+use aws_sdk_bedrockruntime::primitives::Blob;
 use aws_sdk_bedrockruntime::types::{
     ContentBlock, ConversationRole, ConverseOutput as ConverseOutputKind,
     InferenceConfiguration, Message as BedrockMessage, StopReason, SystemContentBlock,
@@ -84,6 +85,11 @@ pub(crate) fn map_stop_reason(reason: &StopReason) -> FinishReason {
     }
 }
 
+pub(crate) fn parse_embed_response(json: &serde_json::Value) -> Result<Vec<f32>, CloudError> {
+    serde_json::from_value(json["embedding"].clone())
+        .map_err(|e| CloudError::Serialization { source: e })
+}
+
 #[async_trait]
 impl LlmProvider for BedrockProvider {
     async fn generate(&self, req: LlmRequest) -> Result<LlmResponse, CloudError> {
@@ -144,10 +150,37 @@ impl LlmProvider for BedrockProvider {
         })
     }
 
-    async fn embed(&self, _texts: Vec<String>) -> Result<EmbedResponse, CloudError> {
-        Err(CloudError::Unsupported {
-            feature: "Bedrock embed",
-        })
+    async fn embed(&self, texts: Vec<String>) -> Result<EmbedResponse, CloudError> {
+        if texts.is_empty() {
+            return Ok(EmbedResponse { embeddings: vec![] });
+        }
+
+        let mut embeddings = Vec::with_capacity(texts.len());
+
+        for text in &texts {
+            let body_bytes = serde_json::to_vec(&serde_json::json!({"inputText": text}))
+                .map_err(|e| CloudError::Serialization { source: e })?;
+
+            let resp = self
+                .client
+                .invoke_model()
+                .model_id("amazon.titan-embed-text-v2:0")
+                .body(Blob::new(body_bytes))
+                .send()
+                .await
+                .map_err(|e| CloudError::Provider {
+                    http_status: 500,
+                    message: e.to_string(),
+                    retryable: false,
+                })?;
+
+            let resp_json: serde_json::Value = serde_json::from_slice(resp.body().as_ref())
+                .map_err(|e| CloudError::Serialization { source: e })?;
+
+            embeddings.push(parse_embed_response(&resp_json)?);
+        }
+
+        Ok(EmbedResponse { embeddings })
     }
 
     async fn generate_with_tools(
