@@ -2,14 +2,17 @@ use async_trait::async_trait;
 use aws_sdk_bedrockruntime::Client;
 use aws_sdk_bedrockruntime::primitives::Blob;
 use aws_sdk_bedrockruntime::types::{
-    ContentBlock, ConversationRole, ConverseOutput as ConverseOutputKind,
+    ContentBlock, ContentBlockDelta as StreamDelta, ConversationRole,
+    ConverseOutput as ConverseOutputKind, ConverseStreamOutput as StreamEvent,
     InferenceConfiguration, Message as BedrockMessage, StopReason, SystemContentBlock,
 };
+use futures::channel::mpsc;
+use futures::SinkExt;
 
 use crate::errors::CloudError;
 use crate::traits::llm_provider::{LlmProvider, LlmStream};
 use crate::types::llm::{
-    EmbedResponse, FinishReason, LlmRequest, LlmResponse, ModelRef,
+    EmbedResponse, FinishReason, LlmRequest, LlmResponse, LlmStreamEvent, ModelRef,
     ToolCallResponse, ToolDefinition, UsageStats,
 };
 
@@ -90,6 +93,23 @@ pub(crate) fn parse_embed_response(json: &serde_json::Value) -> Result<Vec<f32>,
         .map_err(|e| CloudError::Serialization { source: e })
 }
 
+pub(crate) fn map_stream_event(event: &StreamEvent) -> Option<LlmStreamEvent> {
+    match event {
+        StreamEvent::ContentBlockDelta(e) => match e.delta() {
+            Some(StreamDelta::Text(t)) => Some(LlmStreamEvent::DeltaText(t.clone())),
+            _ => None,
+        },
+        StreamEvent::MessageStop(e) => {
+            Some(LlmStreamEvent::Done(map_stop_reason(e.stop_reason())))
+        }
+        StreamEvent::Metadata(e) => e.usage().map(|u| LlmStreamEvent::Usage(UsageStats {
+            prompt_tokens: u.input_tokens() as u32,
+            completion_tokens: u.output_tokens() as u32,
+        })),
+        _ => None,
+    }
+}
+
 #[async_trait]
 impl LlmProvider for BedrockProvider {
     async fn generate(&self, req: LlmRequest) -> Result<LlmResponse, CloudError> {
@@ -144,10 +164,58 @@ impl LlmProvider for BedrockProvider {
         })
     }
 
-    async fn stream(&self, _req: LlmRequest) -> Result<LlmStream, CloudError> {
-        Err(CloudError::Unsupported {
-            feature: "Bedrock stream",
-        })
+    async fn stream(&self, req: LlmRequest) -> Result<LlmStream, CloudError> {
+        let model_id = extract_model_id(&req.model)?;
+        let messages = build_messages(&req)?;
+        let inference_config = build_inference_config(&req);
+
+        let mut builder = self.client.converse_stream().model_id(&model_id);
+
+        for msg in messages {
+            builder = builder.messages(msg);
+        }
+
+        if let Some(system) = &req.system_prompt {
+            builder = builder.system(SystemContentBlock::Text(system.clone()));
+        }
+
+        builder = builder.inference_config(inference_config);
+
+        let response = builder.send().await.map_err(|e| CloudError::Provider {
+            http_status: 500,
+            message: e.to_string(),
+            retryable: false,
+        })?;
+
+        let (mut tx, rx) = mpsc::channel::<LlmStreamEvent>(32);
+        let mut event_stream = response.stream;
+
+        tokio::spawn(async move {
+            loop {
+                match event_stream.recv().await {
+                    Ok(Some(event)) => {
+                        if let Some(mapped) = map_stream_event(&event) {
+                            if tx.send(mapped).await.is_err() {
+                                break;
+                            }
+                        }
+                    }
+                    Ok(None) => break,
+                    Err(e) => {
+                        let _ = tx
+                            .send(LlmStreamEvent::Error(CloudError::Provider {
+                                http_status: 500,
+                                message: e.to_string(),
+                                retryable: true,
+                            }))
+                            .await;
+                        break;
+                    }
+                }
+            }
+        });
+
+        Ok(Box::pin(rx))
     }
 
     async fn embed(&self, texts: Vec<String>) -> Result<EmbedResponse, CloudError> {

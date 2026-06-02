@@ -1,5 +1,6 @@
 use crate::aws::aws_apis::artificial_intelligence::aws_bedrock::{
-    build_inference_config, build_messages, extract_model_id, map_stop_reason, parse_embed_response,
+    build_inference_config, build_messages, extract_model_id, map_stop_reason,
+    map_stream_event, parse_embed_response,
 };
 use crate::errors::CloudError;
 use crate::types::llm::{LlmRequest, Message, ModelRef};
@@ -186,6 +187,97 @@ async fn test_embed_empty_input_returns_empty_vec() {
     assert!(result.embeddings.is_empty());
 }
 
+// ----- map_stream_event -----
+
+#[test]
+fn test_map_stream_event_text_delta_maps_to_delta_text() {
+    use aws_sdk_bedrockruntime::types::{
+        ContentBlockDelta, ContentBlockDeltaEvent, ConverseStreamOutput,
+    };
+
+    let event = ConverseStreamOutput::ContentBlockDelta(
+        ContentBlockDeltaEvent::builder()
+            .content_block_index(0)
+            .delta(ContentBlockDelta::Text("hello".to_string()))
+            .build()
+            .unwrap(),
+    );
+    let result = map_stream_event(&event);
+    assert!(
+        matches!(result, Some(crate::types::llm::LlmStreamEvent::DeltaText(ref t)) if t == "hello"),
+        "expected DeltaText(\"hello\"), got {:?}",
+        result
+    );
+}
+
+#[test]
+fn test_map_stream_event_message_stop_maps_to_done() {
+    use aws_sdk_bedrockruntime::types::{ConverseStreamOutput, MessageStopEvent};
+
+    let event = ConverseStreamOutput::MessageStop(
+        MessageStopEvent::builder()
+            .stop_reason(StopReason::EndTurn)
+            .build()
+            .unwrap(),
+    );
+    let result = map_stream_event(&event);
+    assert!(
+        matches!(
+            result,
+            Some(crate::types::llm::LlmStreamEvent::Done(
+                crate::types::llm::FinishReason::Stop
+            ))
+        ),
+        "expected Done(Stop), got {:?}",
+        result
+    );
+}
+
+#[test]
+fn test_map_stream_event_metadata_maps_to_usage() {
+    use aws_sdk_bedrockruntime::types::{
+        ConverseStreamMetadataEvent, ConverseStreamOutput, TokenUsage,
+    };
+
+    let usage = TokenUsage::builder()
+        .input_tokens(10)
+        .output_tokens(20)
+        .total_tokens(30)
+        .build()
+        .unwrap();
+    let event = ConverseStreamOutput::Metadata(
+        ConverseStreamMetadataEvent::builder()
+            .usage(usage)
+            .build(),
+    );
+    let result = map_stream_event(&event);
+    assert!(
+        matches!(
+            result,
+            Some(crate::types::llm::LlmStreamEvent::Usage(ref u))
+                if u.prompt_tokens == 10 && u.completion_tokens == 20
+        ),
+        "expected Usage(10, 20), got {:?}",
+        result
+    );
+}
+
+#[test]
+fn test_map_stream_event_non_content_event_returns_none() {
+    use aws_sdk_bedrockruntime::types::{ContentBlockStopEvent, ConverseStreamOutput};
+
+    let event = ConverseStreamOutput::ContentBlockStop(
+        ContentBlockStopEvent::builder()
+            .content_block_index(0)
+            .build()
+            .unwrap(),
+    );
+    assert!(
+        map_stream_event(&event).is_none(),
+        "ContentBlockStop should return None"
+    );
+}
+
 // ----- integration -----
 
 #[tokio::test]
@@ -221,4 +313,30 @@ async fn test_embed_live_api() {
         .unwrap();
     assert_eq!(result.embeddings.len(), 1);
     assert!(!result.embeddings[0].is_empty());
+}
+
+#[tokio::test]
+#[ignore]
+async fn test_stream_live_api() {
+    use crate::aws::aws_apis::artificial_intelligence::aws_bedrock::BedrockProvider;
+    use crate::traits::llm_provider::LlmProvider;
+    use crate::types::llm::LlmStreamEvent;
+    use futures::StreamExt;
+
+    let provider = BedrockProvider::new().await;
+    let req = LlmRequest {
+        model: ModelRef::Provider("anthropic.claude-3-5-haiku-20241022-v1:0".to_string()),
+        messages: vec![user_msg("Reply with the single word OK and nothing else.")],
+        max_tokens: Some(10),
+        temperature: Some(0.0),
+        system_prompt: None,
+    };
+    let mut stream = provider.stream(req).await.unwrap();
+    let mut got_text = false;
+    while let Some(event) = stream.next().await {
+        if matches!(event, LlmStreamEvent::DeltaText(_)) {
+            got_text = true;
+        }
+    }
+    assert!(got_text);
 }
