@@ -1,9 +1,9 @@
 use crate::aws::aws_apis::artificial_intelligence::aws_bedrock::{
-    build_inference_config, build_messages, extract_model_id, map_stop_reason,
-    map_stream_event, parse_embed_response,
+    build_inference_config, build_messages, build_tool_spec, document_to_json,
+    extract_model_id, json_to_document, map_stop_reason, map_stream_event, parse_embed_response,
 };
 use crate::errors::CloudError;
-use crate::types::llm::{LlmRequest, Message, ModelRef};
+use crate::types::llm::{LlmRequest, Message, ModelRef, ToolDefinition};
 use aws_sdk_bedrockruntime::types::StopReason;
 
 fn make_request(model: ModelRef, messages: Vec<Message>) -> LlmRequest {
@@ -182,7 +182,10 @@ async fn test_embed_empty_input_returns_empty_vec() {
     use crate::aws::aws_apis::artificial_intelligence::aws_bedrock::BedrockProvider;
     use crate::traits::llm_provider::LlmProvider;
 
-    let provider = BedrockProvider::new().await;
+    let config = aws_sdk_bedrockruntime::Config::builder()
+        .behavior_version(aws_sdk_bedrockruntime::config::BehaviorVersion::latest())
+        .build();
+    let provider = BedrockProvider::with_client(aws_sdk_bedrockruntime::Client::from_conf(config));
     let result = provider.embed(vec![]).await.unwrap();
     assert!(result.embeddings.is_empty());
 }
@@ -278,6 +281,40 @@ fn test_map_stream_event_non_content_event_returns_none() {
     );
 }
 
+// ----- json_to_document / document_to_json -----
+
+#[test]
+fn test_json_to_document_preserves_string() {
+    let val = serde_json::json!("hello");
+    assert_eq!(document_to_json(json_to_document(val.clone())), val);
+}
+
+#[test]
+fn test_json_to_document_preserves_object() {
+    let val = serde_json::json!({"type": "object", "count": 3, "active": true});
+    assert_eq!(document_to_json(json_to_document(val.clone())), val);
+}
+
+#[test]
+fn test_document_round_trip_nested() {
+    let val = serde_json::json!({"nested": {"arr": [1, 2, 3], "flag": false}});
+    assert_eq!(document_to_json(json_to_document(val.clone())), val);
+}
+
+// ----- build_tool_spec -----
+
+#[test]
+fn test_build_tool_spec_sets_name_and_description() {
+    let tool = ToolDefinition {
+        name: "weather".to_string(),
+        description: "Get current weather".to_string(),
+        parameters: serde_json::json!({"type": "object", "properties": {}}),
+    };
+    let spec = build_tool_spec(&tool).unwrap();
+    assert_eq!(spec.name(), "weather");
+    assert_eq!(spec.description(), Some("Get current weather"));
+}
+
 // ----- integration -----
 
 #[tokio::test]
@@ -339,4 +376,34 @@ async fn test_stream_live_api() {
         }
     }
     assert!(got_text);
+}
+
+#[tokio::test]
+#[ignore]
+async fn test_generate_with_tools_live_api() {
+    use crate::aws::aws_apis::artificial_intelligence::aws_bedrock::BedrockProvider;
+    use crate::traits::llm_provider::LlmProvider;
+    use crate::types::llm::ToolCallResponse;
+
+    let provider = BedrockProvider::new().await;
+    let req = LlmRequest {
+        model: ModelRef::Provider("anthropic.claude-3-5-haiku-20241022-v1:0".to_string()),
+        messages: vec![user_msg("What is the weather in London?")],
+        max_tokens: Some(256),
+        temperature: Some(0.0),
+        system_prompt: None,
+    };
+    let tools = vec![ToolDefinition {
+        name: "get_weather".to_string(),
+        description: "Get the current weather for a location".to_string(),
+        parameters: serde_json::json!({
+            "type": "object",
+            "properties": {
+                "location": {"type": "string", "description": "City name"}
+            },
+            "required": ["location"]
+        }),
+    }];
+    let result = provider.generate_with_tools(req, tools).await.unwrap();
+    assert!(matches!(result, ToolCallResponse::ToolCall { .. }));
 }
