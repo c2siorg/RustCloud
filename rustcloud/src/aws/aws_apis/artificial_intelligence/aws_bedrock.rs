@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use aws_sdk_bedrockruntime::Client;
+use aws_sdk_bedrockruntime::error::{ProvideErrorMetadata, SdkError};
 use aws_sdk_bedrockruntime::primitives::Blob;
 use aws_sdk_bedrockruntime::types::{
     ContentBlock, ContentBlockDelta as StreamDelta, ConversationRole,
@@ -32,6 +33,84 @@ impl BedrockProvider {
 
     pub fn with_client(client: Client) -> Self {
         Self { client }
+    }
+}
+
+pub(crate) fn classify_service_error(status: u16, code: &str, message: String) -> CloudError {
+    if status == 429 || code.contains("Throttling") {
+        return CloudError::RateLimit { retry_after: None };
+    }
+    if status == 403 || code.contains("AccessDenied") || status == 401 || code.contains("Unauthorized") {
+        return CloudError::Auth { message };
+    }
+    if status == 400 || code.contains("Validation") {
+        return CloudError::Provider { http_status: status, message, retryable: false };
+    }
+    if status == 503 || code.contains("ServiceUnavailable") {
+        return CloudError::Provider { http_status: status, message, retryable: true };
+    }
+    if status == 408 || code.contains("ModelTimeout") {
+        return CloudError::Provider { http_status: status, message, retryable: true };
+    }
+    if status == 424 || code.contains("ModelError") {
+        return CloudError::Provider { http_status: status, message, retryable: false };
+    }
+    CloudError::Provider {
+        http_status: status,
+        message,
+        retryable: status >= 500,
+    }
+}
+
+pub(crate) fn map_sdk_error<E: ProvideErrorMetadata>(err: SdkError<E>) -> CloudError {
+    match err {
+        SdkError::ServiceError(ctx) => {
+            let status = ctx.raw().status().as_u16();
+            let code = ctx.err().code().unwrap_or("");
+            let message = ctx.err().message().unwrap_or("service error").to_string();
+            classify_service_error(status, code, message)
+        }
+        SdkError::TimeoutError(_) => CloudError::Provider {
+            http_status: 408,
+            message: "request timed out".to_string(),
+            retryable: true,
+        },
+        SdkError::DispatchFailure(e) => {
+            if e.is_timeout() {
+                CloudError::Provider {
+                    http_status: 408,
+                    message: "connection timed out".to_string(),
+                    retryable: true,
+                }
+            } else if e.is_io() {
+                CloudError::Provider {
+                    http_status: 503,
+                    message: "IO error during dispatch".to_string(),
+                    retryable: true,
+                }
+            } else {
+                CloudError::Provider {
+                    http_status: 503,
+                    message: "dispatch failure".to_string(),
+                    retryable: false,
+                }
+            }
+        }
+        SdkError::ResponseError(ctx) => CloudError::Provider {
+            http_status: ctx.raw().status().as_u16(),
+            message: "invalid response from service".to_string(),
+            retryable: false,
+        },
+        SdkError::ConstructionFailure(_) => CloudError::Provider {
+            http_status: 0,
+            message: "failed to construct request".to_string(),
+            retryable: false,
+        },
+        _ => CloudError::Provider {
+            http_status: 500,
+            message: "unknown SDK error".to_string(),
+            retryable: false,
+        },
     }
 }
 
@@ -188,11 +267,7 @@ impl LlmProvider for BedrockProvider {
 
         builder = builder.inference_config(inference_config);
 
-        let response = builder.send().await.map_err(|e| CloudError::Provider {
-            http_status: 500,
-            message: e.to_string(),
-            retryable: false,
-        })?;
+        let response = builder.send().await.map_err(map_sdk_error)?;
 
         let finish_reason = map_stop_reason(response.stop_reason());
 
@@ -240,11 +315,7 @@ impl LlmProvider for BedrockProvider {
 
         builder = builder.inference_config(inference_config);
 
-        let response = builder.send().await.map_err(|e| CloudError::Provider {
-            http_status: 500,
-            message: e.to_string(),
-            retryable: false,
-        })?;
+        let response = builder.send().await.map_err(map_sdk_error)?;
 
         let (mut tx, rx) = mpsc::channel::<LlmStreamEvent>(32);
         let mut event_stream = response.stream;
@@ -261,6 +332,8 @@ impl LlmProvider for BedrockProvider {
                     }
                     Ok(None) => break,
                     Err(e) => {
+                        // recv() errors carry RawMessage as the response type, not HttpResponse,
+                        // so map_sdk_error's signature doesn't match here.
                         let _ = tx
                             .send(LlmStreamEvent::Error(CloudError::Provider {
                                 http_status: 500,
@@ -295,11 +368,7 @@ impl LlmProvider for BedrockProvider {
                 .body(Blob::new(body_bytes))
                 .send()
                 .await
-                .map_err(|e| CloudError::Provider {
-                    http_status: 500,
-                    message: e.to_string(),
-                    retryable: false,
-                })?;
+                .map_err(map_sdk_error)?;
 
             let resp_json: serde_json::Value = serde_json::from_slice(resp.body().as_ref())
                 .map_err(|e| CloudError::Serialization { source: e })?;
@@ -347,11 +416,7 @@ impl LlmProvider for BedrockProvider {
         builder = builder.inference_config(inference_config);
         builder = builder.tool_config(tool_config);
 
-        let response = builder.send().await.map_err(|e| CloudError::Provider {
-            http_status: 500,
-            message: e.to_string(),
-            retryable: false,
-        })?;
+        let response = builder.send().await.map_err(map_sdk_error)?;
 
         let finish_reason = map_stop_reason(response.stop_reason());
 
