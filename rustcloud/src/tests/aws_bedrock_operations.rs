@@ -1,6 +1,7 @@
 use crate::aws::aws_apis::artificial_intelligence::aws_bedrock::{
-    build_inference_config, build_messages, build_tool_spec, document_to_json,
-    extract_model_id, json_to_document, map_stop_reason, map_stream_event, parse_embed_response,
+    build_inference_config, build_messages, build_tool_spec, classify_service_error,
+    document_to_json, extract_model_id, json_to_document, map_stop_reason, map_stream_event,
+    parse_embed_response,
 };
 use crate::errors::CloudError;
 use crate::types::llm::{LlmRequest, Message, ModelRef, ToolDefinition};
@@ -313,6 +314,109 @@ fn test_build_tool_spec_sets_name_and_description() {
     let spec = build_tool_spec(&tool).unwrap();
     assert_eq!(spec.name(), "weather");
     assert_eq!(spec.description(), Some("Get current weather"));
+}
+
+// ----- classify_service_error -----
+
+#[test]
+fn test_classify_service_error_throttling_by_status_returns_rate_limit() {
+    let err = classify_service_error(429, "", "rate limited".to_string());
+    assert!(matches!(err, CloudError::RateLimit { .. }));
+}
+
+#[test]
+fn test_classify_service_error_throttling_by_code_returns_rate_limit() {
+    let err = classify_service_error(200, "ThrottlingException", "throttled".to_string());
+    assert!(matches!(err, CloudError::RateLimit { .. }));
+}
+
+#[test]
+fn test_classify_service_error_access_denied_by_status_returns_auth() {
+    let err = classify_service_error(403, "", "forbidden".to_string());
+    assert!(matches!(err, CloudError::Auth { .. }));
+}
+
+#[test]
+fn test_classify_service_error_access_denied_by_code_returns_auth() {
+    let err = classify_service_error(200, "AccessDeniedException", "denied".to_string());
+    assert!(matches!(err, CloudError::Auth { .. }));
+}
+
+#[test]
+fn test_classify_service_error_validation_returns_provider_not_retryable() {
+    let err = classify_service_error(400, "ValidationException", "bad request".to_string());
+    assert!(
+        matches!(err, CloudError::Provider { retryable: false, .. }),
+        "expected Provider {{ retryable: false }}, got {:?}",
+        err
+    );
+}
+
+#[test]
+fn test_classify_service_error_service_unavailable_returns_provider_retryable() {
+    let err = classify_service_error(503, "", "unavailable".to_string());
+    assert!(
+        matches!(err, CloudError::Provider { retryable: true, .. }),
+        "expected Provider {{ retryable: true }}, got {:?}",
+        err
+    );
+}
+
+#[test]
+fn test_classify_service_error_unknown_5xx_is_retryable() {
+    let err = classify_service_error(502, "", "bad gateway".to_string());
+    assert!(
+        matches!(err, CloudError::Provider { http_status: 502, retryable: true, .. }),
+        "expected Provider {{ http_status: 502, retryable: true }}, got {:?}",
+        err
+    );
+}
+
+#[test]
+fn test_classify_service_error_unknown_4xx_is_not_retryable() {
+    let err = classify_service_error(422, "", "unprocessable".to_string());
+    assert!(
+        matches!(err, CloudError::Provider { http_status: 422, retryable: false, .. }),
+        "expected Provider {{ http_status: 422, retryable: false }}, got {:?}",
+        err
+    );
+}
+
+#[test]
+fn test_classify_service_error_unauthorized_by_code_returns_auth() {
+    let err = classify_service_error(200, "UnauthorizedException", "not authorized".to_string());
+    assert!(matches!(err, CloudError::Auth { .. }));
+}
+
+#[test]
+fn test_classify_service_error_model_timeout_returns_provider_retryable() {
+    let err = classify_service_error(408, "ModelTimeoutException", "timed out".to_string());
+    assert!(
+        matches!(err, CloudError::Provider { http_status: 408, retryable: true, .. }),
+        "expected Provider {{ http_status: 408, retryable: true }}, got {:?}",
+        err
+    );
+}
+
+#[tokio::test]
+async fn test_generate_with_tools_empty_tools_returns_unsupported() {
+    use crate::aws::aws_apis::artificial_intelligence::aws_bedrock::BedrockProvider;
+    use crate::traits::llm_provider::LlmProvider;
+
+    let config = aws_sdk_bedrockruntime::Config::builder()
+        .behavior_version(aws_sdk_bedrockruntime::config::BehaviorVersion::latest())
+        .build();
+    let provider = BedrockProvider::with_client(aws_sdk_bedrockruntime::Client::from_conf(config));
+    let req = make_request(
+        ModelRef::Provider("anthropic.claude-3-5-haiku-20241022-v1:0".to_string()),
+        vec![user_msg("test")],
+    );
+    let err = provider.generate_with_tools(req, vec![]).await.unwrap_err();
+    assert!(
+        matches!(err, CloudError::Unsupported { .. }),
+        "expected Unsupported, got {:?}",
+        err
+    );
 }
 
 // ----- integration -----

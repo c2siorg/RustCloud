@@ -40,7 +40,11 @@ pub(crate) fn classify_service_error(status: u16, code: &str, message: String) -
     if status == 429 || code.contains("Throttling") {
         return CloudError::RateLimit { retry_after: None };
     }
-    if status == 403 || code.contains("AccessDenied") || status == 401 || code.contains("Unauthorized") {
+    if status == 403
+        || status == 401
+        || code.contains("AccessDenied")
+        || code.contains("Unauthorized")
+    {
         return CloudError::Auth { message };
     }
     if status == 400 || code.contains("Validation") {
@@ -384,6 +388,12 @@ impl LlmProvider for BedrockProvider {
         req: LlmRequest,
         tools: Vec<ToolDefinition>,
     ) -> Result<ToolCallResponse, CloudError> {
+        if tools.is_empty() {
+            return Err(CloudError::Unsupported {
+                feature: "generate_with_tools requires at least one tool",
+            });
+        }
+
         let model_id = extract_model_id(&req.model)?;
         let messages = build_messages(&req)?;
         let inference_config = build_inference_config(&req);
