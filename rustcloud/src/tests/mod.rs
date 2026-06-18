@@ -20,4 +20,4 @@ mod gcp_dns_operations;
 mod gcp_loadbalancer_operations;
 mod gcp_notification_operations;
 mod gcp_storage_operations;
-mod gcp_vertex_operations;
+mod gcp_vertex_ai_operations;
