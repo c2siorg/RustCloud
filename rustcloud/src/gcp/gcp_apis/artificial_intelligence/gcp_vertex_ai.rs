@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
@@ -7,8 +9,9 @@ use reqwest::header::AUTHORIZATION;
 use tokio::sync::Mutex;
 
 use crate::errors::CloudError;
-use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
+use crate::gcp::gcp_apis::auth::gcp_auth::ServiceAccountTokenProvider;
 use crate::traits::llm_provider::{LlmProvider, LlmStream};
+use crate::traits::token_provider::TokenProvider;
 use crate::types::llm::{
     EmbedResponse, FinishReason, LlmRequest, LlmResponse, LlmStreamEvent, ModelRef,
     ToolCallResponse, ToolDefinition, UsageStats,
@@ -23,6 +26,7 @@ pub struct VertexAiProvider {
     http: reqwest::Client,
     project: String,
     location: String,
+    auth: Arc<dyn TokenProvider>,
     token: Mutex<CachedToken>,
 }
 
@@ -33,13 +37,21 @@ impl VertexAiProvider {
     ) -> Result<Self, CloudError> {
         let project = project.into();
         let location = location.into();
-        let token = retrieve_token().await.map_err(|e| CloudError::Auth {
+        let auth: Arc<dyn TokenProvider> = Arc::new(
+            ServiceAccountTokenProvider::new(
+                PathBuf::from("service-account.json"),
+                vec!["https://www.googleapis.com/auth/cloud-platform".to_string()],
+            )
+            .map_err(|e| CloudError::Auth { message: e.to_string() })?,
+        );
+        let token = auth.get_token().await.map_err(|e| CloudError::Auth {
             message: e.to_string(),
         })?;
         Ok(Self {
             http: reqwest::Client::new(),
             project,
             location,
+            auth,
             token: Mutex::new(CachedToken {
                 value: token,
                 expires_at: Instant::now() + Duration::from_secs(3600),
@@ -51,24 +63,25 @@ impl VertexAiProvider {
         http: reqwest::Client,
         project: impl Into<String>,
         location: impl Into<String>,
-        token: impl Into<String>,
+        auth: Arc<dyn TokenProvider>,
     ) -> Self {
         Self {
             http,
             project: project.into(),
             location: location.into(),
+            auth,
             token: Mutex::new(CachedToken {
-                value: token.into(),
-                // far-future expiry so tests never hit the real token refresh path
-                expires_at: Instant::now() + Duration::from_secs(86400 * 365),
+                value: String::new(),
+                // already expired so the first get_token() call fetches from auth
+                expires_at: Instant::now(),
             }),
         }
     }
 
-    async fn get_token(&self) -> Result<String, CloudError> {
+    pub(crate) async fn get_token(&self) -> Result<String, CloudError> {
         let mut cached = self.token.lock().await;
         if cached.expires_at.saturating_duration_since(Instant::now()) < Duration::from_secs(300) {
-            let fresh = retrieve_token().await.map_err(|e| CloudError::Auth {
+            let fresh = self.auth.get_token().await.map_err(|e| CloudError::Auth {
                 message: e.to_string(),
             })?;
             cached.value = fresh;
@@ -249,6 +262,32 @@ pub(crate) fn sse_chunk_to_events(json: &serde_json::Value) -> Vec<LlmStreamEven
     events
 }
 
+pub(crate) fn build_embed_request(texts: &[String]) -> serde_json::Value {
+    let instances: Vec<serde_json::Value> =
+        texts.iter().map(|t| serde_json::json!({ "content": t })).collect();
+    serde_json::json!({ "instances": instances })
+}
+
+pub(crate) fn parse_embed_response(json: &serde_json::Value) -> Result<EmbedResponse, CloudError> {
+    let predictions = json["predictions"].as_array().ok_or_else(|| CloudError::Provider {
+        http_status: 0,
+        message: "response missing predictions".to_string(),
+        retryable: false,
+    })?;
+
+    let mut embeddings = Vec::with_capacity(predictions.len());
+    for p in predictions {
+        let values = p["embeddings"]["values"].as_array().ok_or_else(|| CloudError::Provider {
+            http_status: 0,
+            message: "malformed embedding in response".to_string(),
+            retryable: false,
+        })?;
+        embeddings.push(values.iter().map(|v| v.as_f64().unwrap_or(0.0) as f32).collect());
+    }
+
+    Ok(EmbedResponse { embeddings })
+}
+
 #[async_trait]
 impl LlmProvider for VertexAiProvider {
     async fn generate(&self, req: LlmRequest) -> Result<LlmResponse, CloudError> {
@@ -343,8 +382,39 @@ impl LlmProvider for VertexAiProvider {
         Ok(Box::pin(rx))
     }
 
-    async fn embed(&self, _texts: Vec<String>) -> Result<EmbedResponse, CloudError> {
-        Err(CloudError::Unsupported { feature: "Vertex AI embed" })
+    async fn embed(&self, texts: Vec<String>) -> Result<EmbedResponse, CloudError> {
+        if texts.is_empty() {
+            return Ok(EmbedResponse { embeddings: vec![] });
+        }
+
+        let token = self.get_token().await?;
+        let url = vertex_endpoint(&self.project, &self.location, "text-embedding-004", "predict");
+        let body = build_embed_request(&texts);
+
+        let response = self
+            .http
+            .post(&url)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| CloudError::Network { source: e })?;
+
+        let status = response.status().as_u16();
+        if status >= 400 {
+            let text = response.text().await.unwrap_or_default();
+            return Err(map_vertex_http_error(status, &text));
+        }
+
+        let bytes = response
+            .bytes()
+            .await
+            .map_err(|e| CloudError::Network { source: e })?;
+
+        let resp_json: serde_json::Value =
+            serde_json::from_slice(&bytes).map_err(|e| CloudError::Serialization { source: e })?;
+
+        parse_embed_response(&resp_json)
     }
 
     async fn generate_with_tools(
