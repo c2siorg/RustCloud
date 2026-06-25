@@ -72,7 +72,6 @@ impl VertexAiProvider {
             auth,
             token: Mutex::new(CachedToken {
                 value: String::new(),
-                // already expired so the first get_token() call fetches from auth
                 expires_at: Instant::now(),
             }),
         }
@@ -288,6 +287,46 @@ pub(crate) fn parse_embed_response(json: &serde_json::Value) -> Result<EmbedResp
     Ok(EmbedResponse { embeddings })
 }
 
+pub(crate) fn build_tool_request(
+    req: &LlmRequest,
+    tools: &[ToolDefinition],
+) -> Result<serde_json::Value, CloudError> {
+    let mut body = build_vertex_request(req)?;
+    if !tools.is_empty() {
+        let declarations: Vec<serde_json::Value> = tools
+            .iter()
+            .map(|t| serde_json::json!({
+                "name": t.name,
+                "description": t.description,
+                "parameters": t.parameters,
+            }))
+            .collect();
+        body["tools"] = serde_json::json!([{ "functionDeclarations": declarations }]);
+    }
+    Ok(body)
+}
+
+pub(crate) fn parse_tool_response(json: &serde_json::Value) -> Result<ToolCallResponse, CloudError> {
+    let candidate = json["candidates"].get(0).ok_or_else(|| CloudError::Provider {
+        http_status: 0,
+        message: "response contained no candidates".to_string(),
+        retryable: false,
+    })?;
+
+    if let Some(parts) = candidate["content"]["parts"].as_array() {
+        for part in parts {
+            if let Some(fc) = part.get("functionCall") {
+                return Ok(ToolCallResponse::ToolCall {
+                    name: fc["name"].as_str().unwrap_or("").to_string(),
+                    arguments: fc["args"].clone(),
+                });
+            }
+        }
+    }
+
+    parse_vertex_response(json).map(ToolCallResponse::Text)
+}
+
 #[async_trait]
 impl LlmProvider for VertexAiProvider {
     async fn generate(&self, req: LlmRequest) -> Result<LlmResponse, CloudError> {
@@ -419,9 +458,37 @@ impl LlmProvider for VertexAiProvider {
 
     async fn generate_with_tools(
         &self,
-        _req: LlmRequest,
-        _tools: Vec<ToolDefinition>,
+        req: LlmRequest,
+        tools: Vec<ToolDefinition>,
     ) -> Result<ToolCallResponse, CloudError> {
-        Err(CloudError::Unsupported { feature: "Vertex AI tool calling" })
+        let model_id = extract_model_id(&req.model)?;
+        let token = self.get_token().await?;
+        let url = vertex_endpoint(&self.project, &self.location, &model_id, "generateContent");
+        let body = build_tool_request(&req, &tools)?;
+
+        let response = self
+            .http
+            .post(&url)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| CloudError::Network { source: e })?;
+
+        let status = response.status().as_u16();
+        if status >= 400 {
+            let text = response.text().await.unwrap_or_default();
+            return Err(map_vertex_http_error(status, &text));
+        }
+
+        let bytes = response
+            .bytes()
+            .await
+            .map_err(|e| CloudError::Network { source: e })?;
+
+        let resp_json: serde_json::Value =
+            serde_json::from_slice(&bytes).map_err(|e| CloudError::Serialization { source: e })?;
+
+        parse_tool_response(&resp_json)
     }
 }

@@ -4,12 +4,14 @@ use crate::errors::CloudError;
 use crate::gcp::gcp_apis::artificial_intelligence::gcp_vertex_ai::{
     VertexAiProvider,
     build_embed_request,
+    build_tool_request,
     build_vertex_request,
     extract_model_id,
     map_finish_reason,
     map_vertex_http_error,
     parse_embed_response,
     parse_sse_line,
+    parse_tool_response,
     parse_vertex_response,
     sse_chunk_to_events,
     vertex_endpoint,
@@ -17,7 +19,9 @@ use crate::gcp::gcp_apis::artificial_intelligence::gcp_vertex_ai::{
 use crate::gcp::gcp_apis::auth::gcp_auth::MockTokenProvider;
 use crate::traits::llm_provider::LlmProvider;
 use crate::traits::token_provider::TokenProvider;
-use crate::types::llm::{FinishReason, LlmRequest, LlmStreamEvent, Message, ModelRef};
+use crate::types::llm::{
+    FinishReason, LlmRequest, LlmStreamEvent, Message, ModelRef, ToolCallResponse, ToolDefinition,
+};
 
 fn no_creds_provider() -> VertexAiProvider {
     VertexAiProvider::with_http_client(
@@ -444,6 +448,99 @@ fn test_parse_embed_response_malformed_values() {
     );
 }
 
+// --- build_tool_request ---
+
+#[test]
+fn test_build_tool_request_single_tool() {
+    let tools = vec![ToolDefinition {
+        name: "get_weather".to_string(),
+        description: "returns current weather".to_string(),
+        parameters: serde_json::json!({ "type": "object", "properties": {} }),
+    }];
+    let req = make_request(ModelRef::Provider("gemini-1.5-flash".to_string()), vec![]);
+    let body = build_tool_request(&req, &tools).unwrap();
+    let decls = body["tools"][0]["functionDeclarations"].as_array().unwrap();
+    assert_eq!(decls.len(), 1);
+    assert_eq!(decls[0]["name"], "get_weather");
+    assert_eq!(decls[0]["description"], "returns current weather");
+}
+
+#[test]
+fn test_build_tool_request_multiple_tools() {
+    let tools = vec![
+        ToolDefinition { name: "a".to_string(), description: "tool a".to_string(), parameters: serde_json::json!({}) },
+        ToolDefinition { name: "b".to_string(), description: "tool b".to_string(), parameters: serde_json::json!({}) },
+    ];
+    let req = make_request(ModelRef::Provider("gemini-1.5-flash".to_string()), vec![]);
+    let body = build_tool_request(&req, &tools).unwrap();
+    let decls = body["tools"][0]["functionDeclarations"].as_array().unwrap();
+    assert_eq!(decls.len(), 2);
+    assert_eq!(decls[0]["name"], "a");
+    assert_eq!(decls[1]["name"], "b");
+}
+
+#[test]
+fn test_build_tool_request_empty_tools_omits_key() {
+    let req = make_request(ModelRef::Provider("gemini-1.5-flash".to_string()), vec![]);
+    let body = build_tool_request(&req, &[]).unwrap();
+    assert!(body["tools"].is_null());
+}
+
+#[test]
+fn test_build_tool_request_preserves_messages_and_config() {
+    let mut req = make_request(
+        ModelRef::Provider("gemini-1.5-flash".to_string()),
+        vec![Message { role: "user".to_string(), content: "call a tool".to_string() }],
+    );
+    req.max_tokens = Some(256);
+    let tools = vec![ToolDefinition {
+        name: "t".to_string(), description: "d".to_string(), parameters: serde_json::json!({}),
+    }];
+    let body = build_tool_request(&req, &tools).unwrap();
+    assert_eq!(body["contents"][0]["parts"][0]["text"], "call a tool");
+    assert_eq!(body["generationConfig"]["maxOutputTokens"], 256);
+}
+
+// --- parse_tool_response ---
+
+#[test]
+fn test_parse_tool_response_returns_tool_call() {
+    let json = serde_json::json!({
+        "candidates": [{
+            "content": {
+                "parts": [{ "functionCall": { "name": "get_weather", "args": { "city": "London" } } }],
+                "role": "model"
+            },
+            "finishReason": "TOOL_CALLS"
+        }]
+    });
+    let resp = parse_tool_response(&json).unwrap();
+    let ToolCallResponse::ToolCall { name, arguments } = resp else {
+        panic!("expected ToolCall variant");
+    };
+    assert_eq!(name, "get_weather");
+    assert_eq!(arguments["city"], "London");
+}
+
+#[test]
+fn test_parse_tool_response_text_fallback() {
+    let json = serde_json::json!({
+        "candidates": [{
+            "content": { "parts": [{ "text": "No tools needed." }], "role": "model" },
+            "finishReason": "STOP"
+        }]
+    });
+    let resp = parse_tool_response(&json).unwrap();
+    assert!(matches!(resp, ToolCallResponse::Text(_)));
+}
+
+#[test]
+fn test_parse_tool_response_no_candidates_returns_error() {
+    let json = serde_json::json!({ "candidates": [] });
+    let err = parse_tool_response(&json).unwrap_err();
+    assert!(matches!(err, CloudError::Provider { .. }));
+}
+
 // --- async unit tests (no live credentials) ---
 
 #[tokio::test]
@@ -451,27 +548,6 @@ async fn test_embed_empty_texts_returns_early() {
     let provider = no_creds_provider();
     let resp = provider.embed(vec![]).await.unwrap();
     assert!(resp.embeddings.is_empty());
-}
-
-#[tokio::test]
-async fn test_generate_with_tools_returns_unsupported() {
-    use crate::types::llm::ToolDefinition;
-    let provider = no_creds_provider();
-    let req = make_request(
-        ModelRef::Provider("gemini-1.5-flash".to_string()),
-        vec![Message { role: "user".to_string(), content: "hi".to_string() }],
-    );
-    let tools = vec![ToolDefinition {
-        name: "search".to_string(),
-        description: "search the web".to_string(),
-        parameters: serde_json::json!({}),
-    }];
-    let err = provider.generate_with_tools(req, tools).await.unwrap_err();
-    assert!(
-        matches!(err, CloudError::Unsupported { .. }),
-        "expected Unsupported, got {:?}",
-        err
-    );
 }
 
 // --- token caching ---
@@ -501,7 +577,6 @@ async fn test_get_token_refreshes_when_expired() {
         token: "refreshed".to_string(),
     });
 
-    // with_http_client sets expires_at = Instant::now(), so the first get_token() refreshes
     let provider = VertexAiProvider::with_http_client(
         reqwest::Client::new(),
         "p",
@@ -513,7 +588,6 @@ async fn test_get_token_refreshes_when_expired() {
     assert_eq!(token, "refreshed");
     assert_eq!(count.load(Ordering::Relaxed), 1);
 
-    // second call is within TTL — no refresh
     let _ = provider.get_token().await.unwrap();
     assert_eq!(count.load(Ordering::Relaxed), 1);
 }
@@ -578,4 +652,35 @@ async fn test_stream_live_api() {
         }
     }
     assert!(got_text);
+}
+
+#[tokio::test]
+#[ignore]
+async fn test_generate_with_tools_live_api() {
+    let provider = VertexAiProvider::new("your-project-id", "us-central1")
+        .await
+        .expect("failed to create provider");
+    let tools = vec![ToolDefinition {
+        name: "get_weather".to_string(),
+        description: "Returns current weather for a city.".to_string(),
+        parameters: serde_json::json!({
+            "type": "object",
+            "properties": { "city": { "type": "string" } },
+            "required": ["city"]
+        }),
+    }];
+    let req = LlmRequest {
+        model: ModelRef::Provider("gemini-1.5-flash-001".to_string()),
+        messages: vec![Message {
+            role: "user".to_string(),
+            content: "What is the weather in Tokyo?".to_string(),
+        }],
+        max_tokens: Some(256),
+        temperature: Some(0.0),
+        system_prompt: None,
+    };
+    match provider.generate_with_tools(req, tools).await.expect("generate_with_tools failed") {
+        ToolCallResponse::ToolCall { name, .. } => assert_eq!(name, "get_weather"),
+        ToolCallResponse::Text(r) => assert!(!r.text.is_empty()),
+    }
 }
