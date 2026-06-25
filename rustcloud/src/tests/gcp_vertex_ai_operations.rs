@@ -1,16 +1,22 @@
+use std::sync::Arc;
+
 use crate::errors::CloudError;
 use crate::gcp::gcp_apis::artificial_intelligence::gcp_vertex_ai::{
     VertexAiProvider,
+    build_embed_request,
     build_vertex_request,
     extract_model_id,
     map_finish_reason,
     map_vertex_http_error,
+    parse_embed_response,
     parse_sse_line,
     parse_vertex_response,
     sse_chunk_to_events,
     vertex_endpoint,
 };
+use crate::gcp::gcp_apis::auth::gcp_auth::MockTokenProvider;
 use crate::traits::llm_provider::LlmProvider;
+use crate::traits::token_provider::TokenProvider;
 use crate::types::llm::{FinishReason, LlmRequest, LlmStreamEvent, Message, ModelRef};
 
 fn no_creds_provider() -> VertexAiProvider {
@@ -18,7 +24,7 @@ fn no_creds_provider() -> VertexAiProvider {
         reqwest::Client::new(),
         "test-project",
         "us-central1",
-        "fake-token",
+        Arc::new(MockTokenProvider::new("fake-token")),
     )
 }
 
@@ -366,17 +372,85 @@ fn test_sse_chunk_to_events_no_candidates_returns_empty() {
     assert!(sse_chunk_to_events(&json).is_empty());
 }
 
+// --- build_embed_request ---
+
+#[test]
+fn test_build_embed_request_single_text() {
+    let body = build_embed_request(&["hello".to_string()]);
+    assert_eq!(body["instances"][0]["content"], "hello");
+}
+
+#[test]
+fn test_build_embed_request_multiple_texts() {
+    let body = build_embed_request(&["a".to_string(), "b".to_string()]);
+    assert_eq!(body["instances"].as_array().unwrap().len(), 2);
+    assert_eq!(body["instances"][1]["content"], "b");
+}
+
+#[test]
+fn test_build_embed_request_empty() {
+    let body = build_embed_request(&[]);
+    assert_eq!(body["instances"], serde_json::json!([]));
+}
+
+// --- parse_embed_response ---
+
+#[test]
+fn test_parse_embed_response_single() {
+    let json = serde_json::json!({
+        "predictions": [{
+            "embeddings": { "values": [1.0, 2.0, 3.0] }
+        }]
+    });
+    let resp = parse_embed_response(&json).unwrap();
+    assert_eq!(resp.embeddings.len(), 1);
+    assert_eq!(resp.embeddings[0], vec![1.0f32, 2.0f32, 3.0f32]);
+}
+
+#[test]
+fn test_parse_embed_response_multiple() {
+    let json = serde_json::json!({
+        "predictions": [
+            { "embeddings": { "values": [1.0, 2.0] } },
+            { "embeddings": { "values": [3.0, 4.0] } }
+        ]
+    });
+    let resp = parse_embed_response(&json).unwrap();
+    assert_eq!(resp.embeddings.len(), 2);
+    assert_eq!(resp.embeddings[1], vec![3.0f32, 4.0f32]);
+}
+
+#[test]
+fn test_parse_embed_response_missing_predictions() {
+    let json = serde_json::json!({ "error": { "code": 401, "message": "unauthorized" } });
+    let err = parse_embed_response(&json).unwrap_err();
+    assert!(
+        matches!(err, CloudError::Provider { .. }),
+        "expected Provider error, got {:?}",
+        err
+    );
+}
+
+#[test]
+fn test_parse_embed_response_malformed_values() {
+    let json = serde_json::json!({
+        "predictions": [{ "embeddings": {} }]
+    });
+    let err = parse_embed_response(&json).unwrap_err();
+    assert!(
+        matches!(err, CloudError::Provider { .. }),
+        "expected Provider error, got {:?}",
+        err
+    );
+}
+
 // --- async unit tests (no live credentials) ---
 
 #[tokio::test]
-async fn test_embed_returns_unsupported() {
+async fn test_embed_empty_texts_returns_early() {
     let provider = no_creds_provider();
-    let err = provider.embed(vec!["hello".to_string()]).await.unwrap_err();
-    assert!(
-        matches!(err, CloudError::Unsupported { .. }),
-        "expected Unsupported, got {:?}",
-        err
-    );
+    let resp = provider.embed(vec![]).await.unwrap();
+    assert!(resp.embeddings.is_empty());
 }
 
 #[tokio::test]
@@ -400,7 +474,65 @@ async fn test_generate_with_tools_returns_unsupported() {
     );
 }
 
-// --- integration tests (require live GCP credentials) ---
+// --- token caching ---
+
+#[tokio::test]
+async fn test_get_token_refreshes_when_expired() {
+    use std::sync::atomic::{AtomicU32, Ordering};
+
+    struct CountingProvider {
+        count: Arc<AtomicU32>,
+        token: String,
+    }
+
+    #[async_trait::async_trait]
+    impl TokenProvider for CountingProvider {
+        async fn get_token(
+            &self,
+        ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+            self.count.fetch_add(1, Ordering::Relaxed);
+            Ok(self.token.clone())
+        }
+    }
+
+    let count = Arc::new(AtomicU32::new(0));
+    let auth = Arc::new(CountingProvider {
+        count: Arc::clone(&count),
+        token: "refreshed".to_string(),
+    });
+
+    // with_http_client sets expires_at = Instant::now(), so the first get_token() refreshes
+    let provider = VertexAiProvider::with_http_client(
+        reqwest::Client::new(),
+        "p",
+        "us-central1",
+        auth,
+    );
+
+    let token = provider.get_token().await.unwrap();
+    assert_eq!(token, "refreshed");
+    assert_eq!(count.load(Ordering::Relaxed), 1);
+
+    // second call is within TTL — no refresh
+    let _ = provider.get_token().await.unwrap();
+    assert_eq!(count.load(Ordering::Relaxed), 1);
+}
+
+// --- integration tests (require live GCP credentials, run with --ignored) ---
+
+#[tokio::test]
+#[ignore]
+async fn test_embed_live_api() {
+    let provider = VertexAiProvider::new("your-project-id", "us-central1")
+        .await
+        .expect("failed to create provider");
+    let resp = provider
+        .embed(vec!["Hello, world!".to_string()])
+        .await
+        .expect("embed failed");
+    assert_eq!(resp.embeddings.len(), 1);
+    assert!(!resp.embeddings[0].is_empty());
+}
 
 #[tokio::test]
 #[ignore]
