@@ -390,7 +390,11 @@ pub(crate) async fn pump_stream(mut response: reqwest::Response, mut tx: mpsc::S
                 break;
             }
             Err(e) => {
-                let _ = tx.send(LlmStreamEvent::Error(CloudError::Network { source: e })).await;
+                if let Some(done) = pending_done.take() {
+                    let _ = tx.send(done).await;
+                } else {
+                    let _ = tx.send(LlmStreamEvent::Error(CloudError::Network { source: e })).await;
+                }
                 break;
             }
         }

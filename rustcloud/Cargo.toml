@@ -9,6 +9,7 @@ edition = "2021"
 async-trait = "0.1.80"
 aws-config = "1.4.0"
 aws-sdk-bedrockruntime = "1.30.0"
+aws-smithy-http-client = { version = "1.1", features = ["test-util"] }
 aws-smithy-types = "1.4"
 
 aws-sdk-cloudwatch = "1.33.0"
@@ -32,6 +33,7 @@ futures = "0.3"
 gcloud-sdk = "0.24.7"
 gcp_auth = "0.12.2"
 hmac = "0.12.1"
+http = "1"
 mockall = "=0.9.1"
 rand = "0.8"
 reqwest = { version = "0.12.5", features = ["json"] }
@@ -39,6 +41,7 @@ rustls = { version = "0.23", features = ["ring"] }
 serde = "1.0.203"
 serde_json = "1.0.118"
 sha2 = "0.10.9"
+wiremock = "0.6.5"
 
 tokio = { version = "1.37.0", features = ["full", "test-util"] }
 

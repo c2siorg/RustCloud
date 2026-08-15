@@ -1,46 +1,67 @@
-use crate::aws::aws_apis::compute::aws_eks::*;
-use aws_sdk_eks::config::Region;
-use aws_sdk_eks::error::SdkError;
+use aws_sdk_eks::config::{BehaviorVersion, Credentials, Region, SharedCredentialsProvider};
 use aws_sdk_eks::types::{
     AmiTypes, KubernetesNetworkConfigRequest, Logging, NodegroupScalingConfig,
     UpdateAccessConfigRequest, VpcConfigRequest,
 };
 use aws_sdk_eks::{Client, Config};
+use aws_smithy_http_client::test_util::{ReplayEvent, StaticReplayClient};
+use aws_smithy_types::body::SdkBody;
 use std::collections::HashMap;
 
-async fn create_client() -> Client {
-    let config = aws_config::load_from_env().await;
-    let client = Client::new(&config);
-    return client;
+use crate::aws::aws_apis::compute::aws_eks::*;
+
+fn mock_client(response_body: &str) -> Client {
+    let request = http::Request::builder()
+        .method("POST")
+        .uri("https://eks.us-east-1.amazonaws.com/clusters")
+        .body(SdkBody::empty())
+        .unwrap();
+    let response = http::Response::builder()
+        .status(200)
+        .header("content-type", "application/json")
+        .body(SdkBody::from(response_body))
+        .unwrap();
+    let http_client = StaticReplayClient::new(vec![ReplayEvent::new(request, response)]);
+
+    let config = Config::builder()
+        .behavior_version(BehaviorVersion::latest())
+        .region(Region::new("us-east-1"))
+        .credentials_provider(SharedCredentialsProvider::new(Credentials::new(
+            "fake-access-key",
+            "fake-secret-key",
+            None,
+            None,
+            "test",
+        )))
+        .http_client(http_client)
+        .build();
+
+    Client::from_conf(config)
 }
+
 #[tokio::test]
 async fn test_create_eks_cluster() {
-    let client = create_client().await;
-
-    let cluster_name = "test-cluster".to_string();
-    let version = Some("1.21".to_string());
-    let role_arn = None;
-    let resources_vpc_config = None;
-    let kubernetes_network_config = None;
+    let client = mock_client(r#"{"cluster":{"name":"test-cluster","status":"CREATING"}}"#);
 
     let result = create_cluster(
         &client,
-        cluster_name,
-        version,
-        role_arn,
-        resources_vpc_config,
-        kubernetes_network_config,
+        "test-cluster".to_string(),
+        Some("1.21".to_string()),
+        None,
+        None,
+        None,
     )
     .await;
-    assert!(result.is_ok());
+
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_create_node_group() {
-    let client = create_client().await;
+    let client = mock_client(
+        r#"{"nodegroup":{"nodegroupName":"test-nodegroup","clusterName":"test-cluster","status":"CREATING"}}"#,
+    );
 
-    let cluster_name = "test-cluster".to_string();
-    let nodegroup_name = "test-nodegroup".to_string();
     let scaling_config = Some(
         NodegroupScalingConfig::builder()
             .desired_size(2)
@@ -48,22 +69,18 @@ async fn test_create_node_group() {
             .max_size(3)
             .build(),
     );
-    let subnets = None;
-    let instance_types = Some(vec!["t3.medium".to_string()]);
-    let ami_type = Some(AmiTypes::Al2X8664);
-    let node_role = None;
 
     let result = create_node_group(
         &client,
-        cluster_name,
-        nodegroup_name,
+        "test-cluster".to_string(),
+        "test-nodegroup".to_string(),
         None,
         scaling_config,
-        subnets,
-        instance_types,
-        ami_type,
         None,
-        node_role,
+        Some(vec!["t3.medium".to_string()]),
+        Some(AmiTypes::Al2X8664),
+        None,
+        None,
         None,
         None,
         None,
@@ -75,102 +92,119 @@ async fn test_create_node_group() {
         None,
     )
     .await;
-    assert!(result.is_ok());
+
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_delete_nodegroup() {
-    let client = create_client().await;
+    let client = mock_client(
+        r#"{"nodegroup":{"nodegroupName":"test-nodegroup","clusterName":"test-cluster","status":"DELETING"}}"#,
+    );
 
-    let cluster_name = "test-cluster".to_string();
-    let nodegroup_name = "test-nodegroup".to_string();
+    let result = delete_nodegroup(
+        &client,
+        "test-cluster".to_string(),
+        "test-nodegroup".to_string(),
+    )
+    .await;
 
-    let result = delete_nodegroup(&client, cluster_name, nodegroup_name).await;
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_describe_eks_cluster() {
-    let client = create_client().await;
+    let client = mock_client(r#"{"cluster":{"name":"test-cluster","status":"ACTIVE"}}"#);
 
-    let cluster_name = "test-cluster".to_string();
+    let result = describe_cluster(&client, "test-cluster".to_string()).await;
 
-    let result = describe_cluster(&client, cluster_name).await;
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_describe_nodegroup() {
-    let client = create_client().await;
+    let client = mock_client(
+        r#"{"nodegroup":{"nodegroupName":"test-nodegroup","clusterName":"test-cluster","status":"ACTIVE"}}"#,
+    );
 
-    let cluster_name = "test-cluster".to_string();
-    let nodegroup_name = "test-nodegroup".to_string();
+    let result = describe_nodegroup(
+        &client,
+        "test-cluster".to_string(),
+        "test-nodegroup".to_string(),
+    )
+    .await;
 
-    let result = describe_nodegroup(&client, cluster_name, nodegroup_name).await;
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_delete_eks_cluster() {
-    let client = create_client().await;
+    let client = mock_client(r#"{"cluster":{"name":"test-cluster","status":"DELETING"}}"#);
 
-    let cluster_name = "test-cluster";
+    let result = delete_cluster(&client, "test-cluster").await;
 
-    let result = delete_cluster(&client, cluster_name).await;
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_list_eks_clusters() {
-    let client = create_client().await;
+    let client = mock_client(r#"{"clusters":["test-cluster"]}"#);
 
-    let max_results = Some(10);
-    let include = None;
+    let result = list_clusters(&client, Some(10), None).await;
 
-    let result = list_clusters(&client, max_results, include).await;
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_list_nodegroups() {
-    let client = create_client().await;
+    let client = mock_client(r#"{"nodegroups":["test-nodegroup"]}"#);
 
-    let cluster_name = "test-cluster".to_string();
-    let max_results = Some(10);
+    let result = list_nodegroups(&client, "test-cluster".to_string(), Some(10)).await;
 
-    let result = list_nodegroups(&client, cluster_name, max_results).await;
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_update_tags() {
-    let client = create_client().await;
+    let client = mock_client("{}");
 
-    let resource_arn = "arn:aws:eks:us-east-1:123456789012:cluster/test-cluster".to_string();
     let mut tags = HashMap::new();
     tags.insert("key1".to_string(), "value1".to_string());
 
-    let result = update_tags(&client, resource_arn, Some(tags)).await;
-    assert!(result.is_ok());
+    let result = update_tags(
+        &client,
+        "arn:aws:eks:us-east-1:123456789012:cluster/test-cluster".to_string(),
+        Some(tags),
+    )
+    .await;
+
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_update_config() {
-    let client = create_client().await;
-
-    let cluster_name = "test-cluster".to_string();
-    let resources_vpc_config = Some(VpcConfigRequest::builder().build());
-    let logging = Some(Logging::builder().build());
-    let access_config = Some(UpdateAccessConfigRequest::builder().build());
+    let client = mock_client(r#"{"update":{"id":"11111111-2222-3333-4444-555555555555","status":"InProgress","type":"ConfigUpdate"}}"#);
 
     let result = update_config(
         &client,
-        cluster_name,
-        resources_vpc_config,
-        logging,
+        "test-cluster".to_string(),
+        Some(VpcConfigRequest::builder().build()),
+        Some(Logging::builder().build()),
         None,
-        access_config,
+        Some(UpdateAccessConfigRequest::builder().build()),
     )
     .await;
-    assert!(result.is_ok());
+
+    assert!(result.is_ok(), "{:?}", result);
+}
+
+#[tokio::test]
+#[ignore]
+async fn test_describe_eks_cluster_live() {
+    let config = aws_config::load_from_env().await;
+    let client = Client::new(&config);
+
+    let result = describe_cluster(&client, "test-cluster".to_string()).await;
+
+    assert!(result.is_ok(), "{:?}", result);
 }

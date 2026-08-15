@@ -637,6 +637,47 @@ async fn test_stream_connection_drop() {
 }
 
 #[tokio::test]
+async fn test_stream_flushes_pending_done_on_connection_drop() {
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpListener;
+
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+
+    // finish_reason arrives (buffered as pending_done awaiting a usage chunk),
+    // then the connection is cut before the usage chunk or a clean close arrives
+    let body = "data: {\"choices\":[{\"delta\":{},\"finish_reason\":\"stop\"}]}\n";
+
+    tokio::spawn(async move {
+        let (mut socket, _) = listener.accept().await.unwrap();
+        let mut discard = [0u8; 1024];
+        let _ = socket.read(&mut discard).await;
+        // Content-Length overstates the body so the connection closing after it
+        // is read as a truncated body (Err), not a clean end-of-stream (Ok(None)).
+        let response = format!("HTTP/1.1 200 OK\r\nContent-Length: 1000\r\n\r\n{}", body);
+        let _ = socket.write_all(response.as_bytes()).await;
+    });
+
+    let response = reqwest::Client::new()
+        .get(format!("http://{}/", addr))
+        .send()
+        .await
+        .unwrap();
+
+    let (tx, mut rx) = futures::channel::mpsc::channel::<LlmStreamEvent>(32);
+    pump_stream(response, tx).await;
+
+    match rx.next().await {
+        Some(LlmStreamEvent::Done(FinishReason::Stop)) => {}
+        other => panic!("expected the buffered Done to survive the connection drop, got {:?}", other),
+    }
+    assert!(
+        rx.next().await.is_none(),
+        "a completed generation should not also surface a stream error"
+    );
+}
+
+#[tokio::test]
 async fn test_stream_flushes_trailing_line_without_terminator() {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio::net::TcpListener;

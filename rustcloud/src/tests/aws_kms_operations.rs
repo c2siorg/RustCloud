@@ -1,31 +1,50 @@
-use crate::aws::aws_apis::security::aws_keymanagement::*;
-use aws_sdk_kms::config::Region;
-use aws_sdk_kms::types::{KeySpec, KeyUsageType, OriginType, Tag};
+use aws_sdk_kms::config::{BehaviorVersion, Credentials, Region, SharedCredentialsProvider};
+use aws_sdk_kms::types::{KeySpec, KeyUsageType, OriginType};
 use aws_sdk_kms::{Client, Config};
+use aws_smithy_http_client::test_util::{ReplayEvent, StaticReplayClient};
+use aws_smithy_types::body::SdkBody;
 
-async fn create_client() -> Client {
-    let config = aws_config::load_from_env().await;
-    let client = Client::new(&config);
-    return client;
+use crate::aws::aws_apis::security::aws_keymanagement::*;
+
+fn mock_client(response_body: &str) -> Client {
+    let request = http::Request::builder()
+        .method("POST")
+        .uri("https://kms.us-east-1.amazonaws.com/")
+        .body(SdkBody::empty())
+        .unwrap();
+    let response = http::Response::builder()
+        .status(200)
+        .body(SdkBody::from(response_body))
+        .unwrap();
+    let http_client = StaticReplayClient::new(vec![ReplayEvent::new(request, response)]);
+
+    let config = Config::builder()
+        .behavior_version(BehaviorVersion::latest())
+        .region(Region::new("us-east-1"))
+        .credentials_provider(SharedCredentialsProvider::new(Credentials::new(
+            "fake-access-key",
+            "fake-secret-key",
+            None,
+            None,
+            "test",
+        )))
+        .http_client(http_client)
+        .build();
+
+    Client::from_conf(config)
 }
 
 #[tokio::test]
 async fn test_create_key() {
-    let client = create_client().await;
-
-    let policy = r#"{"Version": "2012-10-17","Statement": [{"Sid": "Enable IAM User Permissions","Effect": "Allow","Principal": {"AWS": "arn:aws:iam::167355850481:user/rustcloud-testing-delete-asap"},"Action": "kms:*","Resource": "*"}]}"#.to_string();
-    let description = Some("Test Key".to_string());
-    let key_usage = Some(KeyUsageType::EncryptDecrypt);
-    let key_spec = Some(KeySpec::SymmetricDefault);
-    let origin = Some(OriginType::AwsKms);
+    let client = mock_client(r#"{"KeyMetadata":{"KeyId":"test-key-id"}}"#);
 
     let result = create_key(
         &client,
-        policy,
-        description,
-        key_usage,
-        key_spec,
-        origin,
+        "policy".to_string(),
+        None,
+        Some(KeyUsageType::EncryptDecrypt),
+        Some(KeySpec::SymmetricDefault),
+        Some(OriginType::AwsKms),
         None,
         None,
         None,
@@ -33,57 +52,65 @@ async fn test_create_key() {
         None,
     )
     .await;
-    assert!(result.is_ok());
+
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_delete_key() {
-    let client = create_client().await;
+    let client = mock_client("{}");
 
-    let custom_key_store_id = "cks-1234567890abcdef0".to_string();
+    let result = delete_key(&client, "cks-1234567890abcdef0".to_string()).await;
 
-    let result = delete_key(&client, custom_key_store_id).await;
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_describe_key() {
-    let client = create_client().await;
+    let client = mock_client(r#"{"KeyMetadata":{"KeyId":"test-key-id"}}"#);
 
-    let key_id = "07bfea74-a123-4760-8cb8-fa1a168983b8".to_string();
-    let grant_tokens = None;
+    let result = describe_key(&client, "test-key-id".to_string(), None).await;
 
-    let result = describe_key(&client, key_id, grant_tokens).await;
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_put_key_policy() {
-    let client = create_client().await;
-
-    let key_id = "07bfea74-a123-4760-8cb8-fa1a168983b8".to_string();
-    let policy_name = "default".to_string();
-    let policy = r#"{"Version": "2012-10-17","Statement": [{"Sid": "Enable IAM User Permissions","Effect": "Allow","Principal": {"AWS": "arn:aws:iam::167355850481:user/rustcloud-testing-delete-asap"},"Action": "kms:*","Resource": "*"}]}"#.to_string();
-    let bypass_policy_lockout_safety_check = None;
+    let client = mock_client("{}");
 
     let result = put_key_policy(
         &client,
-        key_id,
-        policy_name,
-        policy,
-        bypass_policy_lockout_safety_check,
+        "test-key-id".to_string(),
+        "default".to_string(),
+        "policy".to_string(),
+        None,
     )
     .await;
-    assert!(result.is_ok());
+
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_update_key() {
-    let client = create_client().await;
+    let client = mock_client("{}");
 
-    let key_id = "07bfea74-a123-4760-8cb8-fa1a168983b8".to_string();
-    let description = Some("Updated Test Key".to_string());
+    let result = update(
+        &client,
+        "test-key-id".to_string(),
+        Some("Updated Test Key".to_string()),
+    )
+    .await;
 
-    let result = update(&client, key_id, description).await;
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
+}
+
+#[tokio::test]
+#[ignore]
+async fn test_describe_key_live() {
+    let config = aws_config::load_from_env().await;
+    let client = Client::new(&config);
+
+    let result = describe_key(&client, "test-key-id".to_string(), None).await;
+
+    assert!(result.is_ok(), "{:?}", result);
 }

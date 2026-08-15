@@ -6,6 +6,7 @@ use crate::gcp::gcp_apis::artificial_intelligence::gcp_vertex_ai::{
     build_embed_request,
     build_tool_request,
     build_vertex_request,
+    drain_complete_lines,
     extract_model_id,
     map_finish_reason,
     map_vertex_http_error,
@@ -309,6 +310,25 @@ fn test_parse_sse_line_blank_line_returns_none() {
 #[test]
 fn test_parse_sse_line_invalid_json_returns_none() {
     assert!(parse_sse_line("data: not-json").is_none());
+}
+
+// --- drain_complete_lines ---
+
+#[test]
+fn test_drain_complete_lines_handles_multibyte_utf8_split_across_calls() {
+    let line = "data: {\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"caf\u{e9}\"}]},\"finishReason\":\"FINISH_REASON_UNSPECIFIED\"}]}\n";
+    let bytes = line.as_bytes();
+    // split mid two-byte UTF-8 char, as a real TCP chunk boundary could
+    let split_at = bytes.iter().position(|&b| b == 0xC3).unwrap() + 1;
+
+    let mut buffer: Vec<u8> = Vec::new();
+    buffer.extend_from_slice(&bytes[..split_at]);
+    assert!(drain_complete_lines(&mut buffer).is_empty(), "no complete line yet");
+
+    buffer.extend_from_slice(&bytes[split_at..]);
+    let parsed = drain_complete_lines(&mut buffer);
+    assert_eq!(parsed.len(), 1);
+    assert_eq!(parsed[0]["candidates"][0]["content"]["parts"][0]["text"], "café");
 }
 
 // --- sse_chunk_to_events ---

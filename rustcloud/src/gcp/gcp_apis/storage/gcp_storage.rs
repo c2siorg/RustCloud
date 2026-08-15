@@ -1,19 +1,31 @@
-use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
+use crate::gcp::gcp_apis::auth::gcp_auth::DefaultTokenProvider;
+use crate::traits::token_provider::TokenProvider;
 use reqwest::header::AUTHORIZATION;
 use serde_json::Value;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 pub struct GoogleStorage {
     client: reqwest::Client,
     base_url: String,
+    auth: Arc<dyn TokenProvider>,
 }
 
 impl GoogleStorage {
     pub fn new() -> Self {
-        GoogleStorage {
-            client: reqwest::Client::new(),
-            base_url: "https://www.googleapis.com/compute/v1".to_string(),
-        }
+        Self::with_http_client(
+            reqwest::Client::new(),
+            "https://www.googleapis.com/compute/v1".to_string(),
+            Arc::new(DefaultTokenProvider),
+        )
+    }
+
+    pub fn with_http_client(
+        client: reqwest::Client,
+        base_url: String,
+        auth: Arc<dyn TokenProvider>,
+    ) -> Self {
+        Self { client, base_url, auth }
     }
 
     pub async fn create_disk(
@@ -110,7 +122,7 @@ impl GoogleStorage {
             "{}/projects/{}/zones/{}/disks",
             self.base_url, project_id, zone
         );
-        let token = retrieve_token().await.unwrap();
+        let token = self.auth.get_token().await.unwrap();
 
         let resp = self
             .client
@@ -141,7 +153,7 @@ impl GoogleStorage {
             "{}/projects/{}/zones/{}/disks/{}",
             self.base_url, request["projectid"], request["Zone"], request["disk"]
         );
-        let token = retrieve_token().await.unwrap();
+        let token = self.auth.get_token().await.unwrap();
         let resp = self
             .client
             .delete(&url)
@@ -234,7 +246,7 @@ impl GoogleStorage {
             "{}/projects/{}/zones/{}/disks/{}/createSnapshot",
             self.base_url, project_id, zone, disk
         );
-        let token = retrieve_token().await.unwrap();
+        let token = self.auth.get_token().await.unwrap();
 
         let resp = self
             .client

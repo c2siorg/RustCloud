@@ -1,10 +1,12 @@
-use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
+use crate::gcp::gcp_apis::auth::gcp_auth::DefaultTokenProvider;
 use crate::gcp::types::network::gcp_loadbalancer_types::*;
+use crate::traits::token_provider::TokenProvider;
 use chrono::Utc;
 use reqwest::{header::AUTHORIZATION, Client};
 use serde_json::to_string;
 use std::collections::HashMap;
 use std::error::Error;
+use std::sync::Arc;
 
 const UNIX_DATE: &str = "%a %b %e %H:%M:%S %Z %Y";
 const RFC3339: &str = "%Y-%m-%dT%H:%M:%S%.f%:z";
@@ -13,19 +15,35 @@ pub struct GoogleLoadBalancer {
     client: Client,
     base_url: String,
     project: String,
+    auth: Arc<dyn TokenProvider>,
 }
 
 impl GoogleLoadBalancer {
     pub fn new(project: &str) -> Self {
+        Self::with_http_client(
+            Client::new(),
+            project,
+            "https://www.googleapis.com".to_string(),
+            Arc::new(DefaultTokenProvider),
+        )
+    }
+
+    pub fn with_http_client(
+        client: Client,
+        project: &str,
+        base_url: String,
+        auth: Arc<dyn TokenProvider>,
+    ) -> Self {
         Self {
-            client: Client::new(),
-            base_url: "https://www.googleapis.com".to_string(),
+            client,
+            base_url,
             project: project.to_string(),
+            auth,
         }
     }
 
     async fn get_authorization_header(&self) -> Result<String, Box<dyn Error>> {
-        let token = retrieve_token().await?;
+        let token = self.auth.get_token().await.map_err(|e| e.to_string())?;
         Ok(format!("Bearer {}", token))
     }
 

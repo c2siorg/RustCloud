@@ -1,34 +1,59 @@
-use crate::aws::aws_apis::database::aws_dynamodb::*;
-use aws_sdk_dynamodb::config::Region;
+use aws_sdk_dynamodb::config::{BehaviorVersion, Credentials, Region, SharedCredentialsProvider};
 use aws_sdk_dynamodb::types::{
-    AttributeDefinition, AttributeValue, AttributeValueUpdate, BillingMode, ComparisonOperator,
-    Condition, GlobalSecondaryIndex, KeySchemaElement, KeyType, LocalSecondaryIndex,
-    ProvisionedThroughput, PutRequest, ReturnConsumedCapacity, ReturnValue, ScalarAttributeType,
-    Select, SseSpecification, StreamSpecification, TableClass, WriteRequest,
+    AttributeDefinition, AttributeValue, BillingMode, ComparisonOperator, Condition,
+    KeySchemaElement, KeyType, ProvisionedThroughput, PutRequest, ReturnConsumedCapacity,
+    ReturnValue, ScalarAttributeType, Select, TableClass, WriteRequest,
 };
 use aws_sdk_dynamodb::{Client, Config};
+use aws_smithy_http_client::test_util::{ReplayEvent, StaticReplayClient};
+use aws_smithy_types::body::SdkBody;
 use std::collections::HashMap;
 
-async fn create_client() -> Client {
-    let config = aws_config::load_from_env().await;
-    let client = Client::new(&config);
-    return client;
+use crate::aws::aws_apis::database::aws_dynamodb::*;
+
+fn mock_client(response_body: &str) -> Client {
+    let request = http::Request::builder()
+        .method("POST")
+        .uri("https://dynamodb.us-east-1.amazonaws.com/")
+        .body(SdkBody::empty())
+        .unwrap();
+    let response = http::Response::builder()
+        .status(200)
+        .header("content-type", "application/x-amz-json-1.0")
+        .body(SdkBody::from(response_body))
+        .unwrap();
+    let http_client = StaticReplayClient::new(vec![ReplayEvent::new(request, response)]);
+
+    let config = Config::builder()
+        .behavior_version(BehaviorVersion::latest())
+        .region(Region::new("us-east-1"))
+        .credentials_provider(SharedCredentialsProvider::new(Credentials::new(
+            "fake-access-key",
+            "fake-secret-key",
+            None,
+            None,
+            "test",
+        )))
+        .http_client(http_client)
+        .build();
+
+    Client::from_conf(config)
 }
 
 #[tokio::test]
 async fn test_create_table() {
-    let client = create_client().await;
+    let client = mock_client(
+        r#"{"TableDescription":{"TableName":"test-table","TableStatus":"CREATING"}}"#,
+    );
 
-    let table_name = "test-table".to_string();
     let attribute_definitions = AttributeDefinition::builder()
         .attribute_name("id")
         .attribute_type(ScalarAttributeType::S)
         .build()
         .unwrap();
-    let key_type = KeyType::Hash;
     let key_schema = KeySchemaElement::builder()
         .attribute_name("id")
-        .key_type(key_type)
+        .key_type(KeyType::Hash)
         .build()
         .unwrap();
     let provisioned_throughput = ProvisionedThroughput::builder()
@@ -40,7 +65,7 @@ async fn test_create_table() {
     let result = create_table(
         &client,
         attribute_definitions,
-        table_name,
+        "test-table".to_string(),
         key_schema,
         None,
         None,
@@ -48,229 +73,227 @@ async fn test_create_table() {
         provisioned_throughput,
         None,
         None,
-        None, // tags
+        None,
         TableClass::Standard,
-        Some(false), // deletion_protection_enabled
-        None,        // resource_policy
-        None,        // on_demand_throughput
+        Some(false),
+        None,
+        None,
     )
     .await;
 
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_delete_item() {
-    let client = create_client().await;
+    let client = mock_client("{}");
 
-    let table_name = "test-table".to_string();
     let mut key = HashMap::new();
     key.insert("id".to_string(), AttributeValue::S("test-id".to_string()));
 
     let result = delete_item(
         &client,
-        table_name,
+        "test-table".to_string(),
         Some(key),
-        None, // expected
-        None, // conditional_operator
-        None, // return_values
-        None, // return_consumed_capacity
-        None, // return_item_collection_metrics
-        None, // condition_expression
-        None, // expression_attribute_names
-        None, // expression_attribute_values
-        None, // return_values_on_condition_check_failure
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
     )
     .await;
 
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_delete_table() {
-    let client = create_client().await;
+    let client = mock_client(
+        r#"{"TableDescription":{"TableName":"test-table","TableStatus":"DELETING"}}"#,
+    );
 
-    let table_name = "test-table".to_string();
+    let result = delete_table(&client, "test-table".to_string()).await;
 
-    let result = delete_table(&client, table_name).await;
-
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_query() {
-    let client = create_client().await;
+    let client = mock_client(r#"{"Items":[],"Count":0,"ScannedCount":0}"#);
 
-    let table_name = "test-table".to_string();
     let mut key_conditions = HashMap::new();
-
     let condition = Condition::builder()
         .comparison_operator(ComparisonOperator::Eq)
         .attribute_value_list(AttributeValue::S("test-id".to_string()))
         .build()
         .expect("Failed to build condition");
-
     key_conditions.insert("id".to_string(), condition);
 
     let result = query(
         &client,
-        table_name,
-        None, // index_name
+        "test-table".to_string(),
+        None,
         Some(Select::AllAttributes),
-        None,        // attributes_to_get
-        Some(10),    // limit
-        Some(false), // consistent_read
+        None,
+        Some(10),
+        Some(false),
         Some(key_conditions),
-        None,       // query_filter
-        None,       // conditional_operator
-        Some(true), // scan_index_forward
-        None,       // exclusive_start_key
+        None,
+        None,
+        Some(true),
+        None,
         Some(ReturnConsumedCapacity::Total),
-        None, // projection_expression
-        None, // filter_expression
-        None, // key_condition_expression
-        None, // expression_attribute_names
-        None, // expression_attribute_values
+        None,
+        None,
+        None,
+        None,
+        None,
     )
     .await;
 
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_get_item() {
-    let client = create_client().await;
+    let client = mock_client(
+        r#"{"Item":{"id":{"S":"test-id"}}}"#,
+    );
 
-    let table_name = "test-table".to_string();
     let mut key = HashMap::new();
     key.insert("id".to_string(), AttributeValue::S("test-id".to_string()));
 
     let result = get_item(
         &client,
-        table_name,
+        "test-table".to_string(),
         key,
-        None, // attributes_to_get
-        Some(false), // consistent_read
-        None, // return_consumed_capacity
-        None, // projection_expression
-        None, // expression_attribute_names
+        None,
+        Some(false),
+        None,
+        None,
+        None,
     )
     .await;
 
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_put_item() {
-    let client = create_client().await;
+    let client = mock_client("{}");
 
-    let table_name = "test-table".to_string();
     let mut item = HashMap::new();
     item.insert("id".to_string(), AttributeValue::S("test-id".to_string()));
-    item.insert("name".to_string(), AttributeValue::S("test-name".to_string()));
+    item.insert(
+        "name".to_string(),
+        AttributeValue::S("test-name".to_string()),
+    );
 
     let result = put_item(
         &client,
-        table_name,
+        "test-table".to_string(),
         item,
-        None, // expected
-        None, // conditional_operator
+        None,
+        None,
         Some(ReturnValue::None),
-        None, // return_consumed_capacity
-        None, // return_item_collection_metrics
-        None, // condition_expression
-        None, // expression_attribute_names
-        None, // expression_attribute_values
-        None, // return_values_on_condition_check_failure
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
     )
     .await;
 
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_update_item() {
-    let client = create_client().await;
+    let client = mock_client("{}");
 
-    let table_name = "test-table".to_string();
     let mut key = HashMap::new();
     key.insert("id".to_string(), AttributeValue::S("test-id".to_string()));
 
     let result = update_item(
         &client,
-        table_name,
+        "test-table".to_string(),
         key,
-        None, // attribute_updates
-        None, // expected
-        None, // conditional_operator
+        None,
+        None,
+        None,
         Some(ReturnValue::AllNew),
-        None, // return_consumed_capacity
-        None, // return_item_collection_metrics
-        Some("SET #n = :val".to_string()), // update_expression
-        None, // condition_expression
-        None, // expression_attribute_names
-        None, // expression_attribute_values
-        None, // return_values_on_condition_check_failure
+        None,
+        None,
+        Some("SET #n = :val".to_string()),
+        None,
+        None,
+        None,
+        None,
     )
     .await;
 
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_scan() {
-    let client = create_client().await;
-
-    let table_name = "test-table".to_string();
+    let client = mock_client(r#"{"Items":[],"Count":0,"ScannedCount":0}"#);
 
     let result = scan(
         &client,
-        table_name,
-        None,        // index_name
-        None,        // attributes_to_get
-        Some(100),   // limit
-        Some(false), // consistent_read
-        None,        // scan_filter
-        None,        // exclusive_start_key
+        "test-table".to_string(),
+        None,
+        None,
+        Some(100),
+        Some(false),
+        None,
+        None,
         Some(ReturnConsumedCapacity::Total),
-        None, // total_segments
-        None, // segment
-        None, // projection_expression
-        None, // filter_expression
-        None, // expression_attribute_names
-        None, // expression_attribute_values
-        None, // conditional_operator
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
         Some(Select::AllAttributes),
     )
     .await;
 
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_batch_write_item() {
-    let client = create_client().await;
+    let client = mock_client(r#"{"UnprocessedItems":{}}"#);
 
     let put_request = PutRequest::builder()
         .item("id", AttributeValue::S("batch-id-1".to_string()))
         .item("name", AttributeValue::S("batch-name-1".to_string()))
         .build()
         .unwrap();
-
-    let write_request = WriteRequest::builder()
-        .put_request(put_request)
-        .build();
+    let write_request = WriteRequest::builder().put_request(put_request).build();
 
     let mut request_items = HashMap::new();
     request_items.insert("test-table".to_string(), vec![write_request]);
 
-    let result = batch_write_item(
-        &client,
-        request_items,
-        None, // return_consumed_capacity
-        None, // return_item_collection_metrics
-    )
-    .await;
+    let result = batch_write_item(&client, request_items, None, None).await;
 
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
+}
+
+#[tokio::test]
+#[ignore]
+async fn test_delete_table_live() {
+    let config = aws_config::load_from_env().await;
+    let client = Client::new(&config);
+
+    let result = delete_table(&client, "test-table".to_string()).await;
+
+    assert!(result.is_ok(), "{:?}", result);
 }

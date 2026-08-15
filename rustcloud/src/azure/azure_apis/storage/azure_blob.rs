@@ -12,12 +12,13 @@ pub struct AzureBlobClient {
 
 impl AzureBlobClient {
     pub fn new(account: String) -> Self {
-
         let base_url = format!("https://{}.blob.core.windows.net", account);
+        Self::with_http_client(Client::new(), account, base_url)
+    }
 
-
+    pub fn with_http_client(client: Client, account: String, base_url: String) -> Self {
         AzureBlobClient {
-            client: Client::new(),
+            client,
             account,
             base_url,
         }

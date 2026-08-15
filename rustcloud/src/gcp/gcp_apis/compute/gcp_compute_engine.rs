@@ -1,20 +1,33 @@
 use reqwest::{header::AUTHORIZATION, Client, Method};
 use serde_json::json;
 use std::collections::HashMap;
+use std::sync::Arc;
 
-use crate::gcp::gcp_apis::auth::gcp_auth::retrieve_token;
+use crate::gcp::gcp_apis::auth::gcp_auth::DefaultTokenProvider;
+use crate::traits::token_provider::TokenProvider;
 
 pub struct GCE {
     client: Client,
     base_url: String,
+    auth: Arc<dyn TokenProvider>,
 }
 
 impl GCE {
     pub fn new() -> Self {
-        Self {
-            client: Client::new(),
-            base_url: "https://compute.googleapis.com/compute/v1".to_string(),
-        }
+        Self::with_http_client(
+            Client::new(),
+            "https://compute.googleapis.com/compute/v1".to_string(),
+            Arc::new(DefaultTokenProvider),
+        )
+    }
+
+    pub fn with_http_client(client: Client, base_url: String, auth: Arc<dyn TokenProvider>) -> Self {
+        Self { client, base_url, auth }
+    }
+
+    async fn get_authorization_header(&self) -> Result<String, Box<dyn std::error::Error>> {
+        let token = self.auth.get_token().await.map_err(|e| e.to_string())?;
+        Ok(format!("Bearer {}", token))
     }
 
     pub async fn create_node(
@@ -163,12 +176,12 @@ impl GCE {
             self.base_url, project_id, zone
         );
 
-        let token = retrieve_token().await?;
+        let auth_header = self.get_authorization_header().await?;
         let response = self
             .client
             .post(&url)
             .header("Content-Type", "application/json")
-            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .header(AUTHORIZATION, auth_header)
             .body(gce_instance_json)
             .send()
             .await?;
@@ -195,12 +208,12 @@ impl GCE {
             self.base_url, project_id, zone, instance
         );
 
-        let token = retrieve_token().await?;
+        let auth_header = self.get_authorization_header().await?;
         let response = self
             .client
             .post(&url)
             .header("Content-Type", "application/json")
-            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .header(AUTHORIZATION, auth_header)
             .send()
             .await?;
 
@@ -226,12 +239,12 @@ impl GCE {
             self.base_url, project_id, zone, instance
         );
 
-        let token = retrieve_token().await?;
+        let auth_header = self.get_authorization_header().await?;
         let response = self
             .client
             .post(&url)
             .header("Content-Type", "application/json")
-            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .header(AUTHORIZATION, auth_header)
             .send()
             .await?;
 
@@ -257,12 +270,12 @@ impl GCE {
             self.base_url, project_id, zone, instance
         );
 
-        let token = retrieve_token().await?;
+        let auth_header = self.get_authorization_header().await?;
         let response = self
             .client
             .delete(&url)
             .header("Content-Type", "application/json")
-            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .header(AUTHORIZATION, auth_header)
             .send()
             .await?;
 
@@ -288,12 +301,12 @@ impl GCE {
             self.base_url, project_id, zone, instance
         );
 
-        let token = retrieve_token().await?;
+        let auth_header = self.get_authorization_header().await?;
         let response = self
             .client
             .post(&url)
             .header("Content-Type", "application/json")
-            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .header(AUTHORIZATION, auth_header)
             .send()
             .await?;
 
@@ -318,12 +331,12 @@ impl GCE {
             self.base_url, project_id, zone
         );
 
-        let token = retrieve_token().await?;
+        let auth_header = self.get_authorization_header().await?;
         let response = self
             .client
             .request(Method::GET, &url)
             .header("Content-Type", "application/json")
-            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .header(AUTHORIZATION, auth_header)
             .send()
             .await?;
 

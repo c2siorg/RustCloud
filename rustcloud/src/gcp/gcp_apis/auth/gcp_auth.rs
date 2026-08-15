@@ -14,6 +14,15 @@ pub async fn retrieve_token() -> Result<String, Box<dyn std::error::Error>> {
     Ok(token.as_str().to_string())
 }
 
+pub struct DefaultTokenProvider;
+
+#[async_trait]
+impl TokenProvider for DefaultTokenProvider {
+    async fn get_token(&self) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        retrieve_token().await.map_err(|e| e.to_string().into())
+    }
+}
+
 pub struct ServiceAccountTokenProvider {
     account: CustomServiceAccount,
     scopes: Vec<String>,

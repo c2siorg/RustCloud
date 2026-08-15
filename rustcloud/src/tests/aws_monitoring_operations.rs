@@ -1,29 +1,60 @@
-use crate::aws::aws_apis::management::aws_monitoring::*;
-use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_cloudwatch::config::{BehaviorVersion, Credentials, Region, SharedCredentialsProvider};
 use aws_sdk_cloudwatch::types::{
     ComparisonOperator, Metric, MetricDataQuery, MetricStat, ScanBy, Statistic,
 };
-use aws_sdk_cloudwatch::Client;
+use aws_sdk_cloudwatch::{Client, Config};
 use aws_sdk_ec2::primitives::DateTime;
-use std::collections::HashMap;
+use aws_smithy_http_client::test_util::{ReplayEvent, StaticReplayClient};
+use aws_smithy_types::body::SdkBody;
 
-async fn create_client() -> Client {
-    let config = aws_config::load_from_env().await;
-    let client = Client::new(&config);
-    return client;
+use crate::aws::aws_apis::management::aws_monitoring::*;
+
+// CloudWatch responses are RPCv2 CBOR here, not JSON/XML like the other legacy services.
+// 0xA0 is an empty CBOR map, valid for every op below since their output fields are optional.
+const EMPTY_CBOR_MAP: &[u8] = &[0xA0];
+
+fn mock_client(response_body: &[u8]) -> Client {
+    let request = http::Request::builder()
+        .method("POST")
+        .uri("https://monitoring.us-east-1.amazonaws.com/")
+        .body(SdkBody::empty())
+        .unwrap();
+    let response = http::Response::builder()
+        .status(200)
+        .header("content-type", "application/cbor")
+        .header("smithy-protocol", "rpc-v2-cbor")
+        .body(SdkBody::from(response_body))
+        .unwrap();
+    let http_client = StaticReplayClient::new(vec![ReplayEvent::new(request, response)]);
+
+    let config = Config::builder()
+        .behavior_version(BehaviorVersion::latest())
+        .region(Region::new("us-east-1"))
+        .credentials_provider(SharedCredentialsProvider::new(Credentials::new(
+            "fake-access-key",
+            "fake-secret-key",
+            None,
+            None,
+            "test",
+        )))
+        .http_client(http_client)
+        .build();
+
+    Client::from_conf(config)
 }
 
 #[tokio::test]
 async fn test_delete_alarm() {
-    let client = create_client().await;
-    let alarm_name = "test-alarm".to_string();
-    let result = delete_alarm(&client, &alarm_name).await;
-    assert!(result.is_ok());
+    let client = mock_client(EMPTY_CBOR_MAP);
+
+    let result = delete_alarm(&client, &"test-alarm".to_string()).await;
+
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_get_metric_data() {
-    let client = create_client().await;
+    let client = mock_client(EMPTY_CBOR_MAP);
 
     let metric_data_queries = Some(vec![MetricDataQuery::builder()
         .id("test-query".to_string())
@@ -40,66 +71,61 @@ async fn test_get_metric_data() {
         )
         .return_data(true)
         .build()]);
-    let start_time = Some(DateTime::from_secs(1625155200)); // Example timestamp
-    let end_time = Some(DateTime::from_secs(1625241600)); // Example timestamp
-    let next_token = None;
-    let scan_by = Some(ScanBy::TimestampDescending);
-    let _max_datapoints = None;
-    let label_options = None;
 
     let result = get_metric_data(
         &client,
         metric_data_queries,
-        start_time,
-        end_time,
-        next_token,
-        scan_by,
-        _max_datapoints,
-        label_options,
+        Some(DateTime::from_secs(1625155200)),
+        Some(DateTime::from_secs(1625241600)),
+        None,
+        Some(ScanBy::TimestampDescending),
+        None,
+        None,
     )
     .await;
 
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_list_alarms() {
-    let client = create_client().await;
+    let client = mock_client(EMPTY_CBOR_MAP);
+
     let result = list_alarms(&client).await;
-    assert!(result.is_ok());
+
+    assert!(result.is_ok(), "{:?}", result);
 }
 
 #[tokio::test]
 async fn test_put_metric_alarm() {
-    let client = create_client().await;
-
-    let alarm_name = "test-alarm".to_string();
-    let alarm_description = Some("This is a test alarm.".to_string());
-    let alarm_actions = None;
-    let comparison_operator = Some(ComparisonOperator::GreaterThanThreshold);
-    let evaluation_periods = Some(1);
-    let metric_name = Some("CPUUtilization".to_string());
-    let namespace = Some("AWS/EC2".to_string());
-    let period = Some(60);
-    let statistic = Some(Statistic::Average);
-    let threshold = Some(80.0);
-    let treat_missing_data = Some("missing".to_string());
+    let client = mock_client(EMPTY_CBOR_MAP);
 
     let result = put_metric_alarm(
         &client,
-        &alarm_name,
-        alarm_description,
-        alarm_actions,
-        comparison_operator,
-        evaluation_periods,
-        metric_name,
-        namespace,
-        period,
-        statistic,
-        threshold,
-        treat_missing_data,
+        &"test-alarm".to_string(),
+        Some("This is a test alarm.".to_string()),
+        None,
+        Some(ComparisonOperator::GreaterThanThreshold),
+        Some(1),
+        Some("CPUUtilization".to_string()),
+        Some("AWS/EC2".to_string()),
+        Some(60),
+        Some(Statistic::Average),
+        Some(80.0),
+        Some("missing".to_string()),
     )
     .await;
 
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result);
+}
+
+#[tokio::test]
+#[ignore]
+async fn test_list_alarms_live() {
+    let config = aws_config::load_from_env().await;
+    let client = Client::new(&config);
+
+    let result = list_alarms(&client).await;
+
+    assert!(result.is_ok(), "{:?}", result);    
 }

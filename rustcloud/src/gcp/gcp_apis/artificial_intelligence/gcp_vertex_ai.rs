@@ -226,6 +226,19 @@ pub(crate) fn parse_sse_line(line: &str) -> Option<serde_json::Value> {
     serde_json::from_str(line.strip_prefix("data: ")?).ok()
 }
 
+pub(crate) fn drain_complete_lines(buffer: &mut Vec<u8>) -> Vec<serde_json::Value> {
+    let mut parsed = Vec::new();
+    while let Some(pos) = buffer.iter().position(|&b| b == b'\n') {
+        let line_bytes: Vec<u8> = buffer.drain(..=pos).collect();
+        let line = String::from_utf8_lossy(&line_bytes);
+        let line = line.trim_end_matches('\n').trim_end_matches('\r');
+        if let Some(json) = parse_sse_line(line) {
+            parsed.push(json);
+        }
+    }
+    parsed
+}
+
 pub(crate) fn sse_chunk_to_events(json: &serde_json::Value) -> Vec<LlmStreamEvent> {
     let mut events = Vec::new();
     let Some(candidate) = json["candidates"].get(0) else {
@@ -389,20 +402,16 @@ impl LlmProvider for VertexAiProvider {
 
         tokio::spawn(async move {
             let mut response = response;
-            let mut buffer = String::new();
+            let mut buffer: Vec<u8> = Vec::new();
 
             loop {
                 match response.chunk().await {
                     Ok(Some(bytes)) => {
-                        buffer.push_str(&String::from_utf8_lossy(&bytes));
-                        while let Some(pos) = buffer.find('\n') {
-                            let line = buffer[..pos].trim_end_matches('\r').to_string();
-                            buffer = buffer[pos + 1..].to_string();
-                            if let Some(json) = parse_sse_line(&line) {
-                                for event in sse_chunk_to_events(&json) {
-                                    if tx.send(event).await.is_err() {
-                                        return;
-                                    }
+                        buffer.extend_from_slice(&bytes);
+                        for json in drain_complete_lines(&mut buffer) {
+                            for event in sse_chunk_to_events(&json) {
+                                if tx.send(event).await.is_err() {
+                                    return;
                                 }
                             }
                         }
